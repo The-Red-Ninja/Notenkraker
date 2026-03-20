@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffffff">
+<title>NootApp</title>
+<style>
+@font-face {
+  font-family: 'Bravura';
+  src: url('https://cdn.jsdelivr.net/gh/steinbergmedia/bravura@master/redist/woff/Bravura.woff2') format('woff2');
+  font-weight: normal; font-style: normal;
+}
+:root { --tab-h:52px; --safe:36px; }
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; overflow:hidden; background:#fff; color:#111; font-family:Georgia,'Times New Roman',serif; }
+button { touch-action:manipulation; }
+
+/* TABS */
+#tabs { display:flex; width:100%; background:#f5f0e8; border-bottom:2px solid #ddd; height:var(--tab-h); flex-shrink:0; }
+.tab-btn { flex:1; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; color:#999; border:none; background:transparent; transition:color .2s; padding:0 4px; font-family:Georgia,serif; position:relative; }
+.tab-btn.active { color:#222; }
+.tab-btn.active::after { content:''; position:absolute; bottom:0; left:8%; right:8%; height:3px; background:#222; border-radius:2px; }
+/* Tab clef symbols using Bravura unicode */
+.tab-clef { font-family:'Bravura',serif; font-size:28px; line-height:1; }
+
+/* APP */
+#app { display:flex; flex-direction:column; height:100vh; }
+.page { display:none; flex:1; overflow-y:auto; overflow-x:hidden; padding:10px var(--safe); background:#fff; }
+.page.active { display:flex; flex-direction:column; }
+
+/* PAGE 0 */
+.p0-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px; }
+.mode-btns { display:flex; gap:6px; }
+.mode-btn { padding:7px 16px; border-radius:20px; border:1.5px solid #bbb; background:#fff; color:#888; font-size:13px; font-family:Georgia,serif; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.mode-btn.active { background:#222; color:#fff; border-color:#222; }
+.scan-btn-top { padding:10px 20px; background:#fff; border:1.5px solid #888; border-radius:24px; color:#333; font-size:15px; cursor:pointer; font-family:Georgia,serif; white-space:nowrap; font-weight:bold; }
+.scan-btn-top:active { background:#eee; }
+.key-name-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; gap:10px; }
+.key-name-big { font-size:20px; font-weight:bold; color:#222; letter-spacing:.3px; }
+.chord-btn-tab0 { flex-shrink:0; padding:8px 14px; background:#fff; border:1.5px solid #555; border-radius:20px; color:#333; font-size:13px; font-family:Georgia,serif; cursor:pointer; white-space:nowrap; touch-action:none; user-select:none; -webkit-user-select:none; }
+.chord-btn-tab0.held { background:#333; color:#fff; }
+.main-row { display:flex; gap:10px; align-items:flex-start; }
+.left-col { display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
+
+.mini-staves-col { display:flex; flex-direction:column; gap:4px; }
+.mini-staves-col canvas { width:100%; height:66px; display:block; border:1px solid #ddd; border-radius:4px; background:#fff; }
+#camera-feed { display:none; width:100%; border-radius:6px; margin-top:6px; }
+
+/* Right-col inside main-row: staves + akkoord, fills quint height */
+.right-col { flex:1; display:flex; flex-direction:column; gap:5px; min-width:0; justify-content:space-between; }
+/* Enharmonic row: full width, own line below main-row */
+.enharm-row { display:flex; gap:8px; margin-top:6px; }
+.enharm-btn { flex:1; padding:9px 4px; border-radius:16px; border:1.5px solid #888; background:#fff; color:#555; font-size:13px; font-family:Georgia,serif; cursor:pointer; transition:all .15s; text-align:center; }
+.enharm-btn.active { background:#222; color:#fff; border-color:#222; }
+
+/* PITCH */
+.pitch-section { margin-top:8px; background:#f5f0e8; border-radius:8px; padding:8px 10px; }
+.pitch-name-hz-row { display:flex; align-items:baseline; justify-content:center; gap:10px; min-height:22px; }
+.pitch-name { font-size:14px; color:#333; font-weight:bold; }
+.pitch-hz { font-size:14px; color:#666; }
+input[type=range].pitch-slider { -webkit-appearance:none; width:100%; height:4px; background:#c8bfa8; border-radius:3px; outline:none; cursor:pointer; margin:4px 0; }
+input[type=range].pitch-slider::-webkit-slider-thumb { -webkit-appearance:none; width:22px; height:22px; background:#333; border-radius:50%; border:2px solid #fff; box-shadow:0 1px 4px #0003; }
+.pitch-ticks { display:flex; justify-content:space-between; font-size:8px; color:#bbb; padding:0 1px; }
+hr.div { border:none; border-top:1px solid #ddd; margin:5px 0; }
+
+/* STAFF PAGES */
+.staff-page { padding:6px 2px; }
+.staff-header { padding:0 6px 4px; display:flex; align-items:center; }
+.staff-key-label { font-size:15px; color:#222; font-weight:bold; }
+.staff-wrap { width:100%; touch-action:none; position:relative; background:#fff; margin-bottom:0; }
+.staff-wrap canvas { width:100%; display:block; }
+.acc-row { display:flex; justify-content:center; gap:18px; margin:0 0 2px; padding-top:2px; }
+.acc-btn { width:54px; height:54px; border-radius:50%; background:#fff; border:2px solid #888; color:#333; font-size:28px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .12s; user-select:none; -webkit-user-select:none; font-family:'Bravura',Georgia,serif; }
+.acc-btn.active { background:#222; color:#fff; border-color:#222; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- TABS -->
+<div id="tabs">
+  <button class="tab-btn active" onclick="showTab(0)" id="tab0">Toonsoort</button>
+  <button class="tab-btn" onclick="showTab(1)" id="tab1">
+    <!-- Treble clef U+E050 in Bravura, fallback to unicode musical symbol -->
+    <span class="tab-clef" style="font-size:32px;line-height:var(--tab-h);display:block;height:var(--tab-h);overflow:hidden;">𝄞</span>
+  </button>
+  <button class="tab-btn" onclick="showTab(2)" id="tab2">
+    <span class="tab-clef" style="font-size:26px;line-height:var(--tab-h);display:block;height:var(--tab-h);overflow:hidden;">𝄢</span>
+  </button>
+</div>
+
+<!-- PAGE 0 -->
+<div class="page active" id="page0">
+  <div class="p0-top">
+    <div class="mode-btns">
+      <button class="mode-btn active" id="btn-maj" onclick="setMode(false)">Majeur</button>
+      <button class="mode-btn"        id="btn-min" onclick="setMode(true)">Mineur</button>
+    </div>
+    <button class="scan-btn-top" id="scan-btn" onclick="startScan()">📷 Scan</button>
+  <button onclick="promptApiKey()" style="background:none;border:none;font-size:11px;color:#aaa;cursor:pointer;padding:0 4px;text-decoration:underline;">API-sleutel</button>
+  </div>
+  <div class="key-name-row">
+    <div class="key-name-big" id="key-name-display">C Groot</div>
+  </div>
+  <!-- quint left | right-col (staves + akkoord) fills same height as quint -->
+  <div class="main-row" id="main-row" style="align-items:stretch;">
+    <canvas id="quint-canvas" width="185" height="185" style="width:185px;height:185px;flex-shrink:0;touch-action:none;cursor:pointer;"></canvas>
+    <div class="right-col">
+      <div class="mini-staves-col">
+        <canvas id="mini-treble"></canvas>
+        <canvas id="mini-bass"></canvas>
+      </div>
+      <button class="chord-btn-tab0" id="chord-btn-main"
+        ontouchstart="chordStart(event)" ontouchend="chordEnd()"
+        onmousedown="chordStart(event)" onmouseup="chordEnd()">🎵 Akkoord</button>
+    </div>
+  </div>
+  <!-- Enharmonic row: own full-width line, hidden until Fis/Ges or Cis/Des -->
+  <div class="enharm-row" id="enharm-row" style="visibility:hidden">
+    <button class="enharm-btn" id="enharm-sharp" onclick="setEnharm('A')">kruizen</button>
+    <button class="enharm-btn" id="enharm-flat"  onclick="setEnharm('B')">mollen</button>
+  </div>
+  <div id="scan-result" style="font-size:11px;color:#888;min-height:14px;margin-top:2px;"></div>
+  <video id="camera-feed" autoplay playsinline style="max-height:200px;object-fit:cover;border-radius:8px;"></video>
+  <canvas id="scan-preview" style="display:none;max-width:100%;border-radius:8px;margin-top:6px;"></canvas>
+  <input type="file" id="scan-file-input" accept="image/*" capture="environment" style="display:none" onchange="scanFromFile(this)">
+  <hr class="div">
+  <div class="pitch-section" id="pitch-section-0"></div>
+</div>
+
+<!-- PAGE 1: Vioolsleutel -->
+<div class="page staff-page" id="page1">
+  <div class="staff-header"><div class="staff-key-label" id="staff-label-treble">C Groot</div></div>
+  <div class="staff-wrap" id="treble-wrap"><canvas id="treble-canvas"></canvas></div>
+  <div class="acc-row">
+    <button class="acc-btn" id="acc-natural-treble" ontouchstart="accTouch('treble','natural',event)" onmousedown="accMouse('treble','natural')">♮</button>
+    <button class="acc-btn" id="acc-sharp-treble"   ontouchstart="accTouch('treble','sharp',event)"   onmousedown="accMouse('treble','sharp')">♯</button>
+    <button class="acc-btn" id="acc-flat-treble"    ontouchstart="accTouch('treble','flat',event)"    onmousedown="accMouse('treble','flat')">♭</button>
+  </div>
+  <hr class="div">
+  <div class="pitch-section" id="pitch-section-1"></div>
+</div>
+
+<!-- PAGE 2: Bassleutel -->
+<div class="page staff-page" id="page2">
+  <div class="staff-header"><div class="staff-key-label" id="staff-label-bass">C Groot</div></div>
+  <div class="staff-wrap" id="bass-wrap"><canvas id="bass-canvas"></canvas></div>
+  <div class="acc-row">
+    <button class="acc-btn" id="acc-natural-bass" ontouchstart="accTouch('bass','natural',event)" onmousedown="accMouse('bass','natural')">♮</button>
+    <button class="acc-btn" id="acc-sharp-bass"   ontouchstart="accTouch('bass','sharp',event)"   onmousedown="accMouse('bass','sharp')">♯</button>
+    <button class="acc-btn" id="acc-flat-bass"    ontouchstart="accTouch('bass','flat',event)"    onmousedown="accMouse('bass','flat')">♭</button>
+  </div>
+  <hr class="div">
+  <div class="pitch-section" id="pitch-section-2"></div>
+</div>
+
+</div>
+<script>
+// ════════════════════════════════════════════════════
+// DATA — volledige kwintencirkel incl. enharmonische pairs
+// ════════════════════════════════════════════════════
+//
+// FEITEN (bevestigd Wikipedia NL + muziektheorie.nl):
+//   Fis Groot = 6 kruizen   Ges Groot = 6 mollen   (enharmonisch, pos 6)
+//   Cis Groot = 7 kruizen   Des Groot = 5 mollen   (enharmonisch, pos 7)
+//   dis Klein = 6 kruizen   es Klein  = 6 mollen   (enharmonisch, pos 6)
+//   ais Klein = 7 kruizen   bes Klein = 5 mollen   (enharmonisch, pos 7)
+//
+// Elke entry heeft BEIDE spellingen als spellingA / spellingB.
+// De weergave wordt bepaald door enharmMode[pos].
+
+const CIRCLE_MAJOR = [
+  { pos:0,  spellingA:{ name:'C Groot',   short:'C',   sharps:0, flats:0 }, root:60 },
+  { pos:1,  spellingA:{ name:'G Groot',   short:'G',   sharps:1, flats:0 }, root:67 },
+  { pos:2,  spellingA:{ name:'D Groot',   short:'D',   sharps:2, flats:0 }, root:62 },
+  { pos:3,  spellingA:{ name:'A Groot',   short:'A',   sharps:3, flats:0 }, root:69 },
+  { pos:4,  spellingA:{ name:'E Groot',   short:'E',   sharps:4, flats:0 }, root:64 },
+  { pos:5,  spellingA:{ name:'B Groot',   short:'B',   sharps:5, flats:0 }, root:71 },
+  { pos:6,  spellingA:{ name:'Fis Groot', short:'Fis', sharps:6, flats:0 },
+            spellingB:{ name:'Ges Groot', short:'Ges', sharps:0, flats:6 }, root:66 },
+  { pos:7,  spellingA:{ name:'Cis Groot', short:'Cis', sharps:7, flats:0 },
+            spellingB:{ name:'Des Groot', short:'Des', sharps:0, flats:5 }, root:61 },
+  { pos:8,  spellingA:{ name:'As Groot',  short:'As',  sharps:0, flats:4 }, root:68 },
+  { pos:9,  spellingA:{ name:'Es Groot',  short:'Es',  sharps:0, flats:3 }, root:63 },
+  { pos:10, spellingA:{ name:'Bes Groot', short:'Bes', sharps:0, flats:2 }, root:70 },
+  { pos:11, spellingA:{ name:'F Groot',   short:'F',   sharps:0, flats:1 }, root:65 },
+];
+
+const CIRCLE_MINOR = [
+  { pos:0,  spellingA:{ name:'a Klein',   short:'am',  sharps:0, flats:0 }, root:69 },
+  { pos:1,  spellingA:{ name:'e Klein',   short:'em',  sharps:1, flats:0 }, root:64 },
+  { pos:2,  spellingA:{ name:'b Klein',   short:'bm',  sharps:2, flats:0 }, root:71 },
+  { pos:3,  spellingA:{ name:'fis Klein', short:'f#m', sharps:3, flats:0 }, root:66 },
+  { pos:4,  spellingA:{ name:'cis Klein', short:'c#m', sharps:4, flats:0 }, root:61 },
+  { pos:5,  spellingA:{ name:'gis Klein', short:'g#m', sharps:5, flats:0 }, root:68 },
+  { pos:6,  spellingA:{ name:'dis Klein', short:'d#m', sharps:6, flats:0 },
+            spellingB:{ name:'es Klein',  short:'ebm', sharps:0, flats:6 }, root:63 },
+  { pos:7,  spellingA:{ name:'ais Klein', short:'a#m', sharps:7, flats:0 },
+            spellingB:{ name:'bes Klein', short:'bbm', sharps:0, flats:5 }, root:70 },
+  { pos:8,  spellingA:{ name:'f Klein',   short:'fm',  sharps:0, flats:4 }, root:65 },
+  { pos:9,  spellingA:{ name:'c Klein',   short:'cm',  sharps:0, flats:3 }, root:60 },
+  { pos:10, spellingA:{ name:'g Klein',   short:'gm',  sharps:0, flats:2 }, root:67 },
+  { pos:11, spellingA:{ name:'d Klein',   short:'dm',  sharps:0, flats:1 }, root:62 },
+];
+
+// Treble clef: bottom line = E4 = midi 64, step=0
+const TREBLE_NOTES = [
+  {name:'C',letter:'C',step:-2,naturalMidi:60},
+  {name:'D',letter:'D',step:-1,naturalMidi:62},
+  {name:'E',letter:'E',step:0, naturalMidi:64},
+  {name:'F',letter:'F',step:1, naturalMidi:65},
+  {name:'G',letter:'G',step:2, naturalMidi:67},
+  {name:'A',letter:'A',step:3, naturalMidi:69},
+  {name:'B',letter:'B',step:4, naturalMidi:71},
+  {name:'C',letter:'C',step:5, naturalMidi:72},
+  {name:'D',letter:'D',step:6, naturalMidi:74},
+  {name:'E',letter:'E',step:7, naturalMidi:76},
+  {name:'F',letter:'F',step:8, naturalMidi:77},
+  {name:'G',letter:'G',step:9, naturalMidi:79},
+  {name:'A',letter:'A',step:10,naturalMidi:81},
+  {name:'B',letter:'B',step:11,naturalMidi:83},
+  {name:'C',letter:'C',step:12,naturalMidi:84},
+];
+
+// Bass clef: bottom line = G2 = midi 43, step=0
+const BASS_NOTES = [
+  {name:'E',letter:'E',step:-2,naturalMidi:40},
+  {name:'F',letter:'F',step:-1,naturalMidi:41},
+  {name:'G',letter:'G',step:0, naturalMidi:43},
+  {name:'A',letter:'A',step:1, naturalMidi:45},
+  {name:'B',letter:'B',step:2, naturalMidi:47},
+  {name:'C',letter:'C',step:3, naturalMidi:48},
+  {name:'D',letter:'D',step:4, naturalMidi:50},
+  {name:'E',letter:'E',step:5, naturalMidi:52},
+  {name:'F',letter:'F',step:6, naturalMidi:53},
+  {name:'G',letter:'G',step:7, naturalMidi:55},
+  {name:'A',letter:'A',step:8, naturalMidi:57},
+  {name:'B',letter:'B',step:9, naturalMidi:59},
+  {name:'C',letter:'C',step:10,naturalMidi:60},
+  {name:'D',letter:'D',step:11,naturalMidi:62},
+  {name:'E',letter:'E',step:12,naturalMidi:64},
+  {name:'F',letter:'F',step:13,naturalMidi:65},
+  {name:'G',letter:'G',step:14,naturalMidi:67},
+];
+
+// Accidental staff positions (step = half-spaces from bottom line)
+const T_SHARPS=[8,5,9,6,3,7,4], T_FLATS=[4,7,3,6,2,5,1];
+const B_SHARPS=[6,3,7,4,1,5,2], B_FLATS=[7,4,8,5,2,6,3];
+
+const PITCH_STOPS=[
+  {hz:415,name:'Barok'},{hz:422,name:'Klassiek'},
+  {hz:430,name:'430 Hz'},{hz:435,name:'435 Hz'},
+  {hz:440,name:'Standaard'},{hz:442,name:'Modern Orkest'},
+  {hz:443,name:'Modern Orkest'},{hz:444,name:'Modern Orkest'},
+];
+const PITCH_MIN=410, PITCH_MAX=446;
+
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+let currentTab=0, isMinor=false, keyIdx=0, pitchHz=440;
+let audioCtx=null, chordNodes=[];
+// enharmMode[pos]: 'A' = spellingA (kruizen-kant), 'B' = spellingB (mollen-kant)
+// Standaard: pos6 = 'B' (Ges/es), pos7 = 'B' (Des/bes) — meest gebruikt in praktijk
+const enharmMode = { 6:'B', 7:'B' };
+
+const SS = {
+  treble:{ step:null, node:null, acc:null, accFired:false },
+  bass:  { step:null, node:null, acc:null, accFired:false },
+};
+
+// ════════════════════════════════════════════════════
+// KEY HELPERS
+// ════════════════════════════════════════════════════
+function circle(){ return isMinor ? CIRCLE_MINOR : CIRCLE_MAJOR; }
+
+// Geeft het actieve spelling-object terug: { name, short, sharps, flats } + root van de entry
+function cKey(){
+  const entry = circle()[keyIdx];
+  const mode = enharmMode[entry.pos] || 'A';
+  const spelling = (mode === 'B' && entry.spellingB) ? entry.spellingB : entry.spellingA;
+  return { ...spelling, root: entry.root };
+}
+
+function selectKey(i){
+  keyIdx = i;
+  const entry = circle()[i];
+  const hasEnharm = !!entry.spellingB;
+  document.getElementById('enharm-row').style.visibility = hasEnharm ? 'visible' : 'hidden';
+  if(hasEnharm) updateEnharmBtns(entry);
+  updateLabels(); renderQuint(); renderMiniStaves();
+  if(currentTab===1){ renderStaff('treble'); setupTouch('treble'); }
+  if(currentTab===2){ renderStaff('bass');   setupTouch('bass'); }
+}
+
+// mode = 'A' (kruizen-spelling) of 'B' (mollen-spelling)
+function setEnharm(mode){
+  const entry = circle()[keyIdx];
+  enharmMode[entry.pos] = mode;
+  updateEnharmBtns(entry);
+  updateLabels(); renderQuint(); renderMiniStaves();
+  if(currentTab===1){ renderStaff('treble'); setupTouch('treble'); }
+  if(currentTab===2){ renderStaff('bass');   setupTouch('bass'); }
+}
+
+function updateEnharmBtns(entry){
+  const mode = enharmMode[entry.pos] || 'A';
+  const spA = entry.spellingA, spB = entry.spellingB;
+  document.getElementById('enharm-sharp').classList.toggle('active', mode==='A');
+  document.getElementById('enharm-flat').classList.toggle('active',  mode==='B');
+  document.getElementById('enharm-sharp').textContent = spA.name + ' (' + spA.sharps + '♯)';
+  document.getElementById('enharm-flat').textContent  = spB.name + ' (' + spB.flats  + '♭)';
+}
+
+function setMode(minor){
+  isMinor=minor;
+  document.getElementById('btn-maj').classList.toggle('active',!isMinor);
+  document.getElementById('btn-min').classList.toggle('active',isMinor);
+  keyIdx=Math.min(keyIdx,circle().length-1);
+  // hide enharm if not applicable
+  const entry=circle()[keyIdx];
+  const hasEnharm=!!entry.spellingB;
+  document.getElementById('enharm-row').style.visibility=hasEnharm?'visible':'hidden';
+  if(hasEnharm) updateEnharmBtns(entry);
+  updateLabels(); renderQuint(); renderMiniStaves();
+  if(currentTab===1){ renderStaff('treble'); setupTouch('treble'); }
+  if(currentTab===2){ renderStaff('bass');   setupTouch('bass'); }
+}
+
+function updateLabels(){
+  const k=cKey();
+  document.getElementById('key-name-display').textContent=k.name;
+  document.getElementById('staff-label-treble').textContent=k.name;
+  document.getElementById('staff-label-bass').textContent=k.name;
+}
+
+// ════════════════════════════════════════════════════
+// AUDIO
+// ════════════════════════════════════════════════════
+function getACtx(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+function midi2freq(m){ return pitchHz*Math.pow(2,(m-69)/12); }
+function playN(midi,vol=0.38){
+  const ac=getACtx(),osc=ac.createOscillator(),g=ac.createGain();
+  osc.type='triangle'; osc.frequency.value=midi2freq(midi);
+  g.gain.setValueAtTime(0,ac.currentTime);
+  g.gain.linearRampToValueAtTime(vol,ac.currentTime+0.02);
+  osc.connect(g); g.connect(ac.destination); osc.start();
+  return{osc,gain:g};
+}
+function stopN(n){
+  if(!n)return;
+  const ac=getACtx();
+  n.gain.gain.setValueAtTime(n.gain.gain.value,ac.currentTime);
+  n.gain.gain.linearRampToValueAtTime(0,ac.currentTime+0.06);
+  setTimeout(()=>{try{n.osc.stop();}catch(e){}},100);
+}
+
+// ════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════
+function showTab(i){
+  currentTab=i;
+  document.querySelectorAll('.page').forEach((p,j)=>p.classList.toggle('active',j===i));
+  document.querySelectorAll('.tab-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+  if(i===1) setTimeout(()=>{renderStaff('treble');setupTouch('treble');},50);
+  if(i===2) setTimeout(()=>{renderStaff('bass');  setupTouch('bass');},50);
+}
+
+// ════════════════════════════════════════════════════
+// QUINTEN CIRCLE — correcte opbouw met alle 12 posities
+// ════════════════════════════════════════════════════
+function renderQuint(){
+  const cv=document.getElementById('quint-canvas');
+  const W=cv.width,H=cv.height,ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  const ks=circle(), cx=W/2,cy=H/2, rO=W*0.43, rI=W*0.24;
+
+  for(let i=0;i<12;i++){
+    const entry=ks[i], sel=(i===keyIdx);
+    const ang=(i/12)*Math.PI*2-Math.PI/2;
+    const a0=ang-Math.PI/12, a1=ang+Math.PI/12;
+
+    // Always show the current active spelling label
+    const activeK = sel ? cKey() : null;
+    const spelling = activeK || entry.spellingA;
+    let label = spelling.short;
+
+    ctx.beginPath();
+    ctx.arc(cx,cy,rO,a0,a1);
+    ctx.arc(cx,cy,rI,a1,a0,true);
+    ctx.closePath();
+    ctx.fillStyle=sel?'#222':(i%2?'#d8d8d8':'#ebebeb');
+    ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+
+    const lx=cx+Math.cos(ang)*(rO+rI)/2;
+    const ly=cy+Math.sin(ang)*(rO+rI)/2;
+    ctx.save();
+    ctx.font=(sel?'bold ':'')+Math.round(W*0.063)+'px Georgia';
+    ctx.fillStyle=sel?'#fff':'#333';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(label,lx,ly);
+    ctx.restore();
+  }
+
+  // Center: acc count of current key
+  const k=cKey(), cnt=k.sharps||k.flats;
+  const sym=k.sharps>0?'♯':k.flats>0?'♭':'';
+  ctx.save();
+  ctx.font='bold '+Math.round(W*0.13)+'px Georgia';
+  ctx.fillStyle='#555'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(cnt===0?'0':(cnt+sym),cx,cy);
+  ctx.restore();
+}
+
+function quintClick(clientX,clientY){
+  const cv=document.getElementById('quint-canvas');
+  const r=cv.getBoundingClientRect();
+  const sx=cv.width/r.width,sy=cv.height/r.height;
+  const mx=(clientX-r.left)*sx,my=(clientY-r.top)*sy;
+  const cx=cv.width/2,cy=cv.height/2;
+  const dx=mx-cx,dy=my-cy,d=Math.sqrt(dx*dx+dy*dy);
+  if(d<cv.width*0.24||d>cv.width*0.45) return;
+  let a=Math.atan2(dy,dx)+Math.PI/2;
+  if(a<0)a+=Math.PI*2;
+  selectKey(Math.round(a/(Math.PI*2/12))%12);
+}
+document.getElementById('quint-canvas').addEventListener('click',e=>quintClick(e.clientX,e.clientY));
+document.getElementById('quint-canvas').addEventListener('touchstart',e=>{
+  e.preventDefault(); quintClick(e.touches[0].clientX,e.touches[0].clientY);
+},{passive:false});
+
+// ════════════════════════════════════════════════════
+// MINI STAVES (preview in tab 0)
+// ════════════════════════════════════════════════════
+function renderMiniStaves(){
+  const p=document.querySelector('.right-col');
+  const w=Math.max(p?p.clientWidth:100, 80); // never set to 0
+  ['treble','bass'].forEach(c=>{
+    const cv=document.getElementById('mini-'+c);
+    if(cv.width !== w){ cv.width=w; }
+    if(cv.height !== 66){ cv.height=66; }
+    drawMini(cv,c);
+  });
+}
+
+function drawMini(cv,clef){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height||92;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  // Scale line spacing to canvas height: leave ~12% top, ~8% bottom padding
+  const topPad=Math.round(H*0.12), botPad=Math.round(H*0.10);
+  const ls=Math.max(Math.round((H-topPad-botPad)/4), 8);
+  const n=5, top=topPad;
+  ctx.strokeStyle='#444'; ctx.lineWidth=0.9;
+  for(let i=0;i<n;i++){
+    const y=top+i*ls;
+    ctx.beginPath(); ctx.moveTo(4,y); ctx.lineTo(W-4,y); ctx.stroke();
+  }
+  const bot=top+(n-1)*ls;
+  function sY(s){return bot-s*(ls/2);}
+
+  // Clef using Bravura font — same ratios as main staff
+  ctx.fillStyle='#111';
+  if(clef==='treble'){
+    ctx.font=`${ls*4.5}px Bravura,serif`;
+    ctx.textBaseline='alphabetic';
+    // SMuFL anchor = line 2 = bot - ls
+    ctx.fillText('\uE050', 3, bot - ls);
+  } else {
+    ctx.font=`${ls*4.5}px Bravura,serif`;
+    ctx.textBaseline='alphabetic';
+    ctx.fillText('\uE062', 3, bot - 3*ls);
+  }
+  ctx.textBaseline='alphabetic';
+
+  // Key signature
+  const k=cKey();
+  const aPos=k.sharps>0?(clef==='treble'?T_SHARPS:B_SHARPS):(clef==='treble'?T_FLATS:B_FLATS);
+  const n2=k.sharps||k.flats, sym=k.sharps>0?'\u266F':'\u266D';
+  const clefW=clef==='treble'? ls*2.1 : ls*2.8;
+  const accSp=ls*0.78;
+  const accGapMini=ls*0.85;
+  ctx.font=`bold ${Math.round(ls*1.35)}px Georgia,serif`;
+  ctx.fillStyle='#111'; ctx.textBaseline='middle';
+  for(let i=0;i<n2;i++) ctx.fillText(sym, 4+clefW+accGapMini+i*accSp, sY(aPos[i]));
+  ctx.textBaseline='alphabetic';
+}
+
+// ════════════════════════════════════════════════════
+// MAIN STAFF RENDER — using Bravura font for clefs + accidentals
+// ════════════════════════════════════════════════════
+function renderStaff(clef){
+  const cv=document.getElementById(clef==='treble'?'treble-canvas':'bass-canvas');
+  const wrap=document.getElementById(clef==='treble'?'treble-wrap':'bass-wrap');
+  const W=wrap.clientWidth||360;
+  cv.width=W;
+
+  const ls=20; // line spacing — large for touch
+  const nLines=5;
+  const staffLeft=4, staffRight=W-6;
+  const staffTop=62, staffBot=staffTop+(nLines-1)*ls, botLine=staffBot;
+
+  const notes=clef==='treble'?TREBLE_NOTES:BASS_NOTES;
+  const minS=notes[0].step, maxS=notes[notes.length-1].step;
+  const topNoteY = botLine - maxS*(ls/2) - 24;
+  const botNoteY = botLine - minS*(ls/2) + 24;
+  cv.height=Math.max(botNoteY, staffTop+80, 260);
+
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,W,cv.height);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,cv.height);
+
+  function sY(s){ return botLine-s*(ls/2); }
+  cv._sY=sY; cv._notes=notes; cv._ls=ls; cv._botLine=botLine; cv._nLines=nLines; cv._staffTop=staffTop;
+
+  // Staff lines
+  ctx.strokeStyle='#222'; ctx.lineWidth=1.2;
+  for(let i=0;i<nLines;i++){
+    const y=staffTop+i*ls;
+    ctx.beginPath(); ctx.moveTo(staffLeft,y); ctx.lineTo(staffRight,y); ctx.stroke();
+  }
+
+  // ── Clef using Bravura font ──
+  ctx.fillStyle='#111';
+  if(clef==='treble'){
+    // Bravura U+E050 G-clef:
+    // SMuFL anchor = origin at bottom staff line (y=botLine).
+    // Font-size: Bravura is designed at 20 staff spaces per em (1000 units).
+    // 1 staff space in our system = ls px.
+    // To make glyphs fill ~9 staff-spaces: font-size = ls * 20 / (1000/540) ≈ ls*4.5
+    // Empirically confirmed: font-size ≈ ls * 4.5 renders the G-clef correctly
+    const fs = ls * 4.5;
+    ctx.font = `${fs}px Bravura,serif`;
+    ctx.textBaseline = 'alphabetic';
+    // SMuFL anchor for E050 = line 2 (where curl crosses G4 line)
+    ctx.fillText('\uE050', staffLeft + 1, botLine - ls);
+  } else {
+    // Bravura U+E062 F-clef (bass clef):
+    // SMuFL anchor = the F-dot is on the 4th staff line from bottom = sY(6) in our system
+    // font-size ≈ ls * 2.2 for correct proportions
+    // Bass clef: font-size chosen so bottom of curve reaches between line1 and line2
+    // Empirically: fs ≈ 4.5*ls gives the right proportions with Bravura E062
+    const fs = ls * 4.5;
+    ctx.font = `${fs}px Bravura,serif`;
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('\uE062', staffLeft + 1, botLine - 3*ls);
+  }
+  ctx.textBaseline = 'alphabetic';
+
+  // ── Key signature using Bravura accidental glyphs ──
+  // U+E262 = sharp, U+E260 = flat, U+E261 = natural
+  const k=cKey();
+  const numAcc=k.sharps||k.flats;
+  const accGlyph=k.sharps>0?'\u266F':'\u266D';
+  const accPos=k.sharps>0?(clef==='treble'?T_SHARPS:B_SHARPS):(clef==='treble'?T_FLATS:B_FLATS);
+  // clef width in pixels to know where accidentals start
+  const clefW = clef==='treble' ? ls*2.1 : ls*2.8;
+  const accGap = ls * 0.85; // at least one symbol-width of space
+  const accStart = staffLeft + clefW + accGap;
+  const accSpacing = ls * 0.82;
+  const accFontSize = ls * 1.4;
+
+  ctx.font = `bold ${accFontSize}px Georgia,serif`;
+  ctx.fillStyle = '#111';
+  ctx.textBaseline = 'middle';
+  for(let i=0;i<numAcc;i++){
+    ctx.fillText(accGlyph, accStart+i*accSpacing, sY(accPos[i]));
+  }
+  ctx.textBaseline = 'alphabetic';
+  cv._afterAcc = accStart + numAcc*accSpacing + 8;
+
+  // ── Touch note ──
+  const st=SS[clef];
+  if(st.step!==null){
+    const note=notes.find(n=>n.step===st.step);
+    if(note){
+      const ny=sY(note.step), nr=ls*0.50, nx=W-56;
+      drawLedgers(ctx,note.step,nx,nr,ls,nLines,botLine);
+
+      // Accidental sign before the notehead (using Bravura or unicode fallback)
+      if(st.acc){
+        const ag=st.acc==='sharp'?'\u266F':st.acc==='flat'?'\u266D':'\u266E';
+        ctx.font=`bold ${ls*1.4}px Georgia,serif`;
+        ctx.fillStyle='#c00'; ctx.textBaseline='middle';
+        ctx.fillText(ag, nx-nr*3.5, ny);
+        ctx.textBaseline='alphabetic';
+      }
+
+      // Filled notehead
+      ctx.fillStyle='#c00';
+      ctx.beginPath(); ctx.ellipse(nx,ny,nr*1.3,nr*0.82,-0.18,0,Math.PI*2); ctx.fill();
+
+      // Note name above staff
+      const noteName=getSoundingNoteName(note,clef);
+      ctx.font=`bold ${ls*1.4}px Georgia`;
+      ctx.fillStyle='#c00'; ctx.textAlign='center';
+      ctx.fillText(noteName, nx, staffTop-10);
+      ctx.textAlign='left';
+    }
+  }
+}
+
+function drawLedgers(ctx,step,nx,nr,ls,nLines,botLine){
+  ctx.strokeStyle='#222'; ctx.lineWidth=1.3;
+  for(let s=-2;s>=step;s-=2){
+    if(s<0){const y=botLine-s*(ls/2);ctx.beginPath();ctx.moveTo(nx-nr*2.2,y);ctx.lineTo(nx+nr*2.2,y);ctx.stroke();}
+  }
+  const topStep=(nLines-1)*2;
+  for(let s=topStep+2;s<=step;s+=2){
+    const y=botLine-s*(ls/2);ctx.beginPath();ctx.moveTo(nx-nr*2.2,y);ctx.lineTo(nx+nr*2.2,y);ctx.stroke();
+  }
+}
+
+function renderTrebleStaff(){renderStaff('treble');}
+function renderBassStaff(){renderStaff('bass');}
+
+// ════════════════════════════════════════════════════
+// KEY-AWARE MIDI
+// ════════════════════════════════════════════════════
+const SHARP_LETTERS=['F','C','G','D','A','E','B'];
+const FLAT_LETTERS =['B','E','A','D','G','C','F'];
+
+function buildKeyOffsets(){
+  const k=cKey(), map={C:0,D:0,E:0,F:0,G:0,A:0,B:0};
+  if(k.sharps>0){ for(let i=0;i<k.sharps;i++) map[SHARP_LETTERS[i]]=+1; }
+  else if(k.flats>0){ for(let i=0;i<k.flats;i++) map[FLAT_LETTERS[i]] =-1; }
+  return map;
+}
+
+function soundingMidi(note,clef){
+  const off=buildKeyOffsets();
+  const keyOff=off[note.letter]??0;
+  let midi=note.naturalMidi+keyOff;
+  const acc=SS[clef].acc;
+  if(acc==='natural'){ midi=note.naturalMidi; }
+  else if(acc==='sharp'){ midi = keyOff===+1 ? note.naturalMidi+keyOff : note.naturalMidi+1; }
+  else if(acc==='flat'){  midi = keyOff===-1 ? note.naturalMidi+keyOff : note.naturalMidi-1; }
+  return midi;
+}
+
+const NOTE_NAMES_SHARP=['C','Cis','D','Dis','E','F','Fis','G','Gis','A','Ais','B'];
+const NOTE_NAMES_FLAT =['C','Des','D','Es', 'E','F','Ges','G','As', 'A','Bes','B'];
+
+function getSoundingNoteName(note,clef){
+  const midi=soundingMidi(note,clef);
+  const pc=((midi%12)+12)%12;
+  const k=cKey();
+  return k.flats>0?NOTE_NAMES_FLAT[pc]:NOTE_NAMES_SHARP[pc];
+}
+
+// ════════════════════════════════════════════════════
+// ACCIDENTAL BUTTONS
+// ════════════════════════════════════════════════════
+function accTouch(clef,type,e){ e.preventDefault(); doAcc(clef,type); }
+function accMouse(clef,type){ doAcc(clef,type); }
+function doAcc(clef,type){
+  const st=SS[clef];
+  if(st.acc===type && !st.accFired){ st.acc=null; }
+  else{ st.acc=type; st.accFired=false; }
+  updateAccBtns(clef);
+}
+function updateAccBtns(clef){
+  ['natural','sharp','flat'].forEach(t=>{
+    document.getElementById('acc-'+t+'-'+clef).classList.toggle('active',SS[clef].acc===t);
+  });
+}
+
+// ════════════════════════════════════════════════════
+// STAFF TOUCH
+// ════════════════════════════════════════════════════
+function setupTouch(clef){
+  const cv=document.getElementById(clef==='treble'?'treble-canvas':'bass-canvas');
+  const SIDE=38;
+  function noteAt(cx,cy){
+    const r=cv.getBoundingClientRect();
+    const sx=cv.width/r.width,sy=cv.height/r.height;
+    const px=(cx-r.left)*sx,py=(cy-r.top)*sy;
+    if(px<SIDE||px>cv.width-SIDE) return null;
+    if(!cv._notes||!cv._sY) return null;
+    let best=null,bd=9999;
+    for(const n of cv._notes){const d=Math.abs(py-cv._sY(n.step));if(d<bd){bd=d;best=n;}}
+    return best;
+  }
+  function ts(cx,cy){
+    const note=noteAt(cx,cy); if(!note)return;
+    const st=SS[clef]; st.step=note.step; stopN(st.node);
+    st.node=playN(soundingMidi(note,clef)); st.accFired=true;
+    renderStaff(clef);
+  }
+  function tm(cx,cy){
+    const note=noteAt(cx,cy); if(!note)return;
+    const st=SS[clef]; if(note.step===st.step)return;
+    st.step=note.step; stopN(st.node);
+    st.node=playN(soundingMidi(note,clef)); renderStaff(clef);
+  }
+  function te(){
+    const st=SS[clef]; stopN(st.node); st.node=null; st.step=null;
+    if(st.acc&&st.accFired){st.acc=null;st.accFired=false;updateAccBtns(clef);}
+    renderStaff(clef);
+  }
+  cv.ontouchstart=e=>{e.preventDefault();ts(e.touches[0].clientX,e.touches[0].clientY);};
+  cv.ontouchmove= e=>{e.preventDefault();tm(e.touches[0].clientX,e.touches[0].clientY);};
+  cv.ontouchend=cv.ontouchcancel=e=>{e.preventDefault();te();};
+  let md=false;
+  cv.onmousedown=e=>{md=true;ts(e.clientX,e.clientY);};
+  cv.onmousemove=e=>{if(md)tm(e.clientX,e.clientY);};
+  cv.onmouseup=cv.onmouseleave=()=>{if(md){md=false;te();}};
+}
+
+// ════════════════════════════════════════════════════
+// CHORD
+// ════════════════════════════════════════════════════
+function chordStart(e){
+  e.preventDefault();
+  document.getElementById('chord-btn-main').classList.add('held');
+  chordNodes.forEach(n=>stopN(n)); chordNodes=[];
+  const k=cKey(), third=isMinor?3:4;
+  [[0,0.55],[third,0.32],[7,0.32]].forEach(([iv,vol])=>chordNodes.push(playN(k.root+iv,vol)));
+}
+function chordEnd(){
+  document.getElementById('chord-btn-main').classList.remove('held');
+  chordNodes.forEach(n=>stopN(n)); chordNodes=[];
+}
+
+// ════════════════════════════════════════════════════
+// PITCH
+// ════════════════════════════════════════════════════
+function buildPitch(){
+  const t=`<div class="pitch-name-hz-row"><span class="pitch-name" id="pn-S"></span><span class="pitch-hz" id="ph-S"></span></div>
+    <input type="range" class="pitch-slider" id="ps-S" min="${PITCH_MIN}" max="${PITCH_MAX}" step="1" value="${pitchHz}"
+      oninput="pIn(this.value,'S')" onchange="pCh(this.value,'S')">
+    <div class="pitch-ticks">${PITCH_STOPS.map(p=>`<span>${p.hz}</span>`).join('')}</div>`;
+  ['0','1','2'].forEach(s=>{
+    document.getElementById('pitch-section-'+s).innerHTML=t.replaceAll('S',s);
+  });
+  updPitch(pitchHz,null);
+}
+function pIn(v,s){ updPitch(v,s); }
+function pCh(v,s){
+  pitchHz=parseFloat(v);
+  ['0','1','2'].forEach(x=>{if(x!==s){const e=document.getElementById('ps-'+x);if(e)e.value=pitchHz;}});
+  updPitch(pitchHz,null);
+}
+function updPitch(v,active){
+  const hz=parseFloat(v);
+  const near=PITCH_STOPS.reduce((a,b)=>Math.abs(b.hz-hz)<Math.abs(a.hz-hz)?b:a);
+  const nm=Math.abs(near.hz-hz)<=1?near.name:'';
+  ['0','1','2'].forEach(s=>{
+    const ne=document.getElementById('pn-'+s),he=document.getElementById('ph-'+s);
+    if(ne)ne.textContent=nm;
+    if(he)he.textContent=hz+' Hz';
+    const sl=document.getElementById('ps-'+s);
+    if(sl&&s!==active)sl.value=hz;
+  });
+}
+
+// ════════════════════════════════════════════════════
+// SCAN
+// ════════════════════════════════════════════════════
+let scanStream=null,scanOn=false;
+async function startScan(){
+  const res=document.getElementById('scan-result'),vid=document.getElementById('camera-feed');
+  if(scanOn){stopScan();return;}
+  // Try live camera first; fall back to file picker
+  if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+    try{
+      const constraints={video:{facingMode:{ideal:'environment'}}};
+      scanStream=await navigator.mediaDevices.getUserMedia(constraints);
+      vid.srcObject=scanStream; vid.style.display='block'; scanOn=true;
+      res.textContent='Richt op de toonsoortaanduiding en tik op het beeld.';
+      vid.onclick=doScan;
+      return;
+    }catch(e){
+      // Fall through to file picker
+      console.log('Camera fallback:', e.name, e.message);
+    }
+  }
+  // Fallback: open camera via file input (works on all mobile browsers)
+  res.textContent='Camera opent via foto-kiezer…';
+  document.getElementById('scan-file-input').click();
+}
+
+function scanFromFile(input){
+  const res=document.getElementById('scan-result');
+  if(!input.files||!input.files[0]){ res.textContent=''; return; }
+  const file=input.files[0];
+  res.textContent='Afbeelding analyseren…';
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    const dataUrl=e.target.result;
+    await analyzeImage(dataUrl.split(',')[1], res);
+  };
+  reader.readAsDataURL(file);
+  input.value=''; // reset so same file can be re-selected
+}
+function stopScan(){
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
+  document.getElementById('camera-feed').style.display='none';scanOn=false;
+}
+async function doScan(){
+  const vid=document.getElementById('camera-feed'),res=document.getElementById('scan-result');
+  res.textContent='Analyseren...';
+  const c=document.createElement('canvas'); c.width=vid.videoWidth; c.height=vid.videoHeight;
+  c.getContext('2d').drawImage(vid,0,0);
+  const b64=c.toDataURL('image/jpeg',0.85).split(',')[1];
+  stopScan();
+  await analyzeImage(b64, res);
+}
+
+function resizeImage(b64, maxPx){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width, h=img.height;
+      if(w>maxPx||h>maxPx){ const s=maxPx/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); }
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(cv.toDataURL('image/jpeg',0.85).split(',')[1]);
+    };
+    img.onerror=()=>resolve(b64);
+    img.src='data:image/jpeg;base64,'+b64;
+  });
+}
+// ── API key management ──
+function getApiKey(){
+  return localStorage.getItem('nootapp_apikey')||'';
+}
+function promptApiKey(){
+  const existing=getApiKey();
+  const key=prompt(
+    'Voer je Anthropic API-sleutel in om scannen te activeren.\n'+
+    '(Gratis aan te maken op console.anthropic.com)\n'+
+    (existing?'Huidige sleutel: '+existing.slice(0,8)+'…  (leeg laten = verwijderen)':''),
+    existing
+  );
+  if(key===null) return null; // cancelled
+  if(key.trim()===''){localStorage.removeItem('nootapp_apikey'); return '';}
+  localStorage.setItem('nootapp_apikey', key.trim());
+  return key.trim();
+}
+
+function applyKeyMatch(p, res){
+  const ks=circle();
+  let f=-1;
+  for(let i=0;i<ks.length;i++){
+    const e=ks[i];
+    const spA=e.spellingA, spB=e.spellingB;
+    if(p.sharps>0 && spA.sharps===p.sharps){ f=i; break; }
+    if(p.flats>0  && spA.flats===p.flats){   f=i; break; }
+    if(p.sharps>0 && spB && spB.sharps===p.sharps){ f=i; break; }
+    if(p.flats>0  && spB && spB.flats===p.flats){   f=i; break; }
+  }
+  if(f<0 && p.sharps===0 && p.flats===0){
+    f=ks.findIndex(e=>e.spellingA.sharps===0&&e.spellingA.flats===0);
+  }
+  if(f>=0){
+    selectKey(f);
+    const e=ks[f];
+    if(e.spellingB){
+      if(p.sharps>0 && e.spellingA.sharps===p.sharps) setEnharm('A');
+      else if(p.flats>0 && e.spellingA.flats===p.flats) setEnharm('A');
+      else if(p.sharps>0 && e.spellingB && e.spellingB.sharps===p.sharps) setEnharm('B');
+      else if(p.flats>0 && e.spellingB && e.spellingB.flats===p.flats) setEnharm('B');
+    }
+    renderQuint(); renderMiniStaves();
+    res.textContent='✓ Herkend: '+cKey().name;
+  } else {
+    res.textContent='Niet herkend ('+p.sharps+'♯ '+p.flats+'♭). Selecteer handmatig.';
+  }
+}
+
+async function analyzeImage(b64, res){
+  let apiKey=getApiKey();
+  if(!apiKey){
+    apiKey=promptApiKey();
+    if(!apiKey){ res.textContent='Geen API-sleutel. Selecteer toonsoort handmatig.'; return; }
+  }
+  const smallB64 = await resizeImage(b64, 800);
+  res.textContent='Analyseren…';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-calls':'true'
+      },
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:100,messages:[{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:'image/jpeg',data:smallB64}},
+        {type:'text',text:'Music score key signature. Count sharps # or flats b right after the clef. Reply ONLY JSON: {"sharps":N,"flats":0} or {"sharps":0,"flats":N}'}
+      ]}]})});
+    if(r.status===401){ localStorage.removeItem('nootapp_apikey'); throw new Error('API-sleutel ongeldig. Tik Scan om opnieuw in te voeren.'); }
+    if(!r.ok){ const err=await r.text(); throw new Error('HTTP '+r.status+': '+err.slice(0,60)); }
+    const data=await r.json();
+    const text=data.content?.[0]?.text||'';
+    const m=text.match(/\{[^}]+\}/);
+    if(m){
+      const raw=JSON.parse(m[0]);
+      applyKeyMatch({sharps:raw.sharps||0, flats:raw.flats||0}, res);
+    } else { res.textContent='Kon toonsoort niet lezen. Selecteer handmatig.'; }
+  }catch(e){ res.textContent=e.message||'Fout bij analyse.'; }
+}
+
+// ════════════════════════════════════════════════════
+// RESIZE + INIT
+// ════════════════════════════════════════════════════
+window.addEventListener('resize',()=>{
+  renderMiniStaves();
+  if(currentTab===1){renderStaff('treble');setupTouch('treble');}
+  if(currentTab===2){renderStaff('bass');  setupTouch('bass');}
+});
+window.addEventListener('DOMContentLoaded',()=>{
+  buildPitch(); updateLabels(); renderQuint();
+  // Wait for Bravura font before drawing canvases
+  const fontUrl = 'https://cdn.jsdelivr.net/gh/steinbergmedia/bravura@master/redist/woff/Bravura.woff2';
+  if(document.fonts && document.fonts.load){
+    document.fonts.load('40px Bravura').then(()=>{
+      renderMiniStaves();
+      if(currentTab===1){renderStaff('treble');setupTouch('treble');}
+      if(currentTab===2){renderStaff('bass');setupTouch('bass');}
+    }).catch(()=>{ renderMiniStaves(); });
+  } else {
+    setTimeout(renderMiniStaves, 400);
+  }
+});
+// Prevent pinch-zoom (multi-finger touchmove)
+document.addEventListener('touchmove', e=>{
+  if(e.touches.length > 1) e.preventDefault();
+},{passive:false});
+</script>
+</body>
+</html>
