@@ -4,12 +4,18 @@
 <meta charset="UTF-8">
   <meta name="author" content="Ruben Ris">
   <meta name="copyright" content="Copyright © 2026 Ruben Ris, Leiden, Nederland. Alle rechten voorbehouden.">
-  <meta name="application-name" content="NootApp">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="application-name" content="Notenkraker">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#ffffff">
-<title>NootApp</title>
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Notenkraker">
+<meta name="theme-color" content="#f0ebe0">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="Icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="Icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="Icons/favicon-16x16.png">
+<title>Notenkraker</title>
 <style>
 @font-face {
   font-family: 'Bravura';
@@ -60,7 +66,7 @@ button { touch-action:manipulation; }
 .mode-btn.active { background:#2a2a2a; color:#fff; border-color:#2a2a2a; box-shadow:0 1px 4px rgba(0,0,0,0.18); }
 .key-name-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; gap:10px; }
 .key-name-big { font-size:15px; font-weight:bold; color:#222; font-family:Georgia,serif; letter-spacing:.2px; text-align:center; cursor:pointer; }
-.chord-btn-tab0 { display:none; /* vervangen door kwintencirkel */ } .chord-btn-tab0-DISABLED { flex-shrink:0; padding:9px 16px; background:#fff; border:1.5px solid #aaa; border-radius:20px; color:#444; font-size:12px; font-family:Georgia,serif; cursor:pointer; white-space:nowrap; touch-action:none; user-select:none; -webkit-user-select:none; letter-spacing:0.4px; transition:background .2s,border-color .2s,color .2s,box-shadow .2s; }
+.chord-btn-tab0 { flex-shrink:0; padding:9px 16px; background:#fff; border:1.5px solid #aaa; border-radius:20px; color:#444; font-size:12px; font-family:Georgia,serif; cursor:pointer; white-space:nowrap; touch-action:none; user-select:none; -webkit-user-select:none; letter-spacing:0.4px; transition:background .2s,border-color .2s,color .2s,box-shadow .2s; }
 .chord-btn-tab0.held { background:#f5f0e8; color:#444; border-color:#888; border-width:2px; box-shadow:0 0 0 3px rgba(160,140,110,0.35), inset 0 1px 3px rgba(0,0,0,0.08); }
 .main-row { display:flex; gap:10px; align-items:flex-start; }
 .left-col { display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
@@ -900,16 +906,14 @@ const PITCH_MIN=410, PITCH_MAX=446;
 // STATE
 // ════════════════════════════════════════════════════
 let currentTab=0, isMinor=false, keyIdx=0, pitchHz=440;
-let audioCtx=null, chordNodes=[], masterGain=null;
+let audioCtx=null, chordNodes=[];
 // enharmMode[pos]: 'A' = spellingA (kruizen-kant), 'B' = spellingB (mollen-kant)
 // Standaard: pos6 = 'B' (Ges/es), pos7 = 'B' (Des/bes) — meest gebruikt in praktijk
 const enharmMode = { 6:'B', 7:'B' };
 
 const SS = {
-  treble:{ step:null, node:null, acc:null, accFired:false,
-           touches:{} }, // touches: {identifier: {step, node}}
-  bass:  { step:null, node:null, acc:null, accFired:false,
-           touches:{} },
+  treble:{ step:null, node:null, acc:null, accFired:false },
+  bass:  { step:null, node:null, acc:null, accFired:false },
 };
 
 // ════════════════════════════════════════════════════
@@ -993,12 +997,7 @@ function updateLabels(){
 // AUDIO
 // ════════════════════════════════════════════════════
 function getACtx(){
-  if(!audioCtx){
-    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-    masterGain=audioCtx.createGain();
-    masterGain.gain.value=window._noteVol||1.0;
-    masterGain.connect(audioCtx.destination);
-  }
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
   if(audioCtx.state==='suspended') audioCtx.resume();
   return audioCtx;
 }
@@ -1007,24 +1006,21 @@ function midi2freq(m){ return pitchHz*Math.pow(2,(m-69)/12); }
 // Globaal nootvolumepercentage (50..200), default 100
 window._noteVol = 1.0;
 
-function playN(midi, baseVol=0.50){
-  // baseVol is de individuele noot-gain; masterGain regelt het totale volume
-  // Gebruik baseVol direct — NIET vermenigvuldigd met _noteVol (dat doet masterGain)
-  const vol = Math.min(1.0, baseVol); // max 1.0 per noot
+function playN(midi, baseVol=0.38){
+  const vol = baseVol * window._noteVol;
   const ac=getACtx(),osc=ac.createOscillator(),g=ac.createGain();
   osc.type='triangle'; osc.frequency.value=midi2freq(midi);
   g.gain.setValueAtTime(0,ac.currentTime);
-  g.gain.linearRampToValueAtTime(vol,ac.currentTime+0.02);
-  const dest = masterGain || ac.destination;
-  osc.connect(g); g.connect(dest); osc.start();
+  g.gain.linearRampToValueAtTime(Math.min(2.0,vol),ac.currentTime+0.02);
+  osc.connect(g); g.connect(ac.destination); osc.start();
   return{osc,gain:g,_midi:midi};
 }
 function stopN(n){
   if(!n)return;
   const ac=getACtx();
-  n.gain.gain.cancelScheduledValues(ac.currentTime);
-  n.gain.gain.setTargetAtTime(0, ac.currentTime, 0.02); // zachte fade zonder klik
-  setTimeout(()=>{try{n.osc.stop();}catch(e){}},120);
+  n.gain.gain.setValueAtTime(n.gain.gain.value,ac.currentTime);
+  n.gain.gain.linearRampToValueAtTime(0,ac.currentTime+0.06);
+  setTimeout(()=>{try{n.osc.stop();}catch(e){}},100);
 }
 
 // ════════════════════════════════════════════════════
@@ -1127,8 +1123,7 @@ document.getElementById('quint-canvas').addEventListener('touchstart', e=>{
   const idx = quintPreview(e.touches[0].clientX, e.touches[0].clientY);
   if(idx !== null){
     _quintPreviewIdx = idx;
-    selectKey(idx);
-    chordStart(); // akkoord aan bij aanraken kwintencirkel
+    selectKey(idx);   // live preview: update all elements immediately
   }
 },{passive:false});
 
@@ -1137,15 +1132,14 @@ document.getElementById('quint-canvas').addEventListener('touchmove', e=>{
   const idx = quintPreview(e.touches[0].clientX, e.touches[0].clientY);
   if(idx !== null && idx !== _quintPreviewIdx){
     _quintPreviewIdx = idx;
-    selectKey(idx);
-    chordUpdate(); // update akkoord bij nieuwe toonsoort
+    selectKey(idx);   // update as finger moves to new segment
   }
 },{passive:false});
 
 document.getElementById('quint-canvas').addEventListener('touchend', e=>{
   e.preventDefault();
+  // Selectie is al live bijgewerkt via touchmove/touchstart — niets meer te doen
   _quintPreviewIdx = null;
-  chordStop(); // akkoord uit bij loslaten
 },{passive:false});
 
 // ════════════════════════════════════════════════════
@@ -1598,84 +1592,139 @@ function renderStaff(clef){
   if(typeof updateNotePosSliderPadding === 'function') updateNotePosSliderPadding(clef);
 
 
-  // ── Touch noten (multitouch: max 3) ──
+  // ── Touch note ──
   const st=SS[clef];
-  // Verzamel alle actieve stappen (enkel + multitouch)
-  const activeSteps = new Set();
-  if(st.step !== null) activeSteps.add(st.step);
-  Object.values(st.touches||{}).forEach(t=>{ if(t.step!==null) activeSteps.add(t.step); });
-  const activeNotes = [...activeSteps].slice(0,3).map(s=>notes.find(n=>n.step===s)).filter(Boolean);
+  if(st.step!==null){
+    const note=notes.find(n=>n.step===st.step);
+    if(note){
+      const ny  = sY(note.step);
+      const nr  = ls*0.52;
+      // Eén weergave: links uitgelijnd, rechts naast de mollen/kruizen
+      const afterAcc = cv._afterAcc || (staffLeft + ls*3);
+      // Nootpositie: slider 0-100% van het beschikbare gebied rechts van voortekens
+      const posPct = (window._notePosPct && window._notePosPct[clef] !== undefined)
+        ? window._notePosPct[clef] : 30;
+      // Volledige canvasbreedte: noot kan ook over sleutel/accidentalen staan
+      // Links: staffLeft + nr (noot past net in beeld)
+      // Rechts: W - nr*1.35 - 4 (noot past net in beeld rechts)
+      const halfNoteW = Math.round(nr * 1.35);
+      const nxMin = staffLeft + 2 * halfNoteW; // 1 nootbreedte naast linkerrand
+      const nxMax = W - halfNoteW - 4;
+      const nxSingle = Math.round(nxMin + (nxMax - nxMin) * posPct / 100);
 
-  if(activeNotes.length > 0){
-    const note = activeNotes[0];
-    const ny  = sY(note.step);
-    const nr  = ls*0.52;
-    const afterAcc = cv._afterAcc || (staffLeft + ls*3);
-    const posPct = (window._notePosPct && window._notePosPct[clef] !== undefined)
-      ? window._notePosPct[clef] : 30;
-    const halfNoteW = Math.round(nr * 1.35);
-    const nxMin = staffLeft + 2 * halfNoteW;
-    const nxMax = W - halfNoteW - 4;
-    const nxSingle = Math.round(nxMin + (nxMax - nxMin) * posPct / 100);
-    const lsNote = Math.round(26 + (Math.min(_trap, 5) - 4) * 26 / 7); // nootnaam schaalt t/m trap 5
-    const nrNote = ls * 0.52;
-    const noteColor = '#111';
-    const noteName   = getSoundingNoteName(note, clef);
-    const noteOctave = getSoundingOctave(note, clef);
-    const nameFont = `${Math.round(lsNote*1.1)}px Arial,Helvetica,sans-serif`; // schaalt met lsNote
-    const accFont  = `bold ${ls*1.4}px Georgia,serif`;
-    const fixedNameY   = sY(11);
-    const fixedBelowY  = sY(-2);
+      // Noot+naam: volledig geschaald met ls (notenbalkgrootte)
+      const nrNote = ls * 0.52;  // nootradius = ls
+      const noteColor = '#111';  // altijd zwart
 
-    function drawOneNote(n2, nx){
-      const ny2 = sY(n2.step);
-      drawLedgers(ctx, n2.step, nx, nrNote, ls, nLines, botLine);
-      ctx.strokeStyle=noteColor; ctx.fillStyle=noteColor;
-      // Accidentaal (alleen voor eerste/hoofdnoot)
-      if(n2===note && st.acc){
-        const ag=st.acc==='sharp'?'\u266F':st.acc==='flat'?'\u266D':'\u266E';
-        ctx.font=accFont; ctx.textBaseline='middle';
-        ctx.fillText(ag, nx-nrNote*3.5, ny2); ctx.textBaseline='alphabetic';
+      const noteName   = getSoundingNoteName(note, clef);
+      const noteOctave = getSoundingOctave(note, clef);
+      const nameFont = `${Math.round(ls*1.1)}px Arial,Helvetica,sans-serif`;
+      const accFont  = `bold ${ls*1.4}px Georgia,serif`;
+
+      // Vaste nootnaam-hoogte: sY(7) = hoogte Ges3/G3 (midden notenbalk)
+      // Naam boven: hoogte B5 viool = sY(11). Onder: B4 viool = sY(7)
+      // Boven: B5 viool = sY(11). Onder: C4 viool = sY(-2) (1 hulplijn onder de balk)
+      const fixedNameY   = sY(11); // boven
+      const fixedBelowY  = sY(-2); // onder: C4-hoogte = 1 lijn onder de notenbalk
+
+      function drawWholeNote(nx){
+        // Hulplijnen
+        drawLedgers(ctx, note.step, nx, nrNote, ls, nLines, botLine);
+
+        // Kleur herstellen na drawLedgers
+        ctx.strokeStyle = noteColor;
+        ctx.fillStyle   = noteColor;
+
+        // Accidentaal
+        if(st.acc){
+          const ag = st.acc==='sharp'?'\u266F':st.acc==='flat'?'\u266D':'\u266E';
+          ctx.font = accFont;
+          ctx.textBaseline='middle';
+          ctx.fillText(ag, nx - nrNote*3.5, ny);
+          ctx.textBaseline='alphabetic';
+        }
+
+        // ── Officiële hele noot ──
+        // Zwart gevulde ellips + licht gekanteld transparant gat
+        const rX = nrNote * 1.55;
+        const rY = nrNote * 0.95;
+
+        // Teken hele noot op offscreen canvas zodat destination-out correct werkt
+        const noteSize = Math.ceil(rX * 2 + 4);
+        const oc = document.createElement('canvas');
+        oc.width = noteSize; oc.height = noteSize;
+        const ox = oc.getContext('2d');
+        const cx = noteSize / 2, cy = noteSize / 2;
+
+        // 1. Zwart gevulde buitenste ellips
+        ox.fillStyle = '#111';
+        ox.beginPath();
+        ox.ellipse(cx, cy, rX, rY, 0, 0, Math.PI*2);
+        ox.fill();
+
+        // 2. Gat: licht gekanteld (0.5 rad ≈ 29°), transparant
+        const holeRX = rX * 0.38;
+        const holeRY = rY * 0.65;
+        ox.globalCompositeOperation = 'destination-out';
+        ox.fillStyle = 'rgba(0,0,0,1)';
+        ox.beginPath();
+        ox.ellipse(cx, cy, holeRX, holeRY, 0.5, 0, Math.PI*2);
+        ox.fill();
+        ox.globalCompositeOperation = 'source-over';
+
+        // 3. Plak op hoofd-canvas op de juiste positie
+        ctx.drawImage(oc, nx - noteSize/2, ny - noteSize/2);
+
+        // ── Nootnaam ──
+        const showOct   = window._showOctave    !== false;
+        const showAbove = window._showNameAbove !== false;
+        const showBelow = window._showNameBelow === true;
+        const label = showOct ? noteName + noteOctave : noteName;
+        ctx.fillStyle = noteColor;
+        ctx.font = nameFont;
+        const nameOffset = nrNote * 2.0;
+        const nameX    = nx < W/2 ? nx + nameOffset : nx - nameOffset;
+        const nameAlign= nx < W/2 ? 'left' : 'right';
+        ctx.textAlign = nameAlign;
+        if(showAbove) ctx.fillText(label, nameX, fixedNameY);
+        if(showBelow){
+          const belowY = fixedBelowY + Math.round(ls*0.3); // C4-hoogte
+          ctx.fillText(label, nameX, belowY);
+        }
+        ctx.textAlign='left';
       }
-      // Noot: gevulde ellips met transparant gat (offscreen)
-      const rX=nrNote*1.55, rY=nrNote*0.95;
-      const noteSize=Math.ceil(rX*2+4);
-      const oc=document.createElement('canvas'); oc.width=noteSize; oc.height=noteSize;
-      const ox=oc.getContext('2d'); const ocx=noteSize/2, ocy=noteSize/2;
-      ox.fillStyle='#111'; ox.beginPath(); ox.ellipse(ocx,ocy,rX,rY,0,0,Math.PI*2); ox.fill();
-      ox.globalCompositeOperation='destination-out'; ox.fillStyle='rgba(0,0,0,1)';
-      ox.beginPath(); ox.ellipse(ocx,ocy,rX*0.38,rY*0.65,0.5,0,Math.PI*2); ox.fill();
-      ox.globalCompositeOperation='source-over';
-      ctx.drawImage(oc, nx-noteSize/2, ny2-noteSize/2);
-    }
 
-    // Teken alle actieve noten op dezelfde x-positie
-    activeNotes.forEach(n2 => drawOneNote(n2, nxSingle));
+      drawWholeNote(nxSingle);
 
-    // Nootnamen
-    const showOct   = window._showOctave    !== false;
-    const showAbove = window._showNameAbove !== false;
-    const showBelow = window._showNameBelow === true;
-    if(showAbove || showBelow){
-      ctx.font=nameFont; ctx.fillStyle=noteColor;
-      const nameOffset=nrNote*2.0;
-      const nameX=nxSingle<W/2?nxSingle+nameOffset:nxSingle-nameOffset;
-      ctx.textAlign=nxSingle<W/2?'left':'right';
-      const lineH=Math.round(lsNote*1.4);
-      activeNotes.forEach((n2,i)=>{
-        const lbl=(showOct?getSoundingNoteName(n2,clef)+getSoundingOctave(n2,clef):getSoundingNoteName(n2,clef));
-        if(showAbove) ctx.fillText(lbl, nameX, fixedNameY - i*lineH);
-        if(showBelow) ctx.fillText(lbl, nameX, fixedBelowY+Math.round(lsNote*0.3)+i*lineH);
-      });
-      ctx.textAlign='left';
-    }
+      // ── Tweede vol-preview-noot ──
+      const extraStep = window._volExtraStep && window._volExtraStep[clef];
+      if(extraStep !== null && extraStep !== undefined && extraStep !== st.step){
+        const extraNote = notes.find(n => n.step === extraStep);
+        if(extraNote){
+          const origStep = st.step;
+          st.step = extraStep;
+          const ey = sY(extraStep);
+          const enxSingle = nxSingle; // zelfde x-positie
+          drawWholeNote(enxSingle);
+          st.step = origStep;
+        }
+      }
 
-    // Stippellijn bij open instellingen
-    const settingsOpen=document.getElementById('settings-panel')&&document.getElementById('settings-panel').classList.contains('open');
-    if(settingsOpen){
-      ctx.save(); ctx.setLineDash([4,4]); ctx.strokeStyle='rgba(100,100,100,0.55)'; ctx.lineWidth=1.5;
-      ctx.beginPath(); ctx.moveTo(nxSingle,0); ctx.lineTo(nxSingle,ny); ctx.stroke();
-      ctx.setLineDash([]); ctx.restore();
+      // ── Stippellijn nootmidden → bovenkant canvas (alleen als instellingen open) ──
+      const settingsOpen = document.getElementById('settings-panel')
+                        && document.getElementById('settings-panel').classList.contains('open');
+      if(settingsOpen){
+        ctx.save();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = 'rgba(100,100,100,0.55)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(nxSingle, 0);
+        ctx.lineTo(nxSingle, ny);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
     }
   }
 }
@@ -1987,10 +2036,7 @@ function updateAccBtns(clef){
 // ════════════════════════════════════════════════════
 function setupTouch(clef){
   const cv=document.getElementById(clef==='treble'?'treble-canvas':'bass-canvas');
-  const SIDE=4;
-  const st=SS[clef];
-  if(!st.touches) st.touches={};
-
+  const SIDE=4; // canvas is al ingeklemd, volledige breedte is aanraakzone
   function noteAt(cx,cy){
     const r=cv.getBoundingClientRect();
     const sx=cv.width/r.width,sy=cv.height/r.height;
@@ -2001,92 +2047,43 @@ function setupTouch(clef){
     for(const n of cv._notes){const d=Math.abs(py-cv._sY(n.step));if(d<bd){bd=d;best=n;}}
     return best;
   }
-
-  // MULTITOUCH handlers
-  cv.ontouchstart=e=>{
-    e.preventDefault();
-    // Max 3 gelijktijdige aanrakingen
-    const activeTouches = Object.keys(st.touches).length;
-    for(const t of e.changedTouches){
-      if(Object.keys(st.touches).length >= 3) break;
-      const note=noteAt(t.clientX,t.clientY); if(!note) continue;
-      const midi=soundingMidi(note,clef);
-      const node=playN(midi, 0.50);
-      st.touches[t.identifier]={step:note.step, node};
-    }
-    // Legacy: eerste touch ook in st.step
-    const first=Object.values(st.touches)[0];
-    st.step=first?first.step:null; st.accFired=true;
+  function ts(cx,cy){
+    const note=noteAt(cx,cy); if(!note)return;
+    const st=SS[clef]; st.step=note.step; stopN(st.node);
+    st.node=playN(soundingMidi(note,clef)); st.accFired=true;
     renderStaff(clef);
-  };
-
-  cv.ontouchmove=e=>{
-    e.preventDefault();
-    let changed=false;
-    for(const t of e.changedTouches){
-      const slot=st.touches[t.identifier]; if(!slot) continue;
-      const note=noteAt(t.clientX,t.clientY); if(!note) continue;
-      if(note.step===slot.step) continue;
-      stopN(slot.node);
-      slot.node=playN(soundingMidi(note,clef), 0.50);
-      slot.step=note.step; changed=true;
-    }
-    if(changed){ const first=Object.values(st.touches)[0]; st.step=first?first.step:null; renderStaff(clef); }
-  };
-
-  cv.ontouchend=cv.ontouchcancel=e=>{
-    e.preventDefault();
-    for(const t of e.changedTouches){
-      const slot=st.touches[t.identifier];
-      if(slot){ stopN(slot.node); delete st.touches[t.identifier]; }
-    }
-    const first=Object.values(st.touches)[0];
-    st.step=first?first.step:null;
-    if(!first){
-      if(st.acc&&st.accFired){st.acc=null;st.accFired=false;updateAccBtns(clef);}
-      const panel=document.getElementById('settings-panel');
-      if(panel&&panel.classList.contains('open')){
-        st.step=clef==='bass'?3:5;
-      }
+  }
+  function tm(cx,cy){
+    const note=noteAt(cx,cy); if(!note)return;
+    const st=SS[clef]; if(note.step===st.step)return;
+    st.step=note.step; stopN(st.node);
+    st.node=playN(soundingMidi(note,clef)); renderStaff(clef);
+  }
+  function te(){
+    const st=SS[clef]; stopN(st.node); st.node=null;
+    if(st.acc&&st.accFired){st.acc=null;st.accFired=false;updateAccBtns(clef);}
+    // Als instellingen open: herstel C-preview
+    const panel=document.getElementById('settings-panel');
+    if(panel&&panel.classList.contains('open')){
+      st.step = clef==='bass'?3:5; // C3 bas, C5 viool
+    } else {
+      st.step = null;
     }
     renderStaff(clef);
-  };
-
-  // Muis (enkelvoudig)
+  }
+  cv.ontouchstart=e=>{e.preventDefault();ts(e.touches[0].clientX,e.touches[0].clientY);};
+  cv.ontouchmove= e=>{e.preventDefault();tm(e.touches[0].clientX,e.touches[0].clientY);};
+  cv.ontouchend=cv.ontouchcancel=e=>{e.preventDefault();te();};
   let md=false;
-  cv.onmousedown=e=>{
-    md=true; const note=noteAt(e.clientX,e.clientY); if(!note)return;
-    stopN(st.node); st.node=playN(soundingMidi(note,clef));
-    st.step=note.step; st.accFired=true; renderStaff(clef);
-  };
-  cv.onmousemove=e=>{
-    if(!md)return; const note=noteAt(e.clientX,e.clientY); if(!note||note.step===st.step)return;
-    stopN(st.node); st.node=playN(soundingMidi(note,clef), 0.50); st.step=note.step; renderStaff(clef);
-  };
-  cv.onmouseup=cv.onmouseleave=()=>{
-    if(!md)return; md=false; stopN(st.node); st.node=null; st.step=null; renderStaff(clef);
-  };
+  cv.onmousedown=e=>{md=true;ts(e.clientX,e.clientY);};
+  cv.onmousemove=e=>{if(md)tm(e.clientX,e.clientY);};
+  cv.onmouseup=cv.onmouseleave=()=>{if(md){md=false;te();}};
 }
 
 // ════════════════════════════════════════════════════
 // CHORD
 // ════════════════════════════════════════════════════
 let chordOn=false;
-
-function chordStart(){
-  chordNodes.forEach(n=>stopN(n)); chordNodes=[];
-  const k=cKey(), third=isMinor?3:4;
-  [[0,0.28],[third,0.28],[7,0.28]].forEach(([iv,vol])=>chordNodes.push(playN(k.root+iv,vol)));
-  chordOn=true;
-  renderMiniStaves();
-}
-
-function chordStop(){
-  chordNodes.forEach(n=>stopN(n)); chordNodes=[];
-  chordOn=false;
-  renderMiniStaves();
-}
-
 function miniSystemClick(e){
   const cv = document.getElementById('mini-system-canvas');
   if(!cv) return;
@@ -2105,7 +2102,7 @@ function chordToggle(e){
   } else {
     chordNodes.forEach(n=>stopN(n)); chordNodes=[];
     const k=cKey(), third=isMinor?3:4;
-    [[0,0.28],[third,0.28],[7,0.28]].forEach(([iv,vol])=>chordNodes.push(playN(k.root+iv,vol)));
+    [[0,0.55],[third,0.32],[7,0.32]].forEach(([iv,vol])=>chordNodes.push(playN(k.root+iv,vol)));
     chordOn=true; btn.classList.add('held');
   }
   renderMiniStaves(); // toon/verberg akkoordnoten
@@ -2113,12 +2110,12 @@ function chordToggle(e){
 function chordUpdate(){
   if(!chordOn) return;
   chordNodes.forEach(n=>stopN(n)); chordNodes=[];
-  renderMiniStaves();
   const k=cKey(), third=isMinor?3:4;
-  [[0,0.28],[third,0.28],[7,0.28]].forEach(([iv,vol])=>chordNodes.push(playN(k.root+iv,vol)));
+  [[0,0.55],[third,0.32],[7,0.32]].forEach(([iv,vol])=>chordNodes.push(playN(k.root+iv,vol)));
   renderMiniStaves(); // update akkoordnoten bij toonsoort-wissel
 }
-// chordStart en chordStop zijn gedefinieerd boven chordToggle
+function chordStart(e){ chordToggle(e); }
+function chordEnd(){}
 
 // ════════════════════════════════════════════════════
 // PITCH
@@ -2307,7 +2304,6 @@ function loadAudioFile(file){
 
   // Volume resetten naar 100% bij nieuw bestand
   window._noteVol = 1.0;
-  if(masterGain) masterGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
   ['pvol-h0','pvol-note-1','pvol-note-2'].forEach(id=>{
     const s = document.getElementById(id); if(s) s.value = 100;
   });
@@ -2498,12 +2494,16 @@ function syncPlayBtns(){
 
 // Volumeslider tab0: preview via _volTouchNodes, chord nodes blijven onaangetast
 function volTabStart(){
-  // Speel alleen de grondtoon van de geselecteerde toonsoort
-  const rootMidi = (cKey().root % 12) + 60; // oct4 (MIDI 60-71)
+  const rootPc = cKey().root % 12;
+  const base = 48 + rootPc;
+  const lowerMidi = base + 7;  // G3
+  const upperMidi = base + 12; // C4
   _volTouchNodes.forEach(n => stopN(n));
-  _volTouchNodes = [ playN(rootMidi, 0.50) ];
-  // Toon de grondnoot in beide muziekbalkjes
-  window._volPreviewMidi = { single: rootMidi };
+  _volTouchNodes = [
+    playN(lowerMidi, 0.38),
+    playN(upperMidi, 0.38),
+  ];
+  window._volPreviewMidi = { lower: lowerMidi, upper: upperMidi };
   renderMiniStaves();
 }
 function volTabEnd(){
@@ -2572,20 +2572,31 @@ function positionTab0VolSlider(){
 
 function volTouchStart(tabIdx){
   const rootPc = cKey().root % 12;
-  // Tab1=viool: oct5 (MIDI 72+), Tab2=bas: oct3 (MIDI 48+)
-  const rootMidi = rootPc + (tabIdx === 1 ? 72 : 48);
+  const base   = 48 + rootPc; // grondtoon oct3
+
+  // Tab 1 vioolsleutel: kwint oct4 (base+19) + grondtoon oct5 (base+24)
+  // Tab 2 bassleutel:   grondtoon oct3 (base+0) + kwint oct3 (base+7)
+  const pairs = {
+    0: [base + 7,  base + 12], // G3 + C4
+    1: [base + 19, base + 24], // G4 + C5
+    2: [base + 0,  base + 7],  // C3 + G3
+  };
+  const [lowerMidi, upperMidi] = pairs[tabIdx] || pairs[0];
 
   _volTouchNodes.forEach(n => stopN(n));
-  _volTouchNodes = [ playN(rootMidi, 0.50) ];
+  _volTouchNodes = [
+    playN(lowerMidi, 0.38),
+    playN(upperMidi, 0.38),
+  ];
 
-  // Toon grondnoot op de juiste notenbalk
-  const clef = tabIdx === 1 ? 'treble' : 'bass';
-  SS[clef].step = midiToStaffStep(rootMidi, clef);
-  window._volExtraStep.treble = null;
-  window._volExtraStep.bass   = null;
+  // Toon beide noten op staven
+  SS['treble'].step = midiToStaffStep(upperMidi, 'treble');
+  SS['bass'].step   = midiToStaffStep(lowerMidi, 'bass');
+  window._volExtraStep.treble = midiToStaffStep(lowerMidi, 'treble');
+  window._volExtraStep.bass   = midiToStaffStep(upperMidi, 'bass');
   renderStaff('treble');
   renderStaff('bass');
-  window._volPreviewMidi = { single: rootMidi };
+  window._volPreviewMidi = { lower: lowerMidi, upper: upperMidi };
   renderMiniStaves();
 }
 
@@ -2659,28 +2670,31 @@ function syncPlayerUI(){
     const z = document.getElementById('pzoom-'+i);
     if(z) z.value = playerState.zoomSecs;
   });
-  // Sync vol sliders op _noteVol (0.2-1.0 → 20-100)
-  ['pvol-h0','pvol-note-1','pvol-note-2'].forEach(id=>{
-    const vl = document.getElementById(id);
+  ['0','1','2','acc-1','acc-2'].forEach(i=>{
+    const vl = document.getElementById('pvol-'+i);
     if(vl) vl.value = Math.round(window._noteVol*100);
   });
 }
 
 // Noot-volumeslider (tab 1, topbar tabs 2&3): regelt _noteVol
 function setNoteVol(val, slot){
-  const pct = Math.max(20, Math.min(100, parseFloat(val)));
-  window._noteVol = pct / 100;
-  // Zorg dat audioCtx en masterGain bestaan
-  getACtx();
-  // Pas masterGain direct aan — dit is het enige volume-kanaal
-  if(masterGain && audioCtx){
-    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
-    masterGain.gain.setValueAtTime(window._noteVol, audioCtx.currentTime);
+  const prev = window._noteVol || 1.0;
+  window._noteVol = parseFloat(val) / 100;
+  const ratio = prev > 0 ? window._noteVol / prev : window._noteVol;
+  if(audioCtx && audioCtx.state !== 'closed'){
+    const scaleNode = n => {
+      if(!n || !n.gain) return;
+      const g = n.gain.gain;
+      g.cancelScheduledValues(audioCtx.currentTime);
+      g.setValueAtTime(Math.max(0, Math.min(2.0, g.value * ratio)), audioCtx.currentTime);
+    };
+    chordNodes.forEach(scaleNode);
+    _volTouchNodes.forEach(scaleNode);
+    ['treble','bass'].forEach(cl=>{ if(SS[cl].node) scaleNode(SS[cl].node); });
   }
-  // Sync alle drie noot-vol sliders
-  ['pvol-h0','pvol-note-1','pvol-note-2'].forEach(id=>{
-    const s=document.getElementById(id); if(s) s.value=pct;
-  });
+  // Sync alle noot-vol sliders
+  const noteIds = ['pvol-h0','pvol-note-1','pvol-note-2'];
+  noteIds.forEach(id=>{ const s=document.getElementById(id); if(s&&id!==('pvol-'+slot)) s.value=val; });
 }
 
 // Mp3-volumeslider onderaan tabs 2&3: regelt audio.volume live
@@ -3315,5 +3329,14 @@ function showTabAnimated(i, dir){
     </div>
   </div>
 </div>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js')
+      .then(r => console.log('SW registered'))
+      .catch(e => console.log('SW error', e));
+  });
+}
+</script>
 </body>
 </html>
