@@ -526,6 +526,24 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
 .app-panel-chevron { font-size:10px; color:#bbb; flex-shrink:0; text-align:right; }
 .app-panel-divider { border:none; border-top:1px solid #eee; margin:1px 0; }
 
+/* ADMIN */
+.admin-row { display:none; }
+body.is-admin .admin-row { display:flex; }
+#admin-token-wrap {
+  display:none; padding:6px 8px 4px;
+}
+body.is-admin #admin-token-wrap { display:block; }
+#admin-token-input {
+  width:100%; font-size:11px; font-family:monospace;
+  border:1px solid #ccc; border-radius:6px; padding:4px 6px;
+  color:#555; background:#fafaf8; outline:none;
+}
+#admin-update-status {
+  font-size:11px; color:#666; font-family:Arial,sans-serif;
+  padding:2px 8px 4px; display:none;
+}
+body.is-admin #admin-update-status { display:block; }
+
 /* TAALKIEZER */
 #lang-picker {
   display:none; position:fixed; z-index:300;
@@ -3999,7 +4017,149 @@ function showTabAnimated(i, dir){
     <span class="app-panel-icon">✉️</span>
     <span class="app-panel-label">Contact</span>
   </div>
+  <hr class="app-panel-divider admin-row">
+  <div class="app-panel-row admin-row" onclick="adminUpdateApp()">
+    <span class="app-panel-icon">🔄</span>
+    <span class="app-panel-label">Update de app</span>
+  </div>
+  <div id="admin-update-status">Gereed.</div>
+  <div id="admin-token-wrap">
+    <input id="admin-token-input" type="password" placeholder="GitHub token" autocomplete="off"
+      onchange="adminSaveToken(this.value)" value="">
+  </div>
+  <div class="app-panel-row admin-row" onclick="adminShowStats()">
+    <span class="app-panel-icon">📊</span>
+    <span class="app-panel-label">Gebruikersstatistieken</span>
+  </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════
+     ADMIN — verborgen beheerfunctie
+     Toegang: open de app éénmalig met ?admin=nuts101
+     Reset:   open met ?admin=reset
+     ═══════════════════════════════════════════════════ -->
+<script>
+(function(){
+  const ADMIN_SECRET = 'nuts101';
+  const LS_KEY       = 'nk_admin_v1';
+  const LS_TOKEN_KEY = 'nk_gh_token';
+
+  // URL-parameter verwerken en meteen verwijderen uit adresbalk
+  const params = new URLSearchParams(window.location.search);
+  const adminParam = params.get('admin');
+  if(adminParam === ADMIN_SECRET){
+    localStorage.setItem(LS_KEY, '1');
+    params.delete('admin');
+    const clean = window.location.pathname + (params.toString() ? '?' + params : '');
+    history.replaceState(null,'', clean);
+  } else if(adminParam === 'reset'){
+    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(LS_TOKEN_KEY);
+    params.delete('admin');
+    const clean = window.location.pathname + (params.toString() ? '?' + params : '');
+    history.replaceState(null,'', clean);
+  }
+
+  // Admin-status activeren
+  if(localStorage.getItem(LS_KEY) === '1'){
+    document.body.classList.add('is-admin');
+    // Token-veld voorinvullen als opgeslagen
+    document.addEventListener('DOMContentLoaded', function(){
+      const stored = localStorage.getItem(LS_TOKEN_KEY) || '';
+      const inp = document.getElementById('admin-token-input');
+      if(inp && stored) inp.value = stored;
+    });
+  }
+})();
+
+function adminSaveToken(val){
+  if(val.trim()) localStorage.setItem('nk_gh_token', val.trim());
+}
+
+function adminSetStatus(msg, color){
+  const el = document.getElementById('admin-update-status');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.color = color || '#666';
+}
+
+async function adminUpdateApp(){
+  const token = localStorage.getItem('nk_gh_token') || '';
+  if(!token){
+    adminSetStatus('⚠️ Vul eerst een GitHub token in.', '#c0392b');
+    return;
+  }
+  adminSetStatus('⏳ Bezig met ophalen van Drive…', '#555');
+
+  // Stap 1: Haal nieuwe index.html op van Google Drive (directe download)
+  const DRIVE_ID   = '1FWM-vlgdYJiLXpNJOoN0uiGWpNnAI-S0';
+  const DRIVE_URL  = `https://drive.google.com/uc?export=download&id=${DRIVE_ID}`;
+  const GH_OWNER   = 'the-red-ninja';
+  const GH_REPO    = 'Notenkraker';
+  const GH_PATH    = 'index.html';
+  const GH_BRANCH  = 'main';
+
+  let newContent;
+  try {
+    const resp = await fetch(DRIVE_URL);
+    if(!resp.ok) throw new Error('Drive HTTP ' + resp.status);
+    newContent = await resp.text();
+    if(!newContent.includes('<!DOCTYPE') && !newContent.includes('<html')){
+      throw new Error('Ongeldig HTML-bestand ontvangen van Drive.');
+    }
+  } catch(e){
+    adminSetStatus('❌ Drive-fout: ' + e.message, '#c0392b');
+    return;
+  }
+
+  adminSetStatus('⏳ Uploaden naar GitHub…', '#555');
+
+  // Stap 2: Haal huidige SHA op (nodig voor update-call)
+  const apiBase = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
+  let sha;
+  try {
+    const r = await fetch(apiBase + `?ref=${GH_BRANCH}`, {
+      headers:{ Authorization:'token ' + token, Accept:'application/vnd.github.v3+json' }
+    });
+    if(!r.ok) throw new Error('GitHub SHA HTTP ' + r.status);
+    const j = await r.json();
+    sha = j.sha;
+  } catch(e){
+    adminSetStatus('❌ GitHub SHA-fout: ' + e.message, '#c0392b');
+    return;
+  }
+
+  // Stap 3: Push nieuwe inhoud
+  const encoded = btoa(unescape(encodeURIComponent(newContent)));
+  try {
+    const r = await fetch(apiBase, {
+      method:'PUT',
+      headers:{
+        Authorization:'token ' + token,
+        Accept:'application/vnd.github.v3+json',
+        'Content-Type':'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Update via admin-panel ' + new Date().toISOString().slice(0,16).replace('T',' '),
+        content: encoded,
+        sha: sha,
+        branch: GH_BRANCH
+      })
+    });
+    if(!r.ok){
+      const j = await r.json();
+      throw new Error(j.message || 'HTTP ' + r.status);
+    }
+    adminSetStatus('✅ Gepubliceerd! GitHub Pages bijgewerkt.', '#27ae60');
+  } catch(e){
+    adminSetStatus('❌ Push-fout: ' + e.message, '#c0392b');
+  }
+}
+
+function adminShowStats(){
+  alert('Gebruikersstatistieken — nog te configureren.');
+}
+</script>
 
 <!-- Taalkiezer -->
 <div id="lang-picker">
