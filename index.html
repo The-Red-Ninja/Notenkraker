@@ -64,7 +64,8 @@ button { touch-action:manipulation; }
 /* Tijdens slide-animatie: beide pagina's zichtbaar */
 .page.sliding { display:flex; flex-direction:column; overflow:hidden; }
 
-/* PAGE 0 */
+/* PAGE 0 heeft geen zijpadding nodig — elementen positioneren zichzelf */
+#page0 { padding-left:0; padding-right:0; }
 .p0-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px; }
 .mode-btns { display:flex; gap:6px; }
 .mode-btn { padding:7px 18px; border-radius:20px; border:1.5px solid #ccc; background:#fff; color:#999; font-size:12px; font-family:Georgia,serif; cursor:pointer; transition:all .18s; white-space:nowrap; letter-spacing:0.3px; }
@@ -99,7 +100,7 @@ hr.div { border:none; border-top:1px solid #ddd; margin:5px 0; }
 .player-mini-row { display:flex; align-items:center; gap:8px; margin-top:8px; }
 
 /* MP3 PLAYER */
-.player-wrap { margin:2px 2px 0; }
+.player-wrap { margin:0 2px 0; }
 .player-outer { display:flex; gap:6px; align-items:flex-start; }
 .player-zoom-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex-shrink:0; padding-top:2px; }
 .player-zoom-label { font-size:9px; color:#aaa; writing-mode:vertical-rl; transform:rotate(180deg); letter-spacing:1px; }
@@ -127,9 +128,25 @@ input[type=range].speed-slider::-webkit-slider-thumb {
   width:54px; height:54px; border-radius:50%; border:2px solid #888; flex-shrink:0;
   background:#fff; color:#333; font-size:22px; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
-  transition:all .12s; touch-action:manipulation;
+  transition:background .12s, border .12s, color .12s; touch-action:manipulation;
+  -webkit-appearance:none; appearance:none;
+  outline:none; -webkit-tap-highlight-color:transparent;
+  accent-color:transparent; user-select:none; -webkit-user-select:none;
 }
-.player-play-btn.playing { background:#222; color:#fff; border-color:#222; }
+/* Spelend: zelfde stijl als actieve accidentaalknop */
+.player-play-btn.playing { background:#222 !important; color:#fff !important; border-color:#222 !important; }
+/* Accidentaal-stijl play-knop op tabs 2&3 */
+.acc-play-btn {
+  width:54px; height:54px; border-radius:50%;
+  background:#fff; border:2px solid #888; color:#333;
+  font-size:22px; cursor:pointer; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .12s, border .12s, color .12s; touch-action:manipulation;
+  -webkit-appearance:none; appearance:none;
+  outline:none; -webkit-tap-highlight-color:transparent;
+  accent-color:transparent; user-select:none; -webkit-user-select:none;
+}
+.acc-play-btn.playing { background:#222 !important; color:#fff !important; border-color:#222 !important; }
 .player-waveform-wrap {
   position:relative; width:100%; height:44px; background:#f5f0e8;
   border-radius:8px; overflow:hidden; touch-action:none;
@@ -157,7 +174,7 @@ input[type=range].seek-slider::-webkit-slider-thumb {
 .staff-top-bar {
   position:absolute; top:0; left:0; right:0; z-index:30;
   background:rgba(255,255,255,0.92);
-  padding:4px 6px 2px;
+  padding:12px 6px 2px; /* 12px = helft sliderhoogte (24px) boven slider+label */
 }
 .staff-key-label-top {
   font-size:15px; font-weight:bold; color:#222;
@@ -188,6 +205,13 @@ input[type=range].seek-slider::-webkit-slider-thumb {
 .staff-right { position:absolute; inset:0; }
 /* note-pos-row nu in .staff-page CSS */
 .scale-col-hidden .scale-col { display:none; }
+/* Exclusieve sliderweergave: verberg andere slider en instellingen */
+.scale-slider-active .note-pos-row { visibility:hidden !important; }
+.notepos-slider-active .scale-col  { display:none !important; }
+.notepos-slider-active #settings-panel,
+.notepos-slider-active #app-panel,
+.scale-slider-active   #settings-panel,
+.scale-slider-active   #app-panel   { display:none !important; }
 /* Nootpositieslider opgesplitst */
 .note-pos-row {
   position:relative; height:26px;
@@ -246,17 +270,6 @@ input[type=range].note-pos-slider-thumb::-webkit-slider-thumb {
 .acc-btn { width:54px; height:54px; border-radius:50%; background:#fff; border:2px solid #888; color:#333; font-size:28px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .12s; user-select:none; -webkit-user-select:none; font-family:Georgia,serif; }
 /* Accidentaalknop actief: inverteer kleuren */
 .acc-btn.active { background:#222; color:#fff; border-color:#222; }
-
-/* Play-knop gelijk aan accidentalenknop (zonder mp3) */
-.acc-play-btn {
-  width:54px; height:54px; border-radius:50%;
-  background:#fff; border:2px solid #888; color:#333;
-  font-size:22px; cursor:pointer; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-  transition:all .12s; touch-action:manipulation;
-}
-/* Met spelende mp3: zwarte knop, wit pauzeteken */
-.acc-play-btn.playing { background:#222; color:#fff; border-color:#222; }
 
 /* Settings-knop: 90° gedraaid, 25% kleiner dan acc-btn (54*0.75=40px) */
 .settings-btn {
@@ -392,7 +405,7 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
 
 /* Zoomslider: zelfde afmeting als mp3-volumeslider, links in player-mount */
 .zoom-col-abs {
-  width:26px; display:none; align-items:stretch; flex-shrink:0;
+  width:26px; display:none; align-items:flex-start; flex-shrink:0;
 }
 .zoom-col-abs.visible { display:flex; }
 .zoom-col-abs .zoom-slider-wrap {
@@ -465,7 +478,7 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
   display:none; position:fixed; z-index:200;
   background:#fff; border:1.5px solid #c8bfa8; border-radius:12px;
   box-shadow:0 4px 24px rgba(0,0,0,0.15); padding:12px;
-  min-width:200px;
+  width:auto; min-width:0; white-space:nowrap;
 }
 #settings-panel.open { display:block; }
 .settings-title { font-size:13px; font-weight:600; color:#333;
@@ -482,6 +495,53 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
 .settings-toggle-item.on .settings-switch::after { left:17px; }
 .settings-close { float:right; background:none; border:none; font-size:16px;
   cursor:pointer; color:#aaa; line-height:1; padding:0; }
+
+/* APP PANEL */
+#app-panel {
+  display:none; position:fixed; z-index:150;
+  background:#fff; border:1.5px solid #c8bfa8;
+  border-radius:10px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.13); padding:4px 6px;
+  min-width:120px;
+}
+#app-panel.open { display:block; }
+/* Personaliseer submenu — zelfde stijl als app-panel, verschijnt ernaast */
+#personaliseer-panel {
+  display:none; position:fixed; z-index:151;
+  background:#fff; border:1.5px solid #c8bfa8;
+  border-radius:10px;
+  box-shadow:0 2px 14px rgba(0,0,0,0.13); padding:4px 6px;
+  min-width:120px;
+}
+#personaliseer-panel.open { display:block; }
+.app-panel-row {
+  display:flex; align-items:center; justify-content:space-between; gap:9px;
+  height:36px; padding:0 6px; border-radius:7px; cursor:pointer;
+  font-size:12.5px; font-family:Arial,sans-serif; color:#333;
+  transition:background .15s; user-select:none; flex-shrink:0;
+}
+.app-panel-row:active { background:#ede8de; }
+.app-panel-icon { font-size:17px; width:22px; text-align:right; flex-shrink:0; line-height:1; }
+.app-panel-label { flex:1; text-align:left; }
+.app-panel-chevron { font-size:10px; color:#bbb; flex-shrink:0; text-align:right; }
+.app-panel-divider { border:none; border-top:1px solid #eee; margin:1px 0; }
+
+/* TAALKIEZER */
+#lang-picker {
+  display:none; position:fixed; z-index:300;
+  background:#fff; border:1.5px solid #c8bfa8; border-radius:12px;
+  box-shadow:0 6px 28px rgba(0,0,0,0.18); padding:8px;
+  width:auto; min-width:0; white-space:nowrap;
+}
+#lang-picker.open { display:block; }
+.lang-option {
+  display:flex; align-items:center; gap:10px;
+  padding:8px 8px; border-radius:8px; cursor:pointer;
+  font-size:13px; font-family:Arial,sans-serif; color:#333;
+  transition:background .15s;
+}
+.lang-option:active { background:#f5f0e8; }
+.lang-option.active { font-weight:700; color:#111; }
 /* Settings-knop wrapper: gecentreerd links, gelijke breedte als play-knop */
 .settings-btn-wrap {
   width:48px; display:flex; align-items:center; justify-content:center;
@@ -586,34 +646,39 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 
 <!-- PAGE 0 -->
 <div class="page active" id="page0">
-  <!-- Toonsoortnaam gecentreerd onder tab1, midi-vol breed onder tab2+3 -->
-  <div style="display:flex;align-items:center;width:100%;gap:0;margin-bottom:6px;">
+  <!-- Toonsoortnaam + midi-vol: zelfde zijafstanden als staff-top-bar op tabs 2&3
+       Negatieve zijmarge compenseert de page-padding (--safe=36px), dan 6px eigen padding -->
+  <div style="display:flex;align-items:center;width:auto;gap:0;
+              padding:12px 6px 2px;margin:-6px 0 6px;">
     <div style="width:33.33%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-      <div class="key-name-big" id="key-name-display" style="cursor:pointer;text-align:center;" onclick="showTab(0)" title="Toonsoort">C Groot</div>
+      <span class="staff-key-label-top" id="key-name-display" style="cursor:pointer;text-align:center;" onclick="showTab(0)" title="Toonsoort">C Groot</span>
     </div>
     <div style="flex:1;padding:0 4px;">
       <div class="h-vol-wrap" id="h-vol-wrap-0" style="height:24px;">
         <div class="h-vol-bg"></div>
         <input type="range" class="h-vol-thumb" id="pvol-h0"
-          min="20" max="100" step="1" value="100"
+          min="20" max="100" step="1" value="20"
           oninput="setNoteVol(this.value,'h0')"
-         
-         
           onchange="setNoteVol(this.value,'h0')">
       </div>
     </div>
   </div>
 
+  <!-- Hz-balk direct onder toonsoort+midivolume -->
+  <div class="pitch-section" id="pitch-section-0" style="padding:0 6px;"></div>
+
   <!-- Majeur/Mineur knoppen -->
-  <div class="mode-btns" style="margin-bottom:8px;">
+  <div class="mode-btns" style="margin-bottom:8px;margin-top:24px;padding:0 6px;">
     <button class="mode-btn active" id="btn-maj" onclick="setMode(false)">Majeur</button>
     <button class="mode-btn"        id="btn-min" onclick="setMode(true)">Mineur</button>
   </div>
 
   <!-- Kwintencirkel links | rechts: akkoordknop boven, daarna notenbalkjes -->
-  <div id="p0-middle" style="display:flex;flex-direction:row;flex:1;min-height:0;gap:10px;align-items:flex-start;">
+  <div id="p0-middle" style="display:flex;flex-direction:row;flex:1;min-height:0;gap:10px;align-items:flex-start;padding:0 6px;">
     <div style="display:flex;flex-direction:column;flex-shrink:0;" id="p0-left-col">
       <canvas id="quint-canvas" style="flex-shrink:0;touch-action:none;cursor:pointer;"></canvas>
+      <!-- Aantal mollen/kruizen onder de kwintencirkel -->
+      <div id="quint-acc-label" style="text-align:center;font-size:18px;font-weight:bold;font-family:Georgia,serif;color:#555;min-height:22px;margin-top:4px;"></div>
       <!-- Enharm: dynamisch gecentreerd onder midden van kwintencirkel -->
       <div class="enharm-row" id="enharm-row" style="visibility:hidden;margin-top:6px;">
         <button class="enharm-btn" id="enharm-sharp" onclick="setEnharm('A')">kruizen</button>
@@ -635,9 +700,8 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
     </div>
   </div>
 
-  <!-- Bedieningtab1: Hz, mp3, play — bottom-aligned -->
-  <div class="bedieningtab1" style="margin-top:auto;">
-    <div class="pitch-section" id="pitch-section-0"></div>
+  <!-- Mp3-balk: links en rechts tot aan schermrand, playknop rechts -->
+  <div style="margin-top:auto;">
     <div id="player-mount-0"></div>
   </div>
 </div>
@@ -656,7 +720,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
         <div class="h-vol-wrap" style="height:24px;">
           <div class="h-vol-bg"></div>
           <input type="range" class="h-vol-thumb" id="pvol-note-1"
-            min="20" max="100" step="1" value="100"
+            min="20" max="100" step="1" value="20"
             oninput="setNoteVol(this.value,'note-1')"
            
            
@@ -670,7 +734,10 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
         <input type="range" class="note-pos-slider-thumb" id="note-pos-treble"
           min="0" max="100" step="1" value="30"
           oninput="onNotePosInput(this.value,'treble')"
-          ontouchend="notePosRelease('treble')" onmouseup="notePosRelease('treble')">
+          ontouchstart="activateNotePosSlider('treble')"
+          ontouchend="deactivateNotePosSlider('treble')"
+          onmousedown="activateNotePosSlider('treble')"
+          onmouseup="deactivateNotePosSlider('treble')">
       </div>
     </div>
   </div>
@@ -682,8 +749,10 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
           min="1" max="15" step="1" value="8"
           oninput="onScaleInput(this.value,'treble')"
           onchange="onScaleInput(this.value,'treble')"
-          ontouchstart="showScaleLabel('treble')"
-          ontouchend="hideScaleLabel('treble')">
+          ontouchstart="activateScaleSlider('treble')"
+          ontouchend="deactivateScaleSlider('treble')"
+          onmousedown="activateScaleSlider('treble')"
+          onmouseup="deactivateScaleSlider('treble')">
       </div>
       <div class="staff-right">
         <div class="staff-wrap" id="treble-wrap"><canvas id="treble-canvas"></canvas></div>
@@ -702,7 +771,8 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
         <button class="acc-btn" id="acc-sharp-treble"   ontouchstart="accTouch('treble','sharp',event)"   onmousedown="accMouse('treble','sharp')">♯</button>
         <button class="acc-btn" id="acc-flat-treble"    ontouchstart="accTouch('treble','flat',event)"    onmousedown="accMouse('treble','flat')">♭</button>
       </div>
-      <button class="acc-play-btn" id="pplaybtn-acc-1" onclick="togglePlay()">▶</button>
+      <div class="acc-play-btn" id="pplaybtn-acc-1" role="button" tabindex="0"
+           onclick="togglePlay()" ontouchend="togglePlay();event.preventDefault()">▶</div>
     </div>
     <div id="player-mount-1" class="player-mount-staff"></div>
     <!-- Mp3-volumeslider: absoluut rechts, volle hoogte, verborgen zonder mp3 -->
@@ -730,7 +800,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
         <div class="h-vol-wrap" style="height:24px;">
           <div class="h-vol-bg"></div>
           <input type="range" class="h-vol-thumb" id="pvol-note-2"
-            min="20" max="100" step="1" value="100"
+            min="20" max="100" step="1" value="20"
             oninput="setNoteVol(this.value,'note-2')"
            
            
@@ -744,7 +814,10 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
         <input type="range" class="note-pos-slider-thumb" id="note-pos-bass"
           min="0" max="100" step="1" value="30"
           oninput="onNotePosInput(this.value,'bass')"
-          ontouchend="notePosRelease('bass')" onmouseup="notePosRelease('bass')">
+          ontouchstart="activateNotePosSlider('bass')"
+          ontouchend="deactivateNotePosSlider('bass')"
+          onmousedown="activateNotePosSlider('bass')"
+          onmouseup="deactivateNotePosSlider('bass')">
       </div>
     </div>
   </div>
@@ -756,8 +829,10 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
           min="1" max="15" step="1" value="8"
           oninput="onScaleInput(this.value,'bass')"
           onchange="onScaleInput(this.value,'bass')"
-          ontouchstart="showScaleLabel('bass')"
-          ontouchend="hideScaleLabel('bass')">
+          ontouchstart="activateScaleSlider('bass')"
+          ontouchend="deactivateScaleSlider('bass')"
+          onmousedown="activateScaleSlider('bass')"
+          onmouseup="deactivateScaleSlider('bass')">
       </div>
       <div class="staff-right">
         <div class="staff-wrap" id="bass-wrap"><canvas id="bass-canvas"></canvas></div>
@@ -776,7 +851,8 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
         <button class="acc-btn" id="acc-sharp-bass"   ontouchstart="accTouch('bass','sharp',event)"   onmousedown="accMouse('bass','sharp')">♯</button>
         <button class="acc-btn" id="acc-flat-bass"    ontouchstart="accTouch('bass','flat',event)"    onmousedown="accMouse('bass','flat')">♭</button>
       </div>
-      <button class="acc-play-btn" id="pplaybtn-acc-2" onclick="togglePlay()">▶</button>
+      <div class="acc-play-btn" id="pplaybtn-acc-2" role="button" tabindex="0"
+           onclick="togglePlay()" ontouchend="togglePlay();event.preventDefault()">▶</div>
     </div>
     <div id="player-mount-2" class="player-mount-staff"></div>
     <!-- Mp3-volumeslider: absoluut rechts, volle hoogte, verborgen zonder mp3 -->
@@ -993,11 +1069,18 @@ function updateLabels(){
   const bl=document.getElementById('staff-key-label-top-bass');
   if(tl) tl.textContent=dn;
   if(bl) bl.textContent=dn;
-  // Achterwaartse compatibiliteit (worden niet meer in HTML gebruikt maar kunnen via JS nog bestaan)
+  // Achterwaartse compatibiliteit
   const sl1=document.getElementById('staff-label-treble');
   const sl2=document.getElementById('staff-label-bass');
   if(sl1) sl1.textContent=dn;
   if(sl2) sl2.textContent=dn;
+  // Aantal mollen/kruizen onder kwintencirkel
+  const accEl = document.getElementById('quint-acc-label');
+  if(accEl){
+    const cnt = k.sharps || k.flats;
+    const sym = k.sharps > 0 ? '♯' : k.flats > 0 ? '♭' : '';
+    accEl.textContent = cnt > 0 ? cnt + sym : '';
+  }
 }
 
 // ════════════════════════════════════════════════════
@@ -1015,8 +1098,11 @@ function getACtx(){
 }
 function midi2freq(m){ return pitchHz*Math.pow(2,(m-69)/12); }
 
-// Globaal nootvolumepercentage (50..200), default 100
-window._noteVol = 1.0;
+// Globaal nootvolumepercentage (50..200), default minimum (20%)
+window._noteVol = 0.20;
+
+// Tab 0 (kwintencirkel/akkoord) klinkt 0.5× zachter dan tabs 1&2
+const TAB0_VOL_FACTOR = 0.5;
 
 function playN(midi, baseVol=0.50){
   // baseVol is de individuele noot-gain; masterGain regelt het totale volume
@@ -1042,6 +1128,7 @@ function stopN(n){
 // TABS
 // ════════════════════════════════════════════════════
 function showTab(i){
+  closeSettings();
   currentTab=i;
   document.querySelectorAll('.page').forEach((p,j)=>{
     p.classList.toggle('active',j===i);
@@ -1092,30 +1179,63 @@ function renderQuint(){
     ctx.restore();
   }
 
-  // Center: acc count of current key
-  const k=cKey(), cnt=k.sharps||k.flats;
-  const sym=k.sharps>0?'♯':k.flats>0?'♭':'';
-  ctx.save();
-  ctx.font='bold '+Math.round(W*0.13)+'px Georgia';
-  ctx.fillStyle='#555'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  if(cnt>0) ctx.fillText(cnt+sym, cx, cy); // geen 0 bij C groot
-  ctx.restore();
+  // Center: app-icoon als toplaag, 75% zichtbaar, meeschalend met binnenring, cirkelvormig geclipt
+  if(window._quintIcon && window._quintIcon.complete){
+    const nativeSize = 192;
+    const diameter = Math.min(rI * 2 * 0.88, nativeSize);
+    const r = diameter / 2;
+    // Verschuif licht naar links zodat de rechter muzieknoot volledig zichtbaar is
+    const xShift = -r * 0.08;
+    ctx.save();
+    ctx.globalAlpha = 0.75;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(window._quintIcon, cx - r + xShift, cy - r, diameter, diameter);
+    ctx.restore();
+  }
 }
 
-function quintClick(clientX,clientY){
-  const cv=document.getElementById('quint-canvas');
-  const r=cv.getBoundingClientRect();
-  const sx=cv.width/r.width,sy=cv.height/r.height;
-  const mx=(clientX-r.left)*sx,my=(clientY-r.top)*sy;
-  const cx=cv.width/2,cy=cv.height/2;
-  const dx=mx-cx,dy=my-cy,d=Math.sqrt(dx*dx+dy*dy);
-  if(d<cv.width*0.24||d>cv.width*0.45) return;
-  let a=Math.atan2(dy,dx)+Math.PI/2;
-  if(a<0)a+=Math.PI*2;
-  selectKey(Math.round(a/(Math.PI*2/12))%12);
-}
-// Muis: selectie bij klik
-document.getElementById('quint-canvas').addEventListener('click',e=>quintClick(e.clientX,e.clientY));
+// Muis: selectie + hover/drag zoals touch (voor Windows)
+let _quintMouseDown = false;
+const _qcv = document.getElementById('quint-canvas');
+
+_qcv.addEventListener('mousedown', e=>{
+  _quintMouseDown = true;
+  const idx = quintPreview(e.clientX, e.clientY);
+  if(idx !== null){
+    _quintPreviewIdx = idx;
+    chordOn = false;
+    selectKey(idx);
+    chordStart();
+  }
+});
+
+_qcv.addEventListener('mousemove', e=>{
+  if(!_quintMouseDown) return;
+  const idx = quintPreview(e.clientX, e.clientY);
+  if(idx !== null && idx !== _quintPreviewIdx){
+    _quintPreviewIdx = idx;
+    selectKey(idx);
+    chordUpdate();
+  }
+});
+
+_qcv.addEventListener('mouseup', e=>{
+  if(_quintMouseDown){
+    _quintMouseDown = false;
+    _quintPreviewIdx = null;
+    chordStop();
+  }
+});
+
+_qcv.addEventListener('mouseleave', e=>{
+  if(_quintMouseDown){
+    _quintMouseDown = false;
+    _quintPreviewIdx = null;
+    chordStop();
+  }
+});
 
 // Touch: preview bij aanraken+slepen, finaliseer bij loslaten
 let _quintPreviewIdx = null;
@@ -1138,8 +1258,9 @@ document.getElementById('quint-canvas').addEventListener('touchstart', e=>{
   const idx = quintPreview(e.touches[0].clientX, e.touches[0].clientY);
   if(idx !== null){
     _quintPreviewIdx = idx;
-    selectKey(idx);
-    chordStart(); // akkoord aan bij aanraken kwintencirkel
+    chordOn = false;        // zorg dat chordUpdate in selectKey niets doet
+    selectKey(idx);         // update UI, labels, notenbalken
+    chordStart();           // zet chordOn=true, speelt af, tekent noten
   }
 },{passive:false});
 
@@ -1162,7 +1283,7 @@ document.getElementById('quint-canvas').addEventListener('touchend', e=>{
 // ════════════════════════════════════════════════════
 // MINI STAVES (preview in tab 0)
 // ════════════════════════════════════════════════════
-function renderMiniStaves(){ drawMiniSystem(); }
+function renderMiniStaves(){ drawMiniSystem(); alignMiniStavesWithQuint(); }
 
 function drawMini(cv, clef){ /* stub */ }
 
@@ -1244,11 +1365,26 @@ function drawBrace(ctx, x, yTop, yBot, ls){
 function drawMiniSystem(){
   const cv=document.getElementById('mini-system-canvas');
   if(!cv) return;
-  const p=document.querySelector('.right-col');
+  const p=document.getElementById('p0-right-col');
   const W=Math.max(p?p.clientWidth:120, 80);
   cv.width=W;
-  const ls=Math.max(Math.round(W/22),9);
-  const staffH=4*ls, gap=3*ls, topPad=Math.round(ls*5.5), botPad=ls;
+
+  // ls wordt bepaald op basis van het MAXIMALE aantal accidentalen (7) + één nootbreedte als marge.
+  // Dit zorgt voor een stabiele, vaste grootte ongeacht de huidige toonsoort.
+  // Layout (alle maten in veelvouden van ls):
+  //   staffLeft = ls*4.2   (accolade + barline)
+  //   clefW     = ls*2.1   (sleutelruimte)
+  //   accGap    = ls*0.85  (gap na sleutel)
+  //   7 acc     = ls*7*0.78 = ls*5.46
+  //   acc→noot marge (= 1 noot breed): nr*2.6 = ls*0.52*2.6 = ls*1.352
+  //   noot+rechterrand: ls*1.8
+  //   Totaal: ls*(4.2+2.1+0.85+5.46+1.352+1.8) + 4 = ls*15.762 + 4
+  // => ls = floor((W-4) / 15.762), begrensd op [7, 11] (= 75% van vroegere max 15)
+  const ls = Math.max(7, Math.min(11, Math.floor((W - 4) / 15.762)));
+
+  const k=cKey(), n2=k.sharps||k.flats;
+
+  const staffH=4*ls, gap=3*ls, topPad=Math.round(ls*3.5), botPad=Math.round(ls*0.5);
   const H=topPad+staffH+gap+staffH+botPad;
   cv.height=H;
   const ctx=cv.getContext('2d');
@@ -1277,7 +1413,7 @@ function drawMiniSystem(){
     drawTrebleClef(ctx,clefX,tBot,ls);
     drawBassClef(ctx,clefX,bBot,ls);
   }
-  const k=cKey(), n2=k.sharps||k.flats, sym=k.sharps>0?'\u266F':'\u266D';
+  const sym=k.sharps>0?'\u266F':'\u266D';
   const clefW=ls*2.1, accGap=ls*0.85, accSp=ls*0.78;
   ctx.font=`bold ${Math.round(ls*1.6)}px Georgia,serif`;
   ctx.fillStyle='#111'; ctx.textBaseline='middle';
@@ -1289,11 +1425,17 @@ function drawMiniSystem(){
   }
   ctx.textBaseline='alphabetic';
 
+  // noteX: rechts van de max-accidentalen-zone (7) + één nootbreedte als vaste marge.
+  // Dit is stabiel ongeacht de huidige toonsoort.
+  const nr = ls * 0.52;
+  const noteWidth = nr * 2.6; // breedte van een hele noot (ellipse breedte = nr*1.3 × 2)
+  const accZoneRight7 = clefX + clefW + accGap + 6*accSp + accSp*0.5; // rechterrand bij 7 acc
+  const noteX = accZoneRight7 + noteWidth;
+
   // ── Akkoord-noten op mini-systeem ──
   if(chordOn){
     const third=isMinor?3:4;
     const intervals=[0,third,7];
-    const noteX = W - ls*1.8;
     drawMiniChord(ctx, intervals, 'treble', tBot, ls, staffLeft, W, noteX);
     drawMiniChord(ctx, intervals, 'bass',   bBot, ls, staffLeft, W, noteX, true);
   }
@@ -1301,7 +1443,6 @@ function drawMiniSystem(){
   // ── Vol-preview-noten op mini-systeem ──
   if(window._volPreviewMidi){
     const { lower, upper } = window._volPreviewMidi;
-    const noteX = W - ls*1.8;
     // Teken grondtoon (upper) in treble, kwint (lower) in bas
     drawMiniChord(ctx, [], 'treble', tBot, ls, staffLeft, W, noteX, false, [upper]);
     drawMiniChord(ctx, [], 'bass',   bBot, ls, staffLeft, W, noteX, true,  [lower]);
@@ -1628,7 +1769,8 @@ function renderStaff(clef){
     const nxMin = staffLeft + 2 * halfNoteW;
     const nxMax = W - halfNoteW - 4;
     const nxSingle = Math.round(nxMin + (nxMax - nxMin) * posPct / 100);
-    const lsNote = Math.round(26 + (Math.min(_trap, 5) - 4) * 26 / 7); // nootnaam schaalt t/m trap 5
+    const LS_NOTE_MAX = 22; // max lettergrootte = ls bij trap 3 (1 standje > kleinste weergave)
+    const lsNote = Math.min(ls, LS_NOTE_MAX); // schaalt mee maar niet groter dan cap
     const nrNote = ls * 0.52;
     const noteColor = '#111';
     const noteName   = getSoundingNoteName(note, clef);
@@ -1679,6 +1821,108 @@ function renderStaff(clef){
         if(showBelow) ctx.fillText(lbl, nameX, fixedBelowY+Math.round(lsNote*0.3)+i*lineH);
       });
       ctx.textAlign='left';
+    }
+
+    // Intervallen: stand 1 = boven notenbalk, stand 2 = onder notenbalk
+    const intMode = window._showInterval || 0;
+    if(intMode > 0 && activeNotes.length >= 2){
+      // Stand 1 toont bij nootnamen boven, stand 2 bij nootnamen onder
+      const intAbove = (intMode === 1);
+      const intBelow = (intMode === 2);
+
+      // Sorteer op klingende MIDI laag → hoog
+      const sortedByMidi = activeNotes.slice().sort((a,b)=>
+        soundingMidi(a,clef) - soundingMidi(b,clef)
+      );
+
+      // Nederlandse intervalnamen op basis van aantal halve tonen
+      const NL_INTERVAL = [
+        'Unisono','Kleine secunde','Grote secunde',
+        'Kleine terts','Grote terts','Reine kwart',
+        'Tritonus','Reine kwint','Kleine sext',
+        'Grote sext','Kleine septiem','Grote septiem','Octaaf'
+      ];
+      function intervalName(semi){
+        const s = ((semi % 12) + 12) % 12;
+        return NL_INTERVAL[s] || NL_INTERVAL[s % 12];
+      }
+
+      const intFont = `${Math.round(lsNote*0.88)}px Arial,Helvetica,sans-serif`;
+      ctx.font = intFont; ctx.fillStyle = '#555';
+
+      // X: rechts van nootnamen
+      ctx.font = nameFont;
+      let maxNameW = 0;
+      sortedByMidi.forEach(n2 => {
+        const lbl = showOct
+          ? getSoundingNoteName(n2,clef) + getSoundingOctave(n2,clef)
+          : getSoundingNoteName(n2,clef);
+        const w2 = ctx.measureText(lbl).width;
+        if(w2 > maxNameW) maxNameW = w2;
+      });
+      ctx.font = intFont;
+
+      const nameOffset = nrNote * 2.0;
+      const nameX = nxSingle < W/2 ? nxSingle + nameOffset : nxSingle - nameOffset;
+      const intGap = nrNote * 0.8;
+      const intX   = nxSingle < W/2
+        ? nameX + maxNameW + intGap
+        : nameX - maxNameW - intGap;
+      const intXAlign = nxSingle < W/2 ? 'left' : 'right';
+      const lineH = Math.round(lsNote * 1.4);
+
+      // Helper: y van nootnaam voor noot op index i in sortedByMidi (laag=0)
+      function nameY(iSorted){
+        // activeNotes staat van hoog naar laag: index 0 = hoogste noot
+        // sortedByMidi staat van laag naar hoog: index 0 = laagste
+        // → activeNotes-index van sortedByMidi[i] = (length-1) - i
+        const iActive = activeNotes.length - 1 - iSorted;
+        if(intAbove){
+          return fixedNameY - iActive * lineH;
+        } else {
+          return fixedBelowY + Math.round(lsNote*0.3) + iActive * lineH;
+        }
+      }
+
+      // Aangrenzende intervallen
+      for(let i = 0; i < sortedByMidi.length - 1; i++){
+        const mLow  = soundingMidi(sortedByMidi[i],   clef);
+        const mHigh = soundingMidi(sortedByMidi[i+1], clef);
+        const semi  = Math.abs(mHigh - mLow);
+        const label = intervalName(semi);
+        const yA = nameY(i);
+        const yB = nameY(i+1);
+        const intY = (yA + yB) / 2;
+        ctx.textAlign = intXAlign;
+        ctx.fillText(label, intX, intY);
+      }
+
+      // Totaalinterval alleen bij precies 3 noten
+      if(sortedByMidi.length === 3){
+        const mBot = soundingMidi(sortedByMidi[0], clef);
+        const mTop = soundingMidi(sortedByMidi[sortedByMidi.length-1], clef);
+        const totalSemi = Math.abs(mTop - mBot);
+        const totalLabel = intervalName(totalSemi);
+
+        let maxIntW = 0;
+        for(let i = 0; i < sortedByMidi.length - 1; i++){
+          const s = Math.abs(soundingMidi(sortedByMidi[i+1],clef) - soundingMidi(sortedByMidi[i],clef));
+          const w2 = ctx.measureText(intervalName(s)).width;
+          if(w2 > maxIntW) maxIntW = w2;
+        }
+        const totalX = nxSingle < W/2
+          ? intX + maxIntW + intGap
+          : intX - maxIntW - intGap;
+
+        const yBot = nameY(0);
+        const yTop = nameY(sortedByMidi.length - 1);
+        ctx.fillStyle = '#888';
+        ctx.textAlign = intXAlign;
+        ctx.fillText(totalLabel, totalX, (yBot + yTop) / 2);
+      }
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = noteColor;
     }
 
     // Stippellijn bij open instellingen
@@ -1759,6 +2003,7 @@ window._showOctave    = true;   // toon octaafnummer naast nootnaam
 window._showNameAbove = true;   // toon nootnaam boven de notenbalk
 window._showNameBelow = false;  // toon nootnaam onder de notenbalk
 window._showSolfege   = false;  // toon solfège namen (Do Re Mi...)
+window._showInterval  = 0;  // 0=uit, 1=interval boven, 2=interval onder
 
 let _notePosPreviousStep = { treble:null, bass:null };
 let _notePosPreviewing  = { treble:false, bass:false };
@@ -1801,9 +2046,11 @@ function onScaleInput(val, clef){
   // Toon trapnummer
   const lbl = document.getElementById('scale-label-'+clef);
   if(lbl){ lbl.textContent=trap; lbl.classList.add('visible'); }
-  // Herteken de notenbalk
+  // Herteken de notenbalk live
   if(clef==='treble'){ renderStaff('treble'); setupTouch('treble'); }
   else               { renderStaff('bass');   setupTouch('bass');   }
+  // Herpositioneer scale-col zodat die meebeweegt met de notenbalk
+  requestAnimationFrame(()=>updateStaffZone());
   saveStaffSettings();
 }
 
@@ -1812,6 +2059,7 @@ function toggleSetting(type){
   if(type==='above')    window._showNameAbove = !window._showNameAbove;
   if(type==='below')    window._showNameBelow = !window._showNameBelow;
   if(type==='solfege')  window._showSolfege   = !window._showSolfege;
+  if(type==='interval') window._showInterval  = (window._showInterval + 1) % 3;
   syncToggleBtns();
   renderStaff('treble'); renderStaff('bass');
   saveStaffSettings();
@@ -1822,52 +2070,118 @@ function syncToggleBtns(){
   const sa=document.getElementById('set-above');
   const sb=document.getElementById('set-below');
   const ss=document.getElementById('set-solfege');
+  const si=document.getElementById('set-interval');
   if(so) so.classList.toggle('on', window._showOctave);
   if(sa) sa.classList.toggle('on', window._showNameAbove);
   if(sb) sb.classList.toggle('on', window._showNameBelow);
   if(ss) ss.classList.toggle('on', window._showSolfege);
+  if(si){
+    const iv = window._showInterval || 0;
+    si.classList.toggle('on', iv > 0);
+    // Tekst naast de schakelaar aanpassen per stand
+    const intLabel = si.querySelector('.interval-label');
+    if(intLabel){
+      intLabel.textContent = iv === 0 ? 'Interval' : iv === 1 ? 'Interval boven' : 'Interval onder';
+    }
+  }
 }
 
 let _settingsAnchor = null;
-function toggleSettings(btn){
-  const panel = document.getElementById('settings-panel');
-  if(panel.classList.contains('open')){
-    closeSettings();
+// Bereken de bottom-waarde: bovenkant van de "open mp3-balk" van de actieve tab
+function getBottomForPanels(){
+  // Zoek het zichtbare player-open of pmini-wrap element
+  const activeTab = currentTab;
+  let ref = null;
+  if(activeTab === 0){
+    ref = document.getElementById('pmini-wrap-0');
   } else {
-    const r = btn.getBoundingClientRect();
-    const pw = 210;
-    // Links = rechts van de knop (flip als buiten scherm)
-    let left = r.right + 6;
-    if(left + pw > window.innerWidth) left = r.left - pw - 6;
-    left = Math.max(4, left);
-    // Onderkant panel = onderkant bedieningsblok (= onderkant knop + kleine marge)
-    // Bedieningsblok is de control-block van de actieve tab
-    const activeCtrl = document.querySelector('.page.active .control-block');
-    const ctrlBottom = activeCtrl ? activeCtrl.getBoundingClientRect().bottom : window.innerHeight;
-    panel.style.bottom = (window.innerHeight - ctrlBottom) + 'px';
-    panel.style.top    = 'auto';
-    panel.style.left   = left + 'px';
-    panel.classList.add('open');
-    _settingsAnchor = btn;
-    document.getElementById('page1').classList.add('settings-open');
-    document.getElementById('page2').classList.add('settings-open');
-    btn.classList.add('held');
-    dismissHintArrows(); // pijl voorgoed verbergen bij eerste activatie
-    showSettingsPreview();
+    ref = document.getElementById('player-open-' + activeTab);
+    // Als mp3 geladen is, gebruik dan de player-mount bovenkant
+    if(!ref || ref.style.display === 'none'){
+      ref = document.getElementById('player-mount-' + activeTab);
+    }
   }
+  if(ref){
+    const r = ref.getBoundingClientRect();
+    return Math.round(window.innerHeight - r.top);
+  }
+  // Fallback: bovenkant acc-row
+  const accRow = document.querySelector('.page.active .acc-row');
+  if(accRow) return Math.round(window.innerHeight - accRow.getBoundingClientRect().top);
+  return 80;
+}
+
+function toggleSettings(btn){
+  const panel  = document.getElementById('settings-panel');
+  const apanel = document.getElementById('app-panel');
+  if(panel.classList.contains('open') || apanel.classList.contains('open')){
+    closeSettings();
+    return;
+  }
+
+  document.getElementById('page1').classList.add('settings-open');
+  document.getElementById('page2').classList.add('settings-open');
+
+  const btnRect = btn.getBoundingClientRect();
+  const leftS   = Math.round(btnRect.right) + 6;
+  const botPx   = getBottomForPanels();
+
+  panel.style.width  = 'auto';
+  panel.style.left   = leftS + 'px';
+  panel.style.right  = 'auto';
+  panel.style.bottom = botPx + 'px';
+  panel.style.top    = 'auto';
+  panel.classList.add('open');
+
+  _settingsAnchor = btn;
+  btn.classList.add('held');
+  dismissHintArrows();
+  showSettingsPreview();
+  updateStaffZone();
+  updateNotePosSliderPadding();
 }
 function closeSettings(){
   document.getElementById('settings-panel').classList.remove('open');
+  document.getElementById('app-panel').classList.remove('open');
+  document.getElementById('lang-picker').classList.remove('open');
+  document.getElementById('personaliseer-panel').classList.remove('open');
   document.getElementById('page1').classList.remove('settings-open');
   document.getElementById('page2').classList.remove('settings-open');
   document.querySelectorAll('.settings-btn').forEach(b=>b.classList.remove('held'));
   hideSettingsPreview();
 }
+
+function showAppPanelAtSettingsPos(){
+  const panel  = document.getElementById('settings-panel');
+  const apanel = document.getElementById('app-panel');
+  const pr = panel.getBoundingClientRect();
+  // Zelfde breedte en rechterkant als settings-panel
+  apanel.style.width  = Math.round(pr.width) + 'px';
+  apanel.style.right  = (window.innerWidth - pr.right) + 'px';
+  apanel.style.left   = 'auto';
+  apanel.style.bottom = panel.style.bottom;
+  apanel.style.top    = 'auto';
+  panel.classList.remove('open');
+  document.getElementById('lang-picker').classList.remove('open');
+  document.getElementById('personaliseer-panel').classList.remove('open');
+  apanel.classList.add('open');
+}
 document.addEventListener('click', e=>{
-  const panel = document.getElementById('settings-panel');
-  if(!panel) return;
-  if(panel.classList.contains('open') && !panel.contains(e.target) && !e.target.closest('.settings-btn')){
+  const panel   = document.getElementById('settings-panel');
+  const apanel  = document.getElementById('app-panel');
+  const lpicker = document.getElementById('lang-picker');
+  const ppanel  = document.getElementById('personaliseer-panel');
+  const anyOpen = (panel  && panel.classList.contains('open')) ||
+                  (apanel && apanel.classList.contains('open'));
+  const clickedOutside = anyOpen &&
+    !panel.contains(e.target)  && !apanel.contains(e.target) &&
+    !(ppanel && ppanel.contains(e.target)) &&
+    !lpicker.contains(e.target) && !e.target.closest('.settings-btn');
+  if(clickedOutside){
     closeSettings();
+  }
+  if(lpicker && lpicker.classList.contains('open') && !lpicker.contains(e.target) && !e.target.closest('#lang-row')){
+    lpicker.classList.remove('open');
   }
 });
 
@@ -1935,7 +2249,8 @@ function saveStaffSettings(){
       showOctave: window._showOctave,
       showNameAbove: window._showNameAbove,
       showNameBelow: window._showNameBelow,
-      showSolfege:   window._showSolfege
+      showSolfege:   window._showSolfege,
+      showInterval:  window._showInterval || 0
     }));
   } catch(e){}
 }
@@ -1966,6 +2281,11 @@ function loadStaffSettings(){
     if(d.showNameAbove !== undefined) window._showNameAbove = d.showNameAbove;
     if(d.showNameBelow !== undefined) window._showNameBelow = d.showNameBelow;
     if(d.showSolfege   !== undefined) window._showSolfege   = d.showSolfege;
+    if(d.showInterval  !== undefined){
+      // Oud opgeslagen als boolean (true/false) of nieuw als getal (0/1/2)
+      const v = d.showInterval;
+      window._showInterval = typeof v === 'number' ? v : (v ? 1 : 0);
+    }
     syncToggleBtns();
   } catch(e){}
 }
@@ -1977,6 +2297,79 @@ function showScaleLabel(clef){
 function hideScaleLabel(clef){
   const lbl = document.getElementById('scale-label-'+clef);
   if(lbl) setTimeout(()=>lbl.classList.remove('visible'), 800);
+}
+
+// ── Exclusieve sliderweergave ──────────────────────────
+// Bij activeren: andere slider + instellingenvensters verdwijnen.
+// Bij loslaten: toestand herstellen.
+let _sliderActiveClef = null;
+
+function activateScaleSlider(clef){
+  _sliderActiveClef = clef;
+  // Sluit instellingenvensters maar bewaar settings-open voor slider-zichtbaarheid
+  document.getElementById('settings-panel').classList.remove('open');
+  document.getElementById('app-panel').classList.remove('open');
+  document.getElementById('lang-picker').classList.remove('open');
+  document.getElementById('personaliseer-panel').classList.remove('open');
+  document.querySelectorAll('.settings-btn').forEach(b=>b.classList.remove('held'));
+  // Bewaar settings-open zodat scale-col zichtbaar blijft, voeg slider-actief toe
+  const page = document.getElementById(clef==='treble'?'page1':'page2');
+  if(page){
+    page.classList.add('scale-slider-active');
+    page.classList.add('settings-open'); // houd scale-col zichtbaar
+  }
+  showScaleLabel(clef);
+  // Herteken notenbalk zodat schaalverandering direct zichtbaar is
+  renderStaff(clef); setupTouch(clef);
+  // Herpositioneer slider direct
+  requestAnimationFrame(()=>updateStaffZone());
+}
+function deactivateScaleSlider(clef){
+  _sliderActiveClef = null;
+  const page = document.getElementById(clef==='treble'?'page1':'page2');
+  if(page){
+    page.classList.remove('scale-slider-active');
+    page.classList.remove('settings-open');
+  }
+  // Wis preview-noot (zelfde als hideSettingsPreview)
+  _notePosPreviewing[clef] = false;
+  SS[clef].step = null;
+  renderStaff(clef);
+  hideScaleLabel(clef);
+}
+
+function activateNotePosSlider(clef){
+  _sliderActiveClef = clef;
+  // Sluit instellingenvensters maar bewaar settings-open + preview-noot
+  document.getElementById('settings-panel').classList.remove('open');
+  document.getElementById('app-panel').classList.remove('open');
+  document.getElementById('lang-picker').classList.remove('open');
+  document.getElementById('personaliseer-panel').classList.remove('open');
+  document.querySelectorAll('.settings-btn').forEach(b=>b.classList.remove('held'));
+  // Zet preview-noot als hij er nog niet was
+  if(!_notePosPreviewing[clef]){
+    _notePosPreviewing[clef] = true;
+    _notePosPreviousStep[clef] = SS[clef].step;
+    SS[clef].step = clef==='bass' ? 3 : 5;
+  }
+  const page = document.getElementById(clef==='treble'?'page1':'page2');
+  if(page){
+    page.classList.add('notepos-slider-active');
+    page.classList.add('settings-open'); // houd note-pos-row zichtbaar
+  }
+  renderStaff(clef);
+}
+function deactivateNotePosSlider(clef){
+  _sliderActiveClef = null;
+  // Wis preview-noot
+  _notePosPreviewing[clef] = false;
+  SS[clef].step = null;
+  const page = document.getElementById(clef==='treble'?'page1':'page2');
+  if(page){
+    page.classList.remove('notepos-slider-active');
+    page.classList.remove('settings-open');
+  }
+  renderStaff(clef);
 }
 
 function accTouch(clef,type,e){ e.preventDefault(); doAcc(clef,type); }
@@ -2016,6 +2409,12 @@ function setupTouch(clef){
   // MULTITOUCH handlers
   cv.ontouchstart=e=>{
     e.preventDefault();
+    // Aanraken notenbalk sluit instellingenvensters
+    const panel  = document.getElementById('settings-panel');
+    const apanel = document.getElementById('app-panel');
+    if((panel && panel.classList.contains('open')) || (apanel && apanel.classList.contains('open'))){
+      closeSettings();
+    }
     // Max 3 gelijktijdige aanrakingen
     const activeTouches = Object.keys(st.touches).length;
     for(const t of e.changedTouches){
@@ -2087,9 +2486,9 @@ let chordOn=false;
 function chordStart(){
   chordNodes.forEach(n=>stopN(n)); chordNodes=[];
   const k=cKey(), third=isMinor?3:4;
-  [[0,0.50],[third,0.50],[7,0.50]].forEach(([iv,vol])=>chordNodes.push(playN(k.root+iv,vol)));
+  [[0,0.50],[third,0.50],[7,0.50]].forEach(([iv,vol])=>chordNodes.push(playN(k.root+iv,vol*TAB0_VOL_FACTOR)));
   chordOn=true;
-  renderMiniStaves();
+  renderMiniStaves(); // na chordOn=true zodat noten getekend worden
 }
 
 function chordStop(){
@@ -2116,7 +2515,7 @@ function chordToggle(e){
   } else {
     chordNodes.forEach(n=>stopN(n)); chordNodes=[];
     const k=cKey(), third=isMinor?3:4;
-    [[0,0.50],[third,0.50],[7,0.50]].forEach(([iv,vol])=>chordNodes.push(playN(k.root+iv,vol)));
+    [[0,0.50],[third,0.50],[7,0.50]].forEach(([iv,vol])=>chordNodes.push(playN(k.root+iv,vol*TAB0_VOL_FACTOR)));
     chordOn=true; btn.classList.add('held');
   }
   renderMiniStaves(); // toon/verberg akkoordnoten
@@ -2126,7 +2525,7 @@ function chordUpdate(){
   chordNodes.forEach(n=>stopN(n)); chordNodes=[];
   renderMiniStaves();
   const k=cKey(), third=isMinor?3:4;
-  [[0,0.50],[third,0.50],[7,0.50]].forEach(([iv,vol])=>chordNodes.push(playN(k.root+iv,vol)));
+  [[0,0.50],[third,0.50],[7,0.50]].forEach(([iv,vol])=>chordNodes.push(playN(k.root+iv,vol*TAB0_VOL_FACTOR)));
   renderMiniStaves(); // update akkoordnoten bij toonsoort-wissel
 }
 // chordStart en chordStop zijn gedefinieerd boven chordToggle
@@ -2135,7 +2534,7 @@ function chordUpdate(){
 // PITCH
 // ════════════════════════════════════════════════════
 function buildPitch(){
-  const t=`<div style="margin-top:6px;padding:0 2px;">
+  const t=`<div style="margin-top:4px;padding:0 2px;">
       <div class="pitch-name-hz-row"><span class="pitch-name" id="pn-S"></span><span class="pitch-hz" id="ph-S"></span></div>
       <input type="range" class="pitch-slider" id="ps-S" min="${PITCH_MIN}" max="${PITCH_MAX}" step="1" value="${pitchHz}"
         oninput="pIn(this.value,'S')" onchange="pCh(this.value,'S')">
@@ -2202,17 +2601,20 @@ function buildPlayerMini(mountId){
   const mount = document.getElementById(mountId);
   if(!mount) return;
   const idx = mountId.slice(-1); // '0'
+  // Marges identiek aan tabs 2&3:
+  //   playknop: acc-row heeft padding:4px 8px → 8px rechts
+  //   mp3-balk: player-open-row heeft padding:4px 2px → 2px links
   mount.innerHTML = `
-    <div id="pmini-wrap-${idx}" style="margin-top:6px;">
-      <div style="display:flex;align-items:center;gap:6px;">
-        <button class="player-file-btn" id="pfbtn-${idx}" onclick="openMp3()" style="flex:1;">
+    <div id="pmini-wrap-${idx}" style="margin-top:4px;">
+      <div style="display:flex;justify-content:flex-end;padding-right:8px;margin-bottom:4px;">
+        <div class="player-play-btn" id="pplaybtn-${idx}" role="button" tabindex="0"
+             onclick="togglePlay()" ontouchend="togglePlay();event.preventDefault()">▶</div>
+      </div>
+      <div style="padding:4px 2px 4px;">
+        <button class="player-file-btn" id="pfbtn-${idx}" onclick="openMp3()"
+                style="width:100%;padding:18px 10px;border-radius:10px;text-align:left;">
           🎵 <span id="t-mp3-label">Open mp3-bestand…</span>
         </button>
-        <button class="player-play-btn" id="pplaybtn-${idx}" onclick="togglePlay()">▶</button>
-      </div>
-      <div class="player-time-row" id="ptime-row-${idx}" style="padding:2px 1px 0;">
-        <span id="ptime-${idx}">0:00</span>
-        <span id="pdur-${idx}">0:00</span>
       </div>
     </div>`;
   updateDuration();
@@ -2224,10 +2626,10 @@ function buildPlayer(mountId){
   const idx = mountId.slice(-1);
   mount.innerHTML = `
     <hr class="div" style="margin:0;">
-    <div style="display:flex;align-items:stretch;min-height:0;">
-      <!-- Zoomslider: 3-laags geheel (bg+label+thumb), zelfde breedte als mp3-vol, verborgen zonder mp3 -->
+    <div style="display:flex;align-items:stretch;min-height:0;" id="player-flex-${idx}">
+      <!-- Zoomslider: 3-laags geheel (bg+label+thumb), verborgen zonder mp3 -->
       <div class="zoom-col-abs" id="zoom-col-${idx}">
-        <div class="zoom-slider-wrap" style="flex:1;">
+        <div class="zoom-slider-wrap" id="zoom-wrap-${idx}" style="flex:1;">
           <div class="zoom-slider-bg">
             <span class="zoom-slider-bg-label">Zoom</span>
           </div>
@@ -2259,16 +2661,19 @@ function buildPlayer(mountId){
                 <canvas id="pwave-${idx}"></canvas>
                 <div class="player-playhead" id="phead-${idx}"></div>
               </div>
-              <div class="player-time-row">
-                <span id="ptime-${idx}">0:00</span>
-                <span id="pdur-${idx}">0:00</span>
-              </div>
-              <input type="range" class="seek-slider" id="pseek-${idx}"
-                min="0" max="1000" step="1" value="0"
-                oninput="seekFromSlider(this.value,'${idx}')" onchange="seekFromSlider(this.value,'${idx}')">
             </div>
           </div>
         </div>
+      </div>
+    </div>
+    <!-- Tijdsindicator en seek-slider: volle breedte, uitgelijnd met linkerkant scherm -->
+    <div class="player-content" id="player-content-seek-${idx}" style="display:none;padding:2px 2px 2px;">
+      <div style="display:flex;align-items:center;gap:4px;">
+        <span id="ptime-${idx}" style="font-size:11px;color:#888;white-space:nowrap;flex-shrink:0;">0:00</span>
+        <input type="range" class="seek-slider" id="pseek-${idx}"
+          min="0" max="1000" step="1" value="0" style="flex:1;min-width:0;"
+          oninput="seekFromSlider(this.value,'${idx}')" onchange="seekFromSlider(this.value,'${idx}')">
+        <span id="pdur-${idx}" style="font-size:11px;color:#888;white-space:nowrap;flex-shrink:0;">0:00</span>
       </div>
     </div>`;
   // Register waveform canvas
@@ -2283,6 +2688,8 @@ function buildPlayer(mountId){
   }
   syncPlayerUI();
   syncMp3State();
+  // Align zoom col bottom to top of seek slider
+  requestAnimationFrame(()=>alignZoomCol(idx));
 }
 
 function openMp3(){
@@ -2352,6 +2759,25 @@ function loadAudioFile(file){
   // Alleen tab0 heeft een bestandsknop
   const fb0 = document.getElementById('pfbtn-0');
   if(fb0) fb0.textContent = '🎵 ' + playerState.fileName;
+
+  // MediaSession API: toon app-icoon en bestandsnaam in Android notificatiebalk
+  if('mediaSession' in navigator){
+    // Absoluut pad zodat het icoon ook werkt bij lokale server of andere origins
+    const iconBase = 'https://the-red-ninja.github.io/Notenkraker/icons/';
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title:  playerState.fileName,
+      artist: 'Notenkraker',
+      album:  '',
+      artwork: [
+        { src: iconBase + 'icon-96x96.png',   sizes: '96x96',   type: 'image/png' },
+        { src: iconBase + 'icon-192x192.png', sizes: '192x192', type: 'image/png' },
+        { src: iconBase + 'icon-512x512.png', sizes: '512x512', type: 'image/png' },
+      ]
+    });
+    navigator.mediaSession.setActionHandler('play',  ()=>{ if(!playerState.isPlaying) togglePlay(); });
+    navigator.mediaSession.setActionHandler('pause', ()=>{ if(playerState.isPlaying)  togglePlay(); });
+    navigator.mediaSession.setActionHandler('stop',  ()=>{ if(playerState.isPlaying)  togglePlay(); });
+  }
 
   // Decode waveform first, then set src (avoids mobile autoplay restrictions)
   decodeWaveform(file).then(() => {
@@ -2497,11 +2923,12 @@ function syncPlayBtns(){
   allIds.forEach(id=>{
     const b = document.getElementById(id);
     if(!b) return;
-    b.textContent = playing ? '\u23F8' : '▶';
+    b.textContent    = playing ? '\u23F8' : '▶';
     b.classList.toggle('playing', playing);
-    b.style.background  = playing ? '#222' : '#fff';
-    b.style.color       = playing ? '#fff' : '#333';
-    b.style.borderColor = playing ? '#222' : '#888';
+    b.style.background   = playing ? '#222' : '#fff';
+    b.style.color        = playing ? '#fff' : '#333';
+    b.style.border       = playing ? '2px solid #222' : '2px solid #888';
+    b.style.borderRadius = '50%'; // altijd rond, ook als eerder overschreven
   });
 }
 
@@ -2512,7 +2939,7 @@ function volTabStart(){
   // Speel alleen de grondtoon van de geselecteerde toonsoort
   const rootMidi = (cKey().root % 12) + 60; // oct4 (MIDI 60-71)
   _volTouchNodes.forEach(n => stopN(n));
-  _volTouchNodes = [ playN(rootMidi, 0.50) ];
+  _volTouchNodes = [ playN(rootMidi, 0.50 * TAB0_VOL_FACTOR) ];
   // Toon de grondnoot in beide muziekbalkjes
   window._volPreviewMidi = { single: rootMidi };
   renderMiniStaves();
@@ -2675,6 +3102,8 @@ function syncPlayerUI(){
     const vl = document.getElementById(id);
     if(vl) vl.value = Math.round(window._noteVol*100);
   });
+  // Zoom-col hoogte afstemmen na layout
+  requestAnimationFrame(()=>{ alignZoomCol('1'); alignZoomCol('2'); });
 }
 
 // Noot-volumeslider (tab 1, topbar tabs 2&3): regelt _noteVol
@@ -2710,12 +3139,13 @@ function syncMp3State(){
   ['1','2'].forEach(i=>{
     const openRow = document.getElementById('player-open-'+i);
     const content = document.getElementById('player-content-'+i);
+    const seekSection = document.getElementById('player-content-seek-'+i);
     if(openRow){
       openRow.style.display = hasFile ? 'none' : '';
-      // Zonder mp3: balk links uitgelijnd (margin-left:0)
       openRow.style.marginLeft = '0';
     }
     if(content) content.style.display = hasFile ? '' : 'none';
+    if(seekSection) seekSection.style.display = hasFile ? '' : 'none';
     // Zoomslider: zichtbaar alleen met mp3
     const zoomCol = document.getElementById('zoom-col-'+i);
     if(zoomCol) zoomCol.classList.toggle('visible', hasFile);
@@ -2725,6 +3155,8 @@ function syncMp3State(){
     // Padding-right control-block: 26px met mp3-vol slider, 0 zonder
     const ctrl = document.getElementById('ctrl-'+(i==='1'?'treble':'bass'));
     if(ctrl) ctrl.style.paddingRight = hasFile ? '26px' : '0';
+    // Zoom-col onderkant afstemmen op waveform-onderkant (geen seek meer eronder)
+    if(hasFile) requestAnimationFrame(()=>alignZoomCol(i));
   });
 }
 
@@ -3034,6 +3466,32 @@ function waveSeekMouse(event, idx){
   document.addEventListener('mouseup',   up, {once:true});
 }
 // ════════════════════════════════════════════════════
+// ZOOM COL AFSTEMMEN OP BOVENKANT SEEK SLIDER
+// ════════════════════════════════════════════════════
+function alignZoomCol(idx){
+  // Zoom-elementen krijgen:
+  //   bovenkant = bovenkant tempobalk (speed-row)
+  //   onderkant = onderkant wavevormbalk
+  // We meten de posities relatief t.o.v. player-flex en stellen hoogte+marginTop in.
+  const flex      = document.getElementById('player-flex-'+idx);
+  const speedRow  = document.querySelector('#player-content-'+idx+' .player-speed-row');
+  const waveWrap  = document.getElementById('pwrap-'+idx);
+  const zoomWrap  = document.getElementById('zoom-wrap-'+idx);
+  if(!flex || !speedRow || !waveWrap || !zoomWrap) return;
+
+  const flexTop   = flex.getBoundingClientRect().top;
+  const speedTop  = speedRow.getBoundingClientRect().top;
+  const waveBot   = waveWrap.getBoundingClientRect().bottom;
+
+  const marginTop = Math.max(0, Math.round(speedTop - flexTop));
+  const height    = Math.max(10, Math.round(waveBot - speedTop));
+
+  zoomWrap.style.marginTop  = marginTop + 'px';
+  zoomWrap.style.height     = height + 'px';
+  zoomWrap.style.flex       = 'none'; // geen flex:1 meer, vaste hoogte
+  zoomWrap.style.paddingBottom = '0';
+}
+// ════════════════════════════════════════════════════
 // RESIZE + INIT
 // ════════════════════════════════════════════════════
 if(window.visualViewport){
@@ -3071,21 +3529,38 @@ function updateStaffZone(){
     if(!ctrl || !zone) return;
 
     // staff-zone: volledig scherm (achter alles), maar start onder de staff-top-bar
-    const topBar = document.getElementById('staff-top-bar-'+clef);
-    const topBarH = topBar ? topBar.offsetHeight : 0;
+    const topBar    = document.getElementById('staff-top-bar-'+clef);
+    const topBarH   = topBar ? topBar.offsetHeight : 0;
     zone.style.top    = topBarH + 'px';
     zone.style.bottom = '0';
 
     // Schaalslider hoogte = 25% van appH, maar minstens 60px
-    const ctrlH = ctrl.offsetHeight || 172;
-    const availMid = appH - ctrlH - topBarH; // beschikbare middendruimte
+    const ctrlH   = ctrl.offsetHeight || 172;
+    const availMid = appH - ctrlH - topBarH;
     const slH = Math.max(60, Math.round(Math.min(availMid * 0.5, appH * 0.25)));
 
-    // Schaalslider: ankerpunt = midden van slider = appMid
-    // Midden van de beschikbare zone (tussen top-bar en bedieningsblok)
-    const zoneMid = Math.round(topBarH + (appH - topBarH - ctrlH) / 2);
-    // top van slider = zoneMid - slH/2
-    const sliderTop = zoneMid - Math.round(slH / 2);
+    // Middelste notenbalklijn in viewport-coördinaten:
+    // staffTop = appMid - staffHeight/2, midLine = staffTop + 2*ls
+    // appMid = totalH/2 - tabH (canvas-coördinaten), canvas start op tabH → viewport = totalH/2 - tabH + tabH + 2*ls - tabH
+    // Vereenvoudigd: midLineViewport = totalH/2 + ls/2
+    // (want staffHeight = 4*ls, midLine = staffTop+2*ls = appMid-2*ls+2*ls = appMid → in viewport: appMid+tabH = totalH/2)
+    // Correct: middelste lijn (index 2) = staffTop + 2*ls in canvas = appMid - 2*ls + 2*ls = appMid in canvas
+    // appMid in canvas = totalH/2 - tabH → in viewport = totalH/2 - tabH + tabH = totalH/2
+    // Dus middelste lijn in viewport = appH / 2 (= helft van de bruikbare hoogte)
+    // In zone-coördinaten: appH/2 - zoneTopViewport
+    const tabEl2    = document.getElementById('tabs');
+    const tabH2     = tabEl2 ? tabEl2.offsetHeight : 72;
+    const _trap2    = window._staffTrap || 8;
+    const ls2       = Math.round(26 + (_trap2-4)*26/7);
+    // staffTop in canvas = appMid_canvas - 2*ls, appMid_canvas = appH/2 - tabH2
+    // middelste lijn in canvas = appMid_canvas
+    // middelste lijn in viewport = tabH2 + appMid_canvas = tabH2 + appH/2 - tabH2 = appH/2
+    const midLineViewport = Math.round(appH / 2);
+    const zoneTopViewport = zone.getBoundingClientRect().top;
+    const midLineInZone   = Math.round(midLineViewport - zoneTopViewport);
+    // Slider gecentreerd op middelste notenbalklijn
+    const sliderTop = Math.max(0, midLineInZone - Math.round(slH / 2));
+
     const sl = document.getElementById('scale-slider-'+clef);
     const scalecol = sl ? sl.closest('.scale-col') : null;
     if(sl) sl.style.height = slH + 'px';
@@ -3098,15 +3573,22 @@ function updateStaffZone(){
 function resizeQuintCanvas(){
   const cv = document.getElementById('quint-canvas');
   if(!cv) return;
-  const safe = 36;
+  // Breedte = halve schermbreedte
   const halfW = Math.floor(window.innerWidth / 2);
-  const w = Math.max(80, halfW - safe);
-  cv.width  = w;
-  cv.height = w;
-  cv.style.width  = w + 'px';
-  cv.style.height = w + 'px';
+  const w = Math.max(80, halfW);
+  // Hoogte: maximaal de beschikbare ruimte boven het verticale schermcentrum
+  // zodat de cirkel niet over de onderste helft valt
+  const appH  = getAppHeight ? getAppHeight() : window.innerHeight;
+  const cvTop = cv.getBoundingClientRect().top;
+  const maxH  = Math.max(140, Math.round(appH * 0.65) - Math.round(cvTop));
+  const size  = Math.max(140, Math.min(220, Math.min(w, Math.max(140, maxH))));
+  cv.width  = size;
+  cv.height = size;
+  cv.style.width  = size + 'px';
+  cv.style.height = size + 'px';
   renderQuint();
   positionEnharmRow();
+  alignMiniStavesWithQuint();
 }
 
 function positionEnharmRow(){
@@ -3117,6 +3599,28 @@ function positionEnharmRow(){
   // Breedte van de enharm-row = breedte van de kwintencirkel
   const w = cv.offsetWidth || cv.width || 165;
   row.style.width = w + 'px';
+}
+
+function alignMiniStavesWithQuint(){
+  const cv        = document.getElementById('quint-canvas');
+  const stavesDiv = document.getElementById('p0-staves');
+  const miniCv    = document.getElementById('mini-system-canvas');
+  if(!cv || !stavesDiv) return;
+
+  // Onderkant kwintencirkel in viewport-coördinaten
+  const quintBot = cv.getBoundingClientRect().bottom;
+
+  // Bovenkant van p0-staves in viewport-coördinaten
+  const stavesTop = stavesDiv.getBoundingClientRect().top;
+
+  // Hoogte van het mini-canvas (CSS hoogte)
+  const canvasH = miniCv ? miniCv.offsetHeight || miniCv.height || 100 : 100;
+
+  // marginTop zodat onderkant canvas = quintBot
+  // onderkant canvas = stavesTop + marginTop + canvasH = quintBot
+  // → marginTop = quintBot - stavesTop - canvasH
+  const marginTop = Math.max(0, Math.round(quintBot - stavesTop - canvasH));
+  stavesDiv.style.marginTop = marginTop + 'px';
 }
 function updateScaleSliderHeight(){
   const h = Math.round(window.innerHeight * 0.25);
@@ -3177,6 +3681,12 @@ function applyTranslations(){
   document.querySelectorAll('[data-t="reczoom"]').forEach(el=>el.textContent=T('recZoom'));
 }
 window.addEventListener('DOMContentLoaded',()=>{
+  // Preload app-icoon voor weergave in kwintencirkel (inline base64 = werkt altijd)
+  const qIcon = new Image();
+  qIcon.width = 192; qIcon.height = 192; // native resolutie
+  qIcon.onload = ()=>{ window._quintIcon = qIcon; renderQuint(); };
+  qIcon.src = 'data:image/png;base64,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';
+
   buildPitch(); updateLabels(); renderQuint();
 
   // Teken tab-iconen: wacht op Bravura, teken dan op canvas
@@ -3192,6 +3702,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   buildPlayer('player-mount-1');
   buildPlayer('player-mount-2');
   applyTranslations();
+  initFlags();
   updateNotePosSliderPadding();
   updateStaffZone(); setTimeout(updateStaffZone, 200);
   resizeQuintCanvas();
@@ -3207,9 +3718,131 @@ window.addEventListener('DOMContentLoaded',()=>{
     renderStaff('bass');   setupTouch('bass');
     drawWaveforms();
   }, 100);
-  setTimeout(renderMiniStaves, 50);
+  setTimeout(()=>{ renderMiniStaves(); alignMiniStavesWithQuint(); }, 50);
 
 });
+
+// ════════════════════════════════════════
+// APP PANEL — installeren, delen, taal
+// ════════════════════════════════════════
+let _deferredInstall = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstall = e;
+  const row = document.getElementById('install-row');
+  if(row) row.style.display = 'flex';
+});
+window.addEventListener('appinstalled', () => {
+  _deferredInstall = null;
+  const row = document.getElementById('install-row');
+  if(row) row.style.display = 'none';
+});
+
+function installApp(){
+  if(!_deferredInstall) return;
+  _deferredInstall.prompt();
+  _deferredInstall.userChoice.then(()=>{ _deferredInstall = null; });
+  closeSettings();
+}
+
+function shareApp(){
+  const data = {
+    title: 'Notenkraker',
+    text: 'Kies een toonsoort en laat direct vanaf een notenbalk de juiste noot klinken.',
+    url: window.location.href
+  };
+  if(navigator.share){
+    navigator.share(data).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(window.location.href)
+      .then(()=>alert('Link gekopieerd naar klembord!'))
+      .catch(()=>alert(window.location.href));
+  }
+  closeSettings();
+}
+
+function togglePersonaliseerMenu(e){
+  e.stopPropagation();
+  const sub    = document.getElementById('personaliseer-panel');
+  const apanel = document.getElementById('app-panel');
+  // Sluit taal-picker als die open is (exclusief)
+  document.getElementById('lang-picker').classList.remove('open');
+  if(sub.classList.contains('open')){ sub.classList.remove('open'); return; }
+  // Positioneer rechts naast app-panel, bottom-aligned
+  const pr = apanel.getBoundingClientRect();
+  sub.style.left   = (pr.right + 6) + 'px';
+  sub.style.bottom = apanel.style.bottom || (window.innerHeight - pr.bottom) + 'px';
+  sub.style.top    = 'auto';
+  sub.classList.add('open');
+}
+
+function toggleLangPicker(e){
+  e.stopPropagation();
+  const picker = document.getElementById('lang-picker');
+  const apanel = document.getElementById('app-panel');
+  // Sluit personaliseer-panel als dat open is (exclusief)
+  document.getElementById('personaliseer-panel').classList.remove('open');
+  if(picker.classList.contains('open')){ picker.classList.remove('open'); return; }
+  // Positioneer rechts naast app-panel, bottom-aligned
+  const pr = apanel.getBoundingClientRect();
+  picker.style.left   = (pr.right + 6) + 'px';
+  picker.style.bottom = apanel.style.bottom || (window.innerHeight - pr.bottom) + 'px';
+  picker.style.top    = 'auto';
+  picker.classList.add('open');
+}
+
+function openContact(){
+  window.location.href = 'mailto:useful.nuts.apps@gmail.com';
+  document.getElementById('personaliseer-panel').classList.remove('open');
+  closeSettings();
+}
+
+// Taal: vlaggen + namen
+// Twemoji SVG-vlaggen voor Windows-compatibiliteit
+// Vlag-emoji → Twemoji codepoint: regional indicator A=1f1e6, B=1f1e7, ... Z=1f1ff
+const LANGS = {
+  nl:{ flag:'🇳🇱', twemoji:'1f1f3-1f1f1', label:'Nederlands' },
+  en:{ flag:'🇬🇧', twemoji:'1f1ec-1f1e7', label:'English' },
+  de:{ flag:'🇩🇪', twemoji:'1f1e9-1f1ea', label:'Deutsch' },
+  fr:{ flag:'🇫🇷', twemoji:'1f1eb-1f1f7', label:'Français' },
+  es:{ flag:'🇪🇸', twemoji:'1f1ea-1f1f8', label:'Español' },
+  it:{ flag:'🇮🇹', twemoji:'1f1ee-1f1f9', label:'Italiano' },
+  pt:{ flag:'🇵🇹', twemoji:'1f1f5-1f1f9', label:'Português' },
+  zh:{ flag:'🇨🇳', twemoji:'1f1e8-1f1f3', label:'中文' },
+};
+let _currentLang = 'nl';
+
+function flagImg(code, size){
+  const lang = LANGS[code];
+  if(!lang) return '';
+  const sz = size || 20;
+  return `<img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/${lang.twemoji}.svg" width="${sz}" height="${sz}" style="vertical-align:middle;display:inline-block;" alt="${lang.flag}" onerror="this.replaceWith(document.createTextNode('${lang.flag}'))">`;
+}
+
+function initFlags(){
+  // Vervang alle vlag-emoji's in lang-picker en current-flag door Twemoji SVG
+  document.querySelectorAll('.lang-option').forEach(el=>{
+    const code = el.dataset.lang;
+    if(!code || !LANGS[code]) return;
+    const flagSpan = el.querySelector('span');
+    if(flagSpan) flagSpan.innerHTML = flagImg(code, 20);
+  });
+  const cf = document.getElementById('current-flag');
+  if(cf) cf.innerHTML = flagImg('nl', 17);
+}
+
+function selectLang(code){
+  _currentLang = code;
+  const l = LANGS[code];
+  const cf = document.getElementById('current-flag');
+  if(cf) cf.innerHTML = flagImg(code, 17);
+  const cl = document.getElementById('current-lang-label');
+  if(cl) cl.textContent = l.label;
+  document.querySelectorAll('.lang-option').forEach(el =>
+    el.classList.toggle('active', el.dataset.lang === code)
+  );
+  document.getElementById('lang-picker').classList.remove('open');
+}
 // ════════════════════════════════════════
 // SWIPE NAVIGATIE TUSSEN TABBLADEN
 // ════════════════════════════════════════
@@ -3313,18 +3946,71 @@ function showTabAnimated(i, dir){
 <div id="settings-panel">
   <div class="settings-toggle-row">
     <div class="settings-toggle-item on" id="set-above" onclick="toggleSetting('above')">
-      <div class="settings-switch"></div>Nootnaam boven balk
+      <div class="settings-switch"></div>Nootnaam boven
     </div>
     <div class="settings-toggle-item" id="set-below" onclick="toggleSetting('below')">
-      <div class="settings-switch"></div>Nootnaam onder balk
+      <div class="settings-switch"></div>Nootnaam onder
     </div>
     <div class="settings-toggle-item on" id="set-octave" onclick="toggleSetting('octave')">
-      <div class="settings-switch"></div>Octaafnummer tonen
+      <div class="settings-switch"></div>Octaafnummer
     </div>
     <div class="settings-toggle-item" id="set-solfege" onclick="toggleSetting('solfege')">
-      <div class="settings-switch"></div>Solfège (Do Re Mi)
+      <div class="settings-switch"></div>Solfège
+    </div>
+    <div class="settings-toggle-item" id="set-interval" onclick="toggleSetting('interval')">
+      <div class="settings-switch"></div><span class="interval-label">Interval</span>
     </div>
   </div>
+  <div style="margin-top:6px;padding-top:2px;">
+    <button onclick="showAppPanelAtSettingsPos()" style="background:none;border:none;font-size:12px;font-family:Arial,sans-serif;color:#888;cursor:pointer;padding:2px 0;width:100%;display:flex;justify-content:space-between;align-items:center;">
+      <span style="padding-left:46px;">meer</span><span>▶</span>
+    </button>
+  </div>
+</div>
+
+<!-- App-paneel: Delen / Personaliseer / Taal -->
+<div id="app-panel">
+  <div class="app-panel-row" id="share-row" onclick="shareApp()">
+    <span class="app-panel-label">Delen</span>
+    <span class="app-panel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></span>
+  </div>
+  <hr class="app-panel-divider">
+  <div class="app-panel-row" id="personaliseer-row" onclick="togglePersonaliseerMenu(event)">
+    <span class="app-panel-label">Personaliseer</span>
+    <span class="app-panel-chevron">▶</span>
+  </div>
+  <hr class="app-panel-divider">
+  <div class="app-panel-row" id="lang-row" onclick="toggleLangPicker(event)">
+    <span class="app-panel-label">Taal</span>
+    <span style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+      <span id="current-flag" style="font-size:17px;line-height:1;">🇳🇱</span>
+      <span class="app-panel-chevron">▶</span>
+    </span>
+  </div>
+  <div class="app-panel-row" id="install-row" onclick="installApp()" style="display:none">
+    <span class="app-panel-label">Installeer deze app</span>
+    <span class="app-panel-icon">⬇️</span>
+  </div>
+</div>
+
+<!-- Personaliseer submenu -->
+<div id="personaliseer-panel">
+  <div class="app-panel-row" onclick="openContact()">
+    <span class="app-panel-icon">✉️</span>
+    <span class="app-panel-label">Contact</span>
+  </div>
+</div>
+
+<!-- Taalkiezer -->
+<div id="lang-picker">
+  <div class="lang-option active" data-lang="nl" onclick="selectLang('nl')"><span style="font-size:20px">🇳🇱</span>Nederlands</div>
+  <div class="lang-option" data-lang="en" onclick="selectLang('en')"><span style="font-size:20px">🇬🇧</span>English</div>
+  <div class="lang-option" data-lang="de" onclick="selectLang('de')"><span style="font-size:20px">🇩🇪</span>Deutsch</div>
+  <div class="lang-option" data-lang="fr" onclick="selectLang('fr')"><span style="font-size:20px">🇫🇷</span>Français</div>
+  <div class="lang-option" data-lang="es" onclick="selectLang('es')"><span style="font-size:20px">🇪🇸</span>Español</div>
+  <div class="lang-option" data-lang="it" onclick="selectLang('it')"><span style="font-size:20px">🇮🇹</span>Italiano</div>
+  <div class="lang-option" data-lang="pt" onclick="selectLang('pt')"><span style="font-size:20px">🇵🇹</span>Português</div>
+  <div class="lang-option" data-lang="zh" onclick="selectLang('zh')"><span style="font-size:20px">🇨🇳</span>中文</div>
 </div>
 </body>
 </html>
