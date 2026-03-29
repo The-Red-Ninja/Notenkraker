@@ -16,9 +16,9 @@
 <meta name="theme-color" content="#f0ebe0">
 
 <!-- Iconen (worden dynamisch per thema ingesteld via setThemeIcons) -->
-<link rel="apple-touch-icon" id="link-apple-touch" href="icons/lm/favicon-180.png">
-<link rel="icon" type="image/x-icon" id="link-favicon-ico" href="icons/lm/favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" id="link-favicon-32" href="icons/lm/favicon-32.png">
+<link rel="apple-touch-icon" id="link-apple-touch" href="icons/icon-lm-180.png">
+<link rel="icon" type="image/x-icon" id="link-favicon-ico" href="icons/favicon-lm.ico">
+<link rel="icon" type="image/png" sizes="32x32" id="link-favicon-32" href="icons/icon-lm-32.png">
 
 <title>Notenkraker</title>
 <style>
@@ -1324,12 +1324,12 @@ function renderQuint(){
     // yShift: positief = omlaag, negatief = omhoog (als fractie van r)
     // scale : 1.0 = zelfde als origineel ml
     const NK_CAL = {
-      ml: { xShift: -0.03, yShift:  0.00, scale: 1.00 },  // man licht
-      vl: { xShift:  0.00, yShift: -0.25, scale: 1.60 },  // vrouw licht: groter + hoger
-      md: { xShift: -0.03, yShift:  0.00, scale: 1.00 },  // man donker
-      vd: { xShift:  0.00, yShift: -0.25, scale: 1.60 },  // vrouw donker
+      lm: { xShift: -0.03, yShift:  0.00, scale: 1.00 },  // man licht
+      lv: { xShift:  0.00, yShift: -0.25, scale: 1.60 },  // vrouw licht: groter + hoger
+      dm: { xShift: -0.03, yShift:  0.00, scale: 1.00 },  // man donker
+      dv: { xShift:  0.00, yShift: -0.25, scale: 1.60 },  // vrouw donker
     };
-    const cal = NK_CAL[(_persGender||'m') + (_persTheme||'l')] || NK_CAL.ml;
+    const cal = NK_CAL[_themaKey()] || NK_CAL.lm;
 
     const nativeSize = 192;
     const diameter = Math.min(rI * 2 * 0.88, nativeSize) * cal.scale;
@@ -2962,15 +2962,16 @@ function loadAudioFile(file){
 
   // MediaSession API: toon app-icoon en bestandsnaam in Android notificatiebalk
   if('mediaSession' in navigator){
-    const msBase = ICON_BASE_LIVE + _themaKey() + '/';
+    const _msKey  = _themaKey();
+    const _msBase = ICON_BASE_LIVE;
     navigator.mediaSession.metadata = new MediaMetadata({
       title:  playerState.fileName,
       artist: 'Notenkraker',
       album:  '',
       artwork: [
-        { src: msBase + 'icon-96.png',  sizes: '96x96',   type: 'image/png' },
-        { src: msBase + 'icon-192.png', sizes: '192x192', type: 'image/png' },
-        { src: msBase + 'icon-512.png', sizes: '512x512', type: 'image/png' },
+        { src: _msBase + 'icon-' + _msKey + '-96.png',  sizes: '96x96',   type: 'image/png' },
+        { src: _msBase + 'icon-' + _msKey + '-192.png', sizes: '192x192', type: 'image/png' },
+        { src: _msBase + 'icon-' + _msKey + '-512.png', sizes: '512x512', type: 'image/png' },
       ]
     });
     navigator.mediaSession.setActionHandler('play',  ()=>{ if(!playerState.isPlaying) togglePlay(); });
@@ -4116,31 +4117,39 @@ document.addEventListener('keyup', e=>{
 // PERSONALISEER: M/V en L/D
 // ════════════════════════════════════════════════════
 // Thema-sleutels: gender (m/v) + helderheid (l/d) → map naar icoon-submap (lm/dm/lv/dv)
-const THEMA_MAP = { ml:'lm', vl:'lv', md:'dm', vd:'dv' };
-
 const ICON_BASE_RAW  = 'https://raw.githubusercontent.com/The-Red-Ninja/Notenkraker/main/icons/';
 const ICON_BASE_LIVE = 'https://the-red-ninja.github.io/Notenkraker/icons/';
 
+// Thema-sleutel: helderheid (l/d) + gender (m/v) = lm/lv/dm/dv
+function _themaKey(){ return (_persTheme||'l') + (_persGender||'m'); }
+
+// Afbeeldingen voor kwintencirkel — relatief pad (zelfde origin = geen CORS-probleem op canvas)
 const QUINT_ICONS = {
-  lm: ICON_BASE_RAW + 'lm/icon-512.png',
-  lv: ICON_BASE_RAW + 'lv/icon-512.png',
-  dm: ICON_BASE_RAW + 'dm/icon-512.png',
-  dv: ICON_BASE_RAW + 'dv/icon-512.png'
+  lm: 'icons/icon-lm-512.png',
+  lv: 'icons/icon-lv-512.png',
+  dm: 'icons/icon-dm-512.png',
+  dv: 'icons/icon-dv-512.png'
+};
+
+// Favicons conform bestaande repo-structuur
+const FAVICON_FILES = {
+  lm: { ico: 'icons/favicon-lm.ico', png32: 'icons/icon-lm-32.png',  touch: 'icons/icon-lm-180.png' },
+  lv: { ico: 'icons/favicon-lv.ico', png32: 'icons/icon-lv-32.png',  touch: 'icons/icon-lv-180.png' },
+  dm: { ico: 'icons/favicon-dm.ico', png32: 'icons/icon-dm-32.png',  touch: 'icons/icon-dm-180.png' },
+  dv: { ico: 'icons/favicon-dv.ico', png32: 'icons/icon-dv-32.png',  touch: 'icons/icon-dv-180.png' },
 };
 
 let _persGender = localStorage.getItem('nk_gender') || 'm';
 let _persTheme  = localStorage.getItem('nk_theme')  || 'l';
 
-function _themaKey(){ return THEMA_MAP[_persGender + _persTheme] || 'lm'; }
-
 function setThemeIcons(key){
-  const base = 'icons/' + key + '/';
+  const f = FAVICON_FILES[key] || FAVICON_FILES.lm;
   const fIco = document.getElementById('link-favicon-ico');
   const f32  = document.getElementById('link-favicon-32');
   const fApl = document.getElementById('link-apple-touch');
-  if(fIco) fIco.href = base + 'favicon.ico';
-  if(f32)  f32.href  = base + 'favicon-32.png';
-  if(fApl) fApl.href = base + 'favicon-180.png';
+  if(fIco) fIco.href = f.ico;
+  if(f32)  f32.href  = f.png32;
+  if(fApl) fApl.href = f.touch;
 }
 
 function persApplyIcon(){
@@ -4148,8 +4157,13 @@ function persApplyIcon(){
   setThemeIcons(key);
   const url = QUINT_ICONS[key];
   const qIcon = new Image();
+  qIcon.crossOrigin = 'anonymous';
   qIcon.onload = ()=>{ window._quintIcon = qIcon; renderQuint(); };
   qIcon.src = url;
+  if(qIcon.complete && qIcon.naturalWidth > 0){
+    window._quintIcon = qIcon;
+    renderQuint();
+  }
 }
 
 function persSetGender(g){
