@@ -512,18 +512,47 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
   background:#fff; border:1.5px solid #c8bfa8;
   border-radius:10px;
   box-shadow:0 4px 14px rgba(0,0,0,0.13); padding:4px 6px;
-  min-width:120px;
+  min-width:120px; max-width:calc(100vw - 16px);
 }
 #app-panel.open { display:block; }
-/* Personaliseer submenu — zelfde stijl als app-panel, verschijnt ernaast */
+/* Personaliseer submenu — dynamische breedte */
 #personaliseer-panel {
   display:none; position:fixed; z-index:151;
   background:#fff; border:1.5px solid #c8bfa8;
   border-radius:10px;
-  box-shadow:0 2px 14px rgba(0,0,0,0.13); padding:4px 6px;
-  min-width:120px;
+  box-shadow:0 2px 14px rgba(0,0,0,0.13); padding:8px;
+  width:clamp(180px, 44vw, 260px);
+  max-width:calc(100vw - 16px);
 }
 #personaliseer-panel.open { display:block; }
+
+/* Avatar-grid: 2×2 */
+#pers-avatar-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:6px;
+  padding:2px 0 6px;
+}
+.pers-avatar-btn {
+  display:flex; flex-direction:column; align-items:center;
+  gap:3px; border:2px solid #c8bfa8; border-radius:10px;
+  background:#faf8f4; cursor:pointer; padding:5px 4px 4px;
+  transition:border-color .15s, background .15s;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none; -webkit-user-select:none;
+}
+.pers-avatar-btn:active { background:#ede8de; }
+.pers-avatar-btn.active {
+  border-color:#2a2a2a; background:#f0ebe0;
+  box-shadow:0 0 0 1.5px #2a2a2a inset;
+}
+.pers-avatar-btn img {
+  width:calc(clamp(180px, 44vw, 260px) / 2 - 22px);
+  height:calc(clamp(180px, 44vw, 260px) / 2 - 22px);
+  object-fit:contain; display:block; border-radius:6px;
+}
+.pers-avatar-lbl {
+  font-size:10px; font-family:Arial,sans-serif;
+  color:#666; text-align:center; line-height:1.2;
+}
 .app-panel-row {
   display:flex; align-items:center; justify-content:space-between; gap:9px;
   height:36px; padding:0 6px; border-radius:7px; cursor:pointer;
@@ -535,19 +564,6 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
 .app-panel-label { flex:1; text-align:left; }
 .app-panel-chevron { font-size:10px; color:#bbb; flex-shrink:0; text-align:right; }
 .app-panel-divider { border:none; border-top:1px solid #eee; margin:1px 0; }
-
-/* ADMIN */
-.pers-switch-row { cursor:default; }
-.pers-switch-row:active { background:transparent; }
-.pers-toggle-group { display:flex; gap:3px; flex-shrink:0; }
-.pers-toggle {
-  padding:3px 10px; border-radius:12px; border:1.5px solid #c8bfa8;
-  background:#fff; color:#888; font-size:12px; font-family:Georgia,serif;
-  cursor:pointer; transition:all .15s; line-height:1.4;
-  -webkit-tap-highlight-color:transparent;
-  user-select:none; -webkit-user-select:none;
-}
-.pers-toggle.active { background:#2a2a2a; color:#fff; border-color:#2a2a2a; }
 
 /* ADMIN */
 body.is-admin .admin-row { display:flex; }
@@ -3925,9 +3941,17 @@ window.addEventListener('DOMContentLoaded',()=>{
 let _deferredInstall = null;
 
 // Toon of verberg de installatierij op basis van installatiestatus
+function _updateInstallLabel(){
+  const lbl = document.getElementById('install-label');
+  if(!lbl) return;
+  const naam = (_persGender === 'v') ? 'de Notenkraakster' : 'de Notenkraker';
+  lbl.innerHTML = 'Installeer<br>' + naam;
+}
+
 function _updateInstallRow(visible){
   const row = document.getElementById('install-row');
   if(row) row.style.display = visible ? 'flex' : 'none';
+  if(visible) _updateInstallLabel();
 }
 
 // Controleer of de app al geïnstalleerd is
@@ -3993,34 +4017,45 @@ function shareApp(){
   closeSettings();
 }
 
+// Gedeelde positionering voor subpanelen (personaliseer, taal):
+// linkerkant gelijk aan app-panel.left, minimale breedte = breedste subpaneel
+function _positionSubPanel(el){
+  const apanel  = document.getElementById('app-panel');
+  const apr     = apanel.getBoundingClientRect();
+
+  // Minimale breedte = breedste van app-panel en de andere subpanelen
+  const siblings = ['personaliseer-panel','lang-picker']
+    .map(id => document.getElementById(id))
+    .filter(Boolean);
+  // Maak ze tijdelijk zichtbaar om breedte te meten
+  const wasHidden = siblings.filter(s => s !== el && !s.classList.contains('open'));
+  wasHidden.forEach(s => { s.style.visibility='hidden'; s.style.display='block'; });
+  const maxSibW = Math.max(...siblings.map(s => s.offsetWidth), apanel.offsetWidth);
+  wasHidden.forEach(s => { s.style.visibility=''; s.style.display=''; });
+
+  el.style.minWidth = maxSibW + 'px';
+  el.style.left     = apr.left + 'px';
+  el.style.right    = 'auto';
+  el.style.bottom   = apanel.style.bottom || (window.innerHeight - apr.bottom) + 'px';
+  el.style.top      = 'auto';
+}
+
 function togglePersonaliseerMenu(e){
   e.stopPropagation();
-  const sub    = document.getElementById('personaliseer-panel');
-  const apanel = document.getElementById('app-panel');
-  // Sluit taal-picker als die open is (exclusief)
+  const sub = document.getElementById('personaliseer-panel');
   document.getElementById('lang-picker').classList.remove('open');
   if(sub.classList.contains('open')){ sub.classList.remove('open'); return; }
-  // Positioneer rechts naast app-panel, bottom-aligned
-  const pr = apanel.getBoundingClientRect();
-  sub.style.left   = (pr.right + 6) + 'px';
-  sub.style.bottom = apanel.style.bottom || (window.innerHeight - pr.bottom) + 'px';
-  sub.style.top    = 'auto';
   sub.classList.add('open');
+  _positionSubPanel(sub);
 }
 
 function toggleLangPicker(e){
   e.stopPropagation();
   const picker = document.getElementById('lang-picker');
-  const apanel = document.getElementById('app-panel');
-  // Sluit personaliseer-panel als dat open is (exclusief)
   document.getElementById('personaliseer-panel').classList.remove('open');
   if(picker.classList.contains('open')){ picker.classList.remove('open'); return; }
-  // Positioneer rechts naast app-panel, bottom-aligned
-  const pr = apanel.getBoundingClientRect();
-  picker.style.left   = (pr.right + 6) + 'px';
-  picker.style.bottom = apanel.style.bottom || (window.innerHeight - pr.bottom) + 'px';
-  picker.style.top    = 'auto';
   picker.classList.add('open');
+  _positionSubPanel(picker);
 }
 
 function openContact(){
@@ -4201,27 +4236,31 @@ function persApplyIcon(){
   }
 }
 
-function persSetGender(g){
-  _persGender = g;
-  localStorage.setItem('nk_gender', g);
-  document.getElementById('pers-m').classList.toggle('active', g==='m');
-  document.getElementById('pers-v').classList.toggle('active', g==='v');
-  persApplyIcon();
+function _persUpdateGrid(){
+  const key = _themaKey();
+  ['lm','dm','lv','dv'].forEach(k => {
+    const btn = document.getElementById('pers-btn-' + k);
+    if(btn) btn.classList.toggle('active', k === key);
+  });
 }
 
-function persSetTheme(t){
-  _persTheme = t;
-  localStorage.setItem('nk_theme', t);
-  document.getElementById('pers-l').classList.toggle('active', t==='l');
-  document.getElementById('pers-d').classList.toggle('active', t==='d');
+// Gecombineerde setter: één klik op avatar stelt gender én thema in
+function persSetKarakter(t, g){
+  _persTheme  = t;
+  _persGender = g;
+  localStorage.setItem('nk_theme',  t);
+  localStorage.setItem('nk_gender', g);
+  _persUpdateGrid();
   persApplyIcon();
+  _updateInstallLabel();
 }
+
+// Behoud backwards-compatibiliteit (gebruikt elders in de code)
+function persSetGender(g){ persSetKarakter(_persTheme,  g); }
+function persSetTheme(t){  persSetKarakter(t, _persGender); }
 
 function persInit(){
-  document.getElementById('pers-m').classList.toggle('active', _persGender==='m');
-  document.getElementById('pers-v').classList.toggle('active', _persGender==='v');
-  document.getElementById('pers-l').classList.toggle('active', _persTheme==='l');
-  document.getElementById('pers-d').classList.toggle('active', _persTheme==='d');
+  _persUpdateGrid();
   persApplyIcon();
 }
 
@@ -4479,24 +4518,36 @@ function showTabAnimated(i, dir){
     </span>
   </div>
   <div class="app-panel-row" id="install-row" onclick="installApp()" style="display:none">
-    <span class="app-panel-label">Installeer deze app</span>
-    <span class="app-panel-icon">⬇️</span>
+    <span class="app-panel-label" id="install-label" style="line-height:1.3">Installeer<br>de Notenkraker</span>
+    <span class="app-panel-icon"><!-- Installeer-icoon: venster met pijl omhoog (iOS/Android/Windows conform) -->
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <line x1="12" y1="16" x2="12" y2="8"/>
+        <polyline points="8 12 12 8 16 12"/>
+      </svg>
+    </span>
   </div>
 </div>
 
 <!-- Personaliseer submenu -->
 <div id="personaliseer-panel">
-  <div class="app-panel-row pers-switch-row">
-    <div class="pers-toggle-group">
-      <button class="pers-toggle active" id="pers-m" onclick="persSetGender('m')">m</button>
-      <button class="pers-toggle" id="pers-v" onclick="persSetGender('v')">v</button>
-    </div>
-  </div>
-  <div class="app-panel-row pers-switch-row">
-    <div class="pers-toggle-group">
-      <button class="pers-toggle active" id="pers-l" onclick="persSetTheme('l')">l</button>
-      <button class="pers-toggle" id="pers-d" onclick="persSetTheme('d')">d</button>
-    </div>
+  <div id="pers-avatar-grid">
+    <button class="pers-avatar-btn active" id="pers-btn-lm" onclick="persSetKarakter('l','m')">
+      <img src="icons/icon-lm-96.png" alt="Blanke man">
+      <span class="pers-avatar-lbl">Notenkraker</span>
+    </button>
+    <button class="pers-avatar-btn" id="pers-btn-dm" onclick="persSetKarakter('d','m')">
+      <img src="icons/icon-dm-96.png" alt="Donkere man">
+      <span class="pers-avatar-lbl">Notenkraker</span>
+    </button>
+    <button class="pers-avatar-btn" id="pers-btn-lv" onclick="persSetKarakter('l','v')">
+      <img src="icons/icon-lv-96.png" alt="Blanke vrouw">
+      <span class="pers-avatar-lbl">Notenkraakster</span>
+    </button>
+    <button class="pers-avatar-btn" id="pers-btn-dv" onclick="persSetKarakter('d','v')">
+      <img src="icons/icon-dv-96.png" alt="Donkere vrouw">
+      <span class="pers-avatar-lbl">Notenkraakster</span>
+    </button>
   </div>
   <hr class="app-panel-divider">
   <div class="app-panel-row" onclick="openContact()">
@@ -4515,7 +4566,7 @@ function showTabAnimated(i, dir){
   </div>
   <div class="app-panel-row admin-row" onclick="adminShowStats()">
     <span class="app-panel-icon">📊</span>
-    <span class="app-panel-label">Gebruikersstatistieken</span>
+    <span class="app-panel-label" style="line-height:1.3">Gebruikers-<br>statistieken</span>
   </div>
 </div>
 
