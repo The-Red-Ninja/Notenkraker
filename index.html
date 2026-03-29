@@ -15,10 +15,10 @@
 <meta name="apple-mobile-web-app-title" content="Notenkraker">
 <meta name="theme-color" content="#f0ebe0">
 
-<!-- Iconen -->
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<!-- Iconen (worden dynamisch per thema ingesteld via setThemeIcons) -->
+<link rel="apple-touch-icon" id="link-apple-touch" href="icons/lm/favicon-180.png">
+<link rel="icon" type="image/x-icon" id="link-favicon-ico" href="icons/lm/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" id="link-favicon-32" href="icons/lm/favicon-32.png">
 
 <title>Notenkraker</title>
 <style>
@@ -673,8 +673,8 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
   background:#fff;
   flex-direction:column;
   align-items:center;
-  justify-content:center;
-  gap:14px;
+  justify-content:space-between;
+  padding:12px 0;
   -webkit-tap-highlight-color:transparent;
 }
 #nk-overlay.open { display:flex; }
@@ -722,6 +722,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
   display:flex;
   animation: nkFadeIn 0.3s ease forwards;
 }
+#nk-share-row {
   display:none;
   align-items:center; justify-content:center; gap:8px;
   cursor:pointer;
@@ -1263,6 +1264,9 @@ function stopN(n){
 // ════════════════════════════════════════════════════
 function showTab(i){
   closeSettings();
+  // Sluit overlay als die open is
+  const _ov = document.getElementById('nk-overlay');
+  if(_ov && _ov.classList.contains('open')) closeNkOverlay();
   currentTab=i;
   document.querySelectorAll('.page').forEach((p,j)=>{
     p.classList.toggle('active',j===i);
@@ -2958,16 +2962,15 @@ function loadAudioFile(file){
 
   // MediaSession API: toon app-icoon en bestandsnaam in Android notificatiebalk
   if('mediaSession' in navigator){
-    // Absoluut pad zodat het icoon ook werkt bij lokale server of andere origins
-    const iconBase = 'https://the-red-ninja.github.io/Notenkraker/icons/';
+    const msBase = ICON_BASE_LIVE + _themaKey() + '/';
     navigator.mediaSession.metadata = new MediaMetadata({
       title:  playerState.fileName,
       artist: 'Notenkraker',
       album:  '',
       artwork: [
-        { src: iconBase + 'icon-96x96.png',   sizes: '96x96',   type: 'image/png' },
-        { src: iconBase + 'icon-192x192.png', sizes: '192x192', type: 'image/png' },
-        { src: iconBase + 'icon-512x512.png', sizes: '512x512', type: 'image/png' },
+        { src: msBase + 'icon-96.png',  sizes: '96x96',   type: 'image/png' },
+        { src: msBase + 'icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: msBase + 'icon-512.png', sizes: '512x512', type: 'image/png' },
       ]
     });
     navigator.mediaSession.setActionHandler('play',  ()=>{ if(!playerState.isPlaying) togglePlay(); });
@@ -4112,18 +4115,37 @@ document.addEventListener('keyup', e=>{
 // ════════════════════════════════════════════════════
 // PERSONALISEER: M/V en L/D
 // ════════════════════════════════════════════════════
+// Thema-sleutels: gender (m/v) + helderheid (l/d) → map naar icoon-submap (lm/dm/lv/dv)
+const THEMA_MAP = { ml:'lm', vl:'lv', md:'dm', vd:'dv' };
+
+const ICON_BASE_RAW  = 'https://raw.githubusercontent.com/The-Red-Ninja/Notenkraker/main/icons/';
+const ICON_BASE_LIVE = 'https://the-red-ninja.github.io/Notenkraker/icons/';
+
 const QUINT_ICONS = {
-  ml: 'https://raw.githubusercontent.com/The-Red-Ninja/Notenkraker/main/icons/icon-512x512.png',
-  vl: 'https://raw.githubusercontent.com/The-Red-Ninja/Notenkraker/main/add/notenkraakster%20hoofd.png',
-  md: 'https://raw.githubusercontent.com/The-Red-Ninja/Notenkraker/main/add/notenkraker%20donker.png',
-  vd: 'https://raw.githubusercontent.com/The-Red-Ninja/Notenkraker/main/add/notenkraakster%20donker.png'
+  lm: ICON_BASE_RAW + 'lm/icon-512.png',
+  lv: ICON_BASE_RAW + 'lv/icon-512.png',
+  dm: ICON_BASE_RAW + 'dm/icon-512.png',
+  dv: ICON_BASE_RAW + 'dv/icon-512.png'
 };
 
 let _persGender = localStorage.getItem('nk_gender') || 'm';
 let _persTheme  = localStorage.getItem('nk_theme')  || 'l';
 
+function _themaKey(){ return THEMA_MAP[_persGender + _persTheme] || 'lm'; }
+
+function setThemeIcons(key){
+  const base = 'icons/' + key + '/';
+  const fIco = document.getElementById('link-favicon-ico');
+  const f32  = document.getElementById('link-favicon-32');
+  const fApl = document.getElementById('link-apple-touch');
+  if(fIco) fIco.href = base + 'favicon.ico';
+  if(f32)  f32.href  = base + 'favicon-32.png';
+  if(fApl) fApl.href = base + 'favicon-180.png';
+}
+
 function persApplyIcon(){
-  const key = _persGender + _persTheme;
+  const key = _themaKey();
+  setThemeIcons(key);
   const url = QUINT_ICONS[key];
   const qIcon = new Image();
   qIcon.onload = ()=>{ window._quintIcon = qIcon; renderQuint(); };
@@ -4164,24 +4186,27 @@ function openNkOverlay(){
 
   const rowTop = document.getElementById('nk-share-row-top');
 
-  // ── Grenzen: onder tabbalk, tot onder playknop ──────────────────────────
+  // ── Grenzen: onder tabbalk, t/m onderkant playknop (mp3-balk blijft zichtbaar) ──
   const tabsEl  = document.getElementById('tabs');
+  const playBtn = document.getElementById('pplaybtn-0');
   const mp3El   = document.getElementById('pmini-wrap-0') ||
                   document.getElementById('player-mount-0');
-  const tabsBot = tabsEl ? tabsEl.getBoundingClientRect().bottom : 72;
-  const mp3Bot  = mp3El  ? mp3El.getBoundingClientRect().bottom  : window.innerHeight;
+  const tabsBot  = tabsEl  ? tabsEl.getBoundingClientRect().bottom  : 72;
+  const overlayBot = playBtn ? playBtn.getBoundingClientRect().bottom
+                   : mp3El  ? mp3El.getBoundingClientRect().top
+                   : window.innerHeight - 60;
 
-  const areaH   = mp3Bot - tabsBot;
+  const areaH   = overlayBot - tabsBot;
   const areaW   = window.innerWidth;
   const margin  = 14;
-  const btnH    = 50;   // ruimte voor knop + gap
+  const btnH    = 50;
   const gap     = 10;
 
-  const imgSize = Math.max(40, Math.min(areaW - 2*margin, areaH - 2*margin - btnH - gap));
+  const imgSize = Math.max(40, Math.min(areaW - 2*margin, areaH - 2*margin - btnH*2 - gap*2));
 
   // ── Overlay positioneren ─────────────────────────────────────────────────
   ov.style.top    = tabsBot + 'px';
-  ov.style.bottom = (window.innerHeight - mp3Bot) + 'px';
+  ov.style.bottom = (window.innerHeight - overlayBot) + 'px';
   ov.style.left   = '0';
   ov.style.right  = '0';
 
@@ -4468,6 +4493,18 @@ function showTabAnimated(i, dir){
     localStorage.removeItem(LS_KEY);
     localStorage.removeItem(LS_TOKEN_KEY);
     params.delete('admin');
+    const clean = window.location.pathname + (params.toString() ? '?' + params : '');
+    history.replaceState(null,'', clean);
+  }
+
+  // Karakter via URL-shortcut (?karakter=lm/dm/lv/dv)
+  const karakterParam = params.get('karakter');
+  if(karakterParam && /^(lm|dm|lv|dv)$/.test(karakterParam)){
+    const gMap = { lm:'m', dm:'m', lv:'v', dv:'v' };
+    const tMap = { lm:'l', dm:'d', lv:'l', dv:'d' };
+    localStorage.setItem('nk_gender', gMap[karakterParam]);
+    localStorage.setItem('nk_theme',  tMap[karakterParam]);
+    params.delete('karakter');
     const clean = window.location.pathname + (params.toString() ? '?' + params : '');
     history.replaceState(null,'', clean);
   }
