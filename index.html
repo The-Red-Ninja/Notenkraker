@@ -20,6 +20,15 @@
 <link rel="icon" type="image/x-icon" id="link-favicon-ico" href="icons/favicon-lm.ico">
 <link rel="icon" type="image/png" sizes="32x32" id="link-favicon-32" href="icons/icon-lm-32.png">
 
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-YS5METEHJ5"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-YS5METEHJ5');
+</script>
+
 <title>Notenkraker</title>
 <style>
 @font-face {
@@ -541,8 +550,7 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
 }
 .pers-avatar-btn:active { background:#ede8de; }
 .pers-avatar-btn.active {
-  border-color:#2a2a2a; background:#f0ebe0;
-  box-shadow:0 0 0 1.5px #2a2a2a inset;
+  background:#f0ebe0;
 }
 .pers-avatar-btn img {
   width:calc(clamp(180px, 44vw, 260px) / 2 - 22px);
