@@ -3923,22 +3923,57 @@ window.addEventListener('DOMContentLoaded',()=>{
 // APP PANEL — installeren, delen, taal
 // ════════════════════════════════════════
 let _deferredInstall = null;
+
+// Toon of verberg de installatierij op basis van installatiestatus
+function _updateInstallRow(visible){
+  const row = document.getElementById('install-row');
+  if(row) row.style.display = visible ? 'flex' : 'none';
+}
+
+// Controleer of de app al geïnstalleerd is
+async function _checkInstalled(){
+  // Als de app al in standalone draait, is hij geïnstalleerd
+  if(window.matchMedia('(display-mode: standalone)').matches ||
+     window.navigator.standalone === true){
+    _updateInstallRow(false);
+    return;
+  }
+  // getInstalledRelatedApps: betrouwbaarste check (Chrome Android)
+  if('getInstalledRelatedApps' in navigator){
+    try {
+      const related = await navigator.getInstalledRelatedApps();
+      if(related && related.length > 0){
+        _updateInstallRow(false);
+        return;
+      }
+    } catch(e){}
+  }
+  // Geen bewijs van installatie — toon knop als prompt beschikbaar is
+  if(_deferredInstall) _updateInstallRow(true);
+}
+
+// Chrome vuurt beforeinstallprompt als installatie mogelijk is
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   _deferredInstall = e;
-  const row = document.getElementById('install-row');
-  if(row) row.style.display = 'flex';
+  _checkInstalled(); // hercheck: na verwijdering komt de prompt terug
 });
+
+// Na installatie: verberg de knop
 window.addEventListener('appinstalled', () => {
   _deferredInstall = null;
-  const row = document.getElementById('install-row');
-  if(row) row.style.display = 'none';
+  _updateInstallRow(false);
 });
+
+// Controleer bij elke pageshow (ook na herstart na verwijdering)
+window.addEventListener('pageshow', () => { _checkInstalled(); });
 
 function installApp(){
   if(!_deferredInstall) return;
   _deferredInstall.prompt();
-  _deferredInstall.userChoice.then(()=>{ _deferredInstall = null; });
+  _deferredInstall.userChoice.then(choice => {
+    if(choice.outcome === 'accepted') _deferredInstall = null;
+  });
   closeSettings();
 }
 
