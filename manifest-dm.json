@@ -1,0 +1,22 @@
+{
+  "name": "Notenkraker",
+  "short_name": "Notenkraker",
+  "description": "Kies een toonsoort en laat direct vanaf een notenbalk de juiste noot klinken.",
+  "start_url": "./index.html?karakter=dm",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f0ebe0",
+  "orientation": "portrait",
+  "lang": "nl",
+  "icons": [
+    { "src": "icons/icon-dm-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-dm-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-dm-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Blanke man",    "short_name": "Notenkraker",    "url": "./index.html?karakter=lm", "icons": [{ "src": "icons/icon-lm-96.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Donkere man",   "short_name": "Notenkraker",    "url": "./index.html?karakter=dm", "icons": [{ "src": "icons/icon-dm-96.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Blanke vrouw",  "short_name": "Notenkraakster", "url": "./index.html?karakter=lv", "icons": [{ "src": "icons/icon-lv-96.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Donkere vrouw", "short_name": "Notenkraakster", "url": "./index.html?karakter=dv", "icons": [{ "src": "icons/icon-dv-96.png", "sizes": "96x96", "type": "image/png" }] }
+  ]
+}

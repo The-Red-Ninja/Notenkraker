@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <!-- PWA: installeerbaar als app -->
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" id="link-manifest" href="manifest-lm.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -295,12 +295,18 @@ input[type=range].note-pos-slider-thumb::-webkit-slider-thumb {
 /* Shift-knop: zelfde afmeting en stijl als acc-btn, alleen zichtbaar op Windows */
 .shift-btn {
   width:54px; height:54px; border-radius:50%; background:#fff; border:2px solid #888;
-  color:#333; font-size:20px; cursor:pointer; display:none; align-items:center;
+  color:#333; font-size:20px; cursor:pointer; display:flex; align-items:center;
   justify-content:center; transition:all .12s; user-select:none; -webkit-user-select:none;
   font-family:Arial,sans-serif; flex-shrink:0; line-height:1; touch-action:manipulation;
 }
 .shift-btn.active { background:#222; color:#fff; border-color:#222; }
-body.is-windows .shift-btn { display:flex; }
+.shift-pin path, .shift-pin rect { fill:#222; transition: fill .12s; }
+.shift-btn.active .shift-pin path,
+.shift-btn.active .shift-pin rect { fill:#fff; }
+.shift-pin-body { fill:#222; transition: fill .12s; }
+.shift-pin-hole { fill:#fff; transition: fill .12s; }
+.shift-btn.active .shift-pin-body { fill:#fff; }
+.shift-btn.active .shift-pin-hole { fill:#222; }
 
 /* Settings-knop: 90° gedraaid, 25% kleiner dan acc-btn (54*0.75=40px) */
 .settings-btn {
@@ -573,6 +579,18 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
   font-size:10px; font-family:Arial,sans-serif;
   color:#666; text-align:center; line-height:1.2;
 }
+.install-theme-btn {
+  display:flex; flex-direction:column; align-items:center;
+  gap:4px; border:2px solid #c8bfa8; border-radius:10px;
+  background:#faf8f4; cursor:pointer; padding:8px 6px 6px;
+  transition:border-color .15s, background .15s;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none; -webkit-user-select:none; width:100%;
+}
+.install-theme-btn:active { background:#ede8de; }
+.install-theme-btn.active { border-color:#888; background:#f0ebe0; }
+.install-theme-btn img { width:52px; height:52px; object-fit:contain; border-radius:6px; }
+.install-theme-btn span { font-size:10px; font-family:Arial,sans-serif; color:#555; }
 .app-panel-row {
   display:flex; align-items:center; justify-content:space-between; gap:9px;
   height:36px; padding:0 6px; border-radius:7px; cursor:pointer;
@@ -917,7 +935,8 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
         <button class="acc-btn" id="acc-flat-treble"    ontouchstart="accTouch('treble','flat',event)"    onmousedown="accMouse('treble','flat')">♭</button>
         <button class="shift-btn" id="shift-btn-treble"
           onmousedown="shiftMouseDown('treble',event);event.preventDefault()"
-          title="Shift">⇧</button>
+          ontouchstart="shiftMouseDown('treble',event);event.preventDefault()"
+          title="Shift"><svg class="shift-pin" width="20" height="24" viewBox="0 0 20 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 1 C5.5 1 2 4.5 2 9 C2 11.5 3.2 13.7 5 15.2 L5 18 L9 18 L9 25 L11 25 L11 18 L15 18 L15 15.2 C16.8 13.7 18 11.5 18 9 C18 4.5 14.5 1 10 1 Z" class="shift-pin-body"/><circle cx="10" cy="9" r="3.5" class="shift-pin-hole"/></svg></button>
       </div>
       <div class="acc-play-btn" id="pplaybtn-acc-1" role="button" tabindex="0"
            onclick="togglePlay()" ontouchend="togglePlay();event.preventDefault()">▶</div>
@@ -985,7 +1004,8 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
         <button class="acc-btn" id="acc-flat-bass"    ontouchstart="accTouch('bass','flat',event)"    onmousedown="accMouse('bass','flat')">♭</button>
         <button class="shift-btn" id="shift-btn-bass"
           onmousedown="shiftMouseDown('bass',event);event.preventDefault()"
-          title="Shift">⇧</button>
+          ontouchstart="shiftMouseDown('bass',event);event.preventDefault()"
+          title="Shift"><svg class="shift-pin" width="20" height="24" viewBox="0 0 20 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 1 C5.5 1 2 4.5 2 9 C2 11.5 3.2 13.7 5 15.2 L5 18 L9 18 L9 25 L11 25 L11 18 L15 18 L15 15.2 C16.8 13.7 18 11.5 18 9 C18 4.5 14.5 1 10 1 Z" class="shift-pin-body"/><circle cx="10" cy="9" r="3.5" class="shift-pin-hole"/></svg></button>
       </div>
       <div class="acc-play-btn" id="pplaybtn-acc-2" role="button" tabindex="0"
            onclick="togglePlay()" ontouchend="togglePlay();event.preventDefault()">▶</div>
@@ -1327,9 +1347,9 @@ function renderQuint(){
     // scale : 1.0 = zelfde als origineel ml
     const NK_CAL = {
       lm: { xShift: -0.03, yShift:  0.00, scale: 1.00 },  // man licht
-      lv: { xShift:  0.00, yShift: -0.25, scale: 1.60 },  // vrouw licht: groter + hoger
+      lv: { xShift:  0.00, yShift:  0.00, scale: 1.00 },  // vrouw licht
       dm: { xShift: -0.03, yShift:  0.00, scale: 1.00 },  // man donker
-      dv: { xShift:  0.00, yShift: -0.25, scale: 1.60 },  // vrouw donker
+      dv: { xShift:  0.00, yShift:  0.00, scale: 1.00 },  // vrouw donker
     };
     const cal = NK_CAL[_themaKey()] || NK_CAL.lm;
 
@@ -2592,7 +2612,27 @@ function setupTouch(clef){
     if((panel && panel.classList.contains('open')) || (apanel && apanel.classList.contains('open'))){
       closeSettings(); return;
     }
-    // Noten activeren
+    if(isShiftActive(clef)){
+      // Shift-modus: touch togglet noot als vastgezet
+      for(const t of e.changedTouches){
+        const note=noteAt(t.clientX,t.clientY); if(!note) continue;
+        if(pinnedNotes[clef].has(note.step)){
+          const v=pinnedNotes[clef].get(note.step);
+          stopN(v.node);
+          pinnedNotes[clef].delete(note.step);
+          // st.step wissen zodat noot niet via cursor actief blijft
+          if(st.step===note.step) st.step=null;
+        } else {
+          const node=playN(soundingMidi(note,clef), 0.50);
+          pinnedNotes[clef].set(note.step, {node});
+          st.step=note.step;
+        }
+        st.accFired=true;
+      }
+      renderStaff(clef);
+      return;
+    }
+    // Normaal: noten activeren
     for(const t of e.changedTouches){
       if(Object.keys(st.touches).length >= 3) break;
       const note=noteAt(t.clientX,t.clientY); if(!note) continue;
@@ -2615,6 +2655,7 @@ function setupTouch(clef){
 
   cv.ontouchmove=e=>{
     e.preventDefault();
+    if(isShiftActive(clef)) return; // geen sleep in shift-modus
     if(e.touches.length === 1){
       const isSwipe = window.swipeMove(e.touches[0].clientX, e.touches[0].clientY);
       if(isSwipe){
@@ -2644,6 +2685,7 @@ function setupTouch(clef){
 
   cv.ontouchend=cv.ontouchcancel=e=>{
     e.preventDefault();
+    if(isShiftActive(clef)) return; // pinned noten blijven klinken
     if(st._swipeIsHoriz){
       if(e.touches.length === 0){
         window.swipeEnd(e.changedTouches[0].clientX);
@@ -2678,11 +2720,13 @@ function setupTouch(clef){
         const v=pinnedNotes[clef].get(note.step);
         stopN(v.node);
         pinnedNotes[clef].delete(note.step);
+        if(st.step===note.step) st.step=null;
       } else {
         const node=playN(soundingMidi(note,clef), 0.50);
         pinnedNotes[clef].set(note.step, {node});
+        st.step=note.step;
       }
-      st.step=note.step; st.accFired=true;
+      st.accFired=true;
       renderStaff(clef);
     } else {
       stopN(st.node); st.node=playN(soundingMidi(note,clef));
@@ -4014,11 +4058,34 @@ window.addEventListener('pageshow', () => { _checkInstalled(); });
 
 function installApp(){
   if(!_deferredInstall) return;
-  _deferredInstall.prompt();
-  _deferredInstall.userChoice.then(choice => {
-    if(choice.outcome === 'accepted') _deferredInstall = null;
-  });
   closeSettings();
+  // Markeer actief thema in het keuzescherm
+  const curKey = _themaKey();
+  ['lm','dm','lv','dv'].forEach(k => {
+    const btn = document.getElementById('itbtn-' + k);
+    if(btn) btn.classList.toggle('active', k === curKey);
+  });
+  const overlay = document.getElementById('install-theme-overlay');
+  if(overlay){ overlay.style.display = 'flex'; }
+}
+
+function closeInstallThemePicker(){
+  const overlay = document.getElementById('install-theme-overlay');
+  if(overlay) overlay.style.display = 'none';
+}
+
+function installWithTheme(t, g){
+  // Stel thema in (manifest wisselt mee via setThemeIcons)
+  persSetKarakter(t, g);
+  closeInstallThemePicker();
+  // Kleine vertraging zodat browser de nieuwe manifest-link heeft opgepikt
+  setTimeout(() => {
+    if(!_deferredInstall) return;
+    _deferredInstall.prompt();
+    _deferredInstall.userChoice.then(choice => {
+      if(choice.outcome === 'accepted') _deferredInstall = null;
+    });
+  }, 80);
 }
 
 function shareApp(){
@@ -4083,6 +4150,10 @@ function openContact(){
   document.getElementById('personaliseer-panel').classList.remove('open');
   closeSettings();
 }
+function openFeedback(){
+  window.location.href = 'mailto:useful.nuts.apps@gmail.com?subject=5%20woorden%20over%20Notenkraker';
+  closeSettings();
+}
 
 // Taal: vlaggen + namen
 // Twemoji SVG-vlaggen voor Windows-compatibiliteit
@@ -4139,7 +4210,7 @@ function selectLang(code){
 })();
 
 // ════════════════════════════════════════════════════
-// SHIFT-MODUS (alleen Windows)
+// SHIFT-MODUS (Windows + Android)
 // ════════════════════════════════════════════════════
 // shiftState[clef]: false | 'mouse' | 'keyboard'
 // pinnedNotes[clef]: Map<step, {node}>
@@ -4240,6 +4311,9 @@ function setThemeIcons(key){
   if(fIco) fIco.href = f.ico;
   if(f32)  f32.href  = f.png32;
   if(fApl) fApl.href = f.touch;
+  // Wissel manifest zodat installatie-icoon overeenkomt met thema
+  const mLink = document.getElementById('link-manifest');
+  if(mLink) mLink.href = 'manifest-' + key + '.json';
 }
 
 function persApplyIcon(){
@@ -4671,6 +4745,11 @@ function showTabAnimated(i, dir){
     <span class="app-panel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></span>
   </div>
   <hr class="app-panel-divider">
+  <div class="app-panel-row" onclick="openFeedback()">
+    <span class="app-panel-label" style="line-height:1.4">5 woorden over<br>hoe je deze app<br>graag gebruikt</span>
+    <span class="app-panel-icon">✉️</span>
+  </div>
+  <hr class="app-panel-divider">
   <div class="app-panel-row" id="personaliseer-row" onclick="togglePersonaliseerMenu(event)">
     <span class="app-panel-label">Personaliseer</span>
     <span class="app-panel-chevron">▶</span>
@@ -4692,6 +4771,43 @@ function showTabAnimated(i, dir){
         <polyline points="8 12 12 8 16 12"/>
       </svg>
     </span>
+  </div>
+</div>
+
+<!-- Install thema-keuze overlay -->
+<div id="install-theme-overlay" style="
+  display:none; position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,0.55); align-items:center; justify-content:center;"
+  onclick="if(event.target===this)closeInstallThemePicker()">
+  <div style="
+    background:#fff; border-radius:16px; padding:20px 18px 16px;
+    max-width:300px; width:88%; box-shadow:0 8px 32px rgba(0,0,0,0.25);
+    font-family:Georgia,serif; text-align:center;">
+    <div style="font-size:15px; font-weight:bold; color:#2a2a2a; margin-bottom:4px;">Installeer als…</div>
+    <div style="font-size:12px; color:#888; margin-bottom:14px;">Kies welk icoon je op je scherm wil zien</div>
+    <div id="install-theme-grid" style="
+      display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+      <button class="install-theme-btn" id="itbtn-lm" onclick="installWithTheme('l','m')">
+        <img src="icons/icon-lm-96.png" alt="Blanke man">
+        <span>Notenkraker</span>
+      </button>
+      <button class="install-theme-btn" id="itbtn-dm" onclick="installWithTheme('d','m')">
+        <img src="icons/icon-dm-96.png" alt="Donkere man">
+        <span>Notenkraker</span>
+      </button>
+      <button class="install-theme-btn" id="itbtn-lv" onclick="installWithTheme('l','v')">
+        <img src="icons/icon-lv-96.png" alt="Blanke vrouw">
+        <span>Notenkraakster</span>
+      </button>
+      <button class="install-theme-btn" id="itbtn-dv" onclick="installWithTheme('d','v')">
+        <img src="icons/icon-dv-96.png" alt="Donkere vrouw">
+        <span>Notenkraakster</span>
+      </button>
+    </div>
+    <button onclick="closeInstallThemePicker()" style="
+      width:100%; padding:10px; border:1.5px solid #ccc; border-radius:8px;
+      background:#f5f0e8; color:#555; font-size:13px; cursor:pointer;
+      font-family:Georgia,serif;">Annuleren</button>
   </div>
 </div>
 
@@ -4718,7 +4834,7 @@ function showTabAnimated(i, dir){
   <hr class="app-panel-divider">
   <div class="app-panel-row" onclick="openContact()">
     <span class="app-panel-icon">✉️</span>
-    <span class="app-panel-label">Contact</span>
+    <span class="app-panel-label">Featrequest</span>
   </div>
   <hr class="app-panel-divider admin-row">
   <div class="app-panel-row admin-row" onclick="adminUpdateApp()">
