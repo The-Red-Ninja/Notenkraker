@@ -4350,6 +4350,29 @@ function persSetKarakter(t, g){
   // Sluit alle menu's en ga naar tab 0
   closeSettings();
   showTab(0);
+  // Herinstallatie-toast tonen als de prompt beschikbaar is
+  if(_deferredInstall){
+    const toast = document.getElementById('reinstall-toast');
+    if(toast) toast.style.display = 'flex';
+  }
+}
+
+function closeReinstallToast(){
+  const toast = document.getElementById('reinstall-toast');
+  if(toast) toast.style.display = 'none';
+}
+
+function reinstallWithCurrentTheme(){
+  closeReinstallToast();
+  if(!_deferredInstall) return;
+  // Thema is al ingesteld, manifest al gewisseld — direct prompten
+  setTimeout(() => {
+    if(!_deferredInstall) return;
+    _deferredInstall.prompt();
+    _deferredInstall.userChoice.then(choice => {
+      if(choice.outcome === 'accepted') _deferredInstall = null;
+    });
+  }, 80);
 }
 
 // Behoud backwards-compatibiliteit (gebruikt elders in de code)
@@ -4811,7 +4834,24 @@ function showTabAnimated(i, dir){
   </div>
 </div>
 
-<!-- Personaliseer submenu -->
+<!-- Herinstalleer-toast: verschijnt na themawisseling als herinstallatie mogelijk is -->
+<div id="reinstall-toast" style="
+  display:none; position:fixed; bottom:0; left:0; right:0; z-index:9998;
+  background:#2a2a2a; color:#fff; font-family:Arial,sans-serif;
+  padding:14px 16px; align-items:center; justify-content:space-between; gap:10px;
+  box-shadow:0 -2px 12px rgba(0,0,0,0.3);">
+  <span style="font-size:13px; line-height:1.3; flex:1;">Ook de app opnieuw<br>installeren met dit icoon?</span>
+  <div style="display:flex; gap:8px; flex-shrink:0;">
+    <button onclick="closeReinstallToast()" style="
+      padding:8px 14px; border-radius:8px; border:1.5px solid #666;
+      background:transparent; color:#ccc; font-size:13px; cursor:pointer;
+      font-family:Arial,sans-serif;">Nee</button>
+    <button onclick="reinstallWithCurrentTheme()" style="
+      padding:8px 14px; border-radius:8px; border:none;
+      background:#f5f0e8; color:#222; font-size:13px; font-weight:bold;
+      cursor:pointer; font-family:Arial,sans-serif;">Ja</button>
+  </div>
+</div>
 <div id="personaliseer-panel">
   <div id="pers-avatar-grid">
     <button class="pers-avatar-btn active" id="pers-btn-lm" onclick="persSetKarakter('l','m')">
