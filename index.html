@@ -48,7 +48,17 @@ html,body { height:100%; overflow:hidden; background:#fff; color:#111; font-fami
 button { touch-action:manipulation; }
 
 /* TABS */
-#tabs { display:flex; width:100%; background:#f0ebe0; border-bottom:2px solid #b8ae9a; height:var(--tab-h); flex-shrink:0; }
+#tabs { display:flex; width:100%; background:#f0ebe0; border-bottom:2px solid #b8ae9a; height:var(--tab-h); flex-shrink:0; position:relative; z-index:30; }
+/* Statische balk onder tabbalk: toonsoort + midi-volume */
+#top-bar {
+  display:flex; flex-direction:column; align-items:stretch; width:100%;
+  padding:12px 6px 4px; gap:4px;
+  background:#fff;
+  border-bottom:1px solid #eee;
+  position:relative; z-index:30;
+  flex-shrink:0; box-sizing:border-box;
+}
+
 .tab-btn {
   flex:1; display:flex; align-items:center; justify-content:center;
   cursor:pointer; font-size:12px; color:#999; border:none; border-right:1px solid #cfc7b8;
@@ -179,12 +189,14 @@ input[type=range].seek-slider::-webkit-slider-thumb {
 /* STAFF PAGES */
 .staff-page { padding:0; position:relative; overflow:hidden; flex:1; }
 
-/* Staff-top-bar: toonsoortnaam + nootpositieslider bovenaan pagina */
-.staff-top-bar {
-  position:absolute; top:0; left:0; right:0; z-index:30;
-  background:rgba(255,255,255,0.92);
-  padding:12px 6px 2px; /* 12px = helft sliderhoogte (24px) boven slider+label */
-}
+/* staff-top-bar verwijderd — statische #top-bar gebruikt */
+/* Verberg player in niet-actieve en slidende pages */
+.page.sliding .player-mount-staff,
+.page.sliding .player-open-row,
+.page.sliding .player-content,
+.page.sliding .zoom-col-abs { visibility:hidden; }
+.page:not(.active):not(.sliding) .player-mount-staff { visibility:hidden; }
+/* Bottom-bar: verberg de playknop van tab0 niet — die hoort statisch zichtbaar te zijn */
 .staff-key-label-top {
   font-size:15px; font-weight:bold; color:#222;
   text-align:right; display:block; cursor:pointer;
@@ -786,25 +798,22 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 
 <!-- TABS -->
 <div id="tabs">
-  <button class="tab-btn active" onclick="showTab(0)" id="tab0"><span style="font-size:12px;letter-spacing:0.5px;">Toonsoort</span></button>
-  <button class="tab-btn" onclick="showTab(1)" id="tab1">
+  <button class="tab-btn active" onclick="showTabAnimated(0, currentTab<0?'right':'left')" id="tab0"><span style="font-size:12px;letter-spacing:0.5px;">Toonsoort</span></button>
+  <button class="tab-btn" onclick="showTabAnimated(1, currentTab<1?'left':'right')" id="tab1">
     <div style="height:72px;overflow:hidden;position:relative;width:28px;">
       <span style="font-family:'Bravura',Georgia,serif;font-size:28px;line-height:1;position:absolute;bottom:8px;left:0;color:inherit;"></span>
     </div>
   </button>
-  <button class="tab-btn" onclick="showTab(2)" id="tab2">
+  <button class="tab-btn" onclick="showTabAnimated(2, currentTab<2?'left':'right')" id="tab2">
     <span style="font-family:'Bravura',Georgia,serif;font-size:38px;line-height:1;display:block;transform:translateY(2px);color:inherit;"></span>
   </button>
 </div>
 
-<!-- PAGE 0 -->
-<div class="page active" id="page0">
-  <!-- Toonsoortnaam + midi-vol: zelfde zijafstanden als staff-top-bar op tabs 2&3
-       Negatieve zijmarge compenseert de page-padding (--safe=36px), dan 6px eigen padding -->
-  <div style="display:flex;align-items:center;width:auto;gap:0;
-              padding:12px 6px 2px;margin:-6px 0 6px;">
+<!-- STATISCHE TOP-BAR: toonsoort + midi-volume, altijd zichtbaar -->
+<div id="top-bar" style="flex-direction:column;padding-bottom:2px;">
+  <div style="display:flex;align-items:center;width:100%;gap:0;">
     <div style="width:33.33%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-      <span class="staff-key-label-top" id="key-name-display" style="cursor:pointer;text-align:center;" onclick="showTab(0)" title="Toonsoort">C Groot</span>
+      <span class="staff-key-label-top" id="key-name-display" style="cursor:pointer;text-align:center;" onclick="showTabAnimated(0, currentTab<0?'right':'left')" title="Toonsoort">C Groot</span>
     </div>
     <div style="flex:1;padding:0 4px;">
       <div class="h-vol-wrap" id="h-vol-wrap-0" style="height:24px;">
@@ -816,12 +825,13 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Hz-balk direct onder toonsoort+midivolume -->
-  <div class="pitch-section" id="pitch-section-0" style="padding:0 6px;"></div>
+<!-- PAGE 0 -->
+<div class="page active" id="page0">
 
   <!-- Majeur/Mineur knoppen -->
-  <div class="mode-btns" style="margin-bottom:8px;margin-top:24px;padding:0 6px;">
+  <div class="mode-btns" style="margin-bottom:8px;margin-top:8px;padding:0 6px;">
     <button class="mode-btn active" id="btn-maj" onclick="setMode(false)">Majeur</button>
     <button class="mode-btn"        id="btn-min" onclick="setMode(true)">Mineur</button>
   </div>
@@ -852,8 +862,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
       </div>
     </div>
   </div>
-
-  <!-- Mp3-balk: links en rechts tot aan schermrand, playknop rechts -->
+  <!-- Mp3-balk en player: blijft op tab0 -->
   <div style="margin-top:auto;">
     <div id="player-mount-0"></div>
   </div>
@@ -862,30 +871,13 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 <!-- PAGE 1: Vioolsleutel -->
 <div class="page staff-page" id="page1">
   <!-- TOP: toonsoortnaam gecentreerd onder tab1, midi-vol breed onder tab2+3 -->
-  <div class="staff-top-bar" id="staff-top-bar-treble">
-    <div style="display:flex;align-items:center;width:100%;gap:0;">
-      <!-- Naam: gecentreerd in eerste 1/3 van schermbreedte (= tab Toonsoort) -->
-      <div style="width:33.33%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <span class="staff-key-label-top" id="staff-key-label-top-treble" onclick="showTab(0)" title="Toonsoort">C Groot</span>
-      </div>
-      <!-- Midi-volumeslider: breed onder tab2+tab3 = resterende 66.67% -->
-      <div style="flex:1;padding:0 4px;">
-        <div class="h-vol-wrap" style="height:24px;">
-          <div class="h-vol-bg"></div>
-          <input type="range" class="h-vol-thumb" id="pvol-note-1"
-            min="20" max="100" step="1" value="20"
-            oninput="setNoteVol(this.value,'note-1')"
-           
-           
-            onchange="setNoteVol(this.value,'note-1')">
-        </div>
-      </div>
-    </div>
-    <div class="note-pos-row" id="note-pos-row-treble">
-      <div class="note-pos-slider-wrap" id="note-pos-wrap-treble">
-        <div class="note-pos-slider-bg" id="note-pos-bg-treble"></div>
-        <input type="range" class="note-pos-slider-thumb" id="note-pos-treble"
-          min="0" max="100" step="1" value="30"
+  <!-- note-pos-slider: bewaard voor nootpositie functie, verborgen -->
+  <div style="display:none">
+    <input type="range" id="pvol-note-1" min="20" max="100" step="1" value="20">
+    <div id="note-pos-row-treble">
+      <div id="note-pos-wrap-treble">
+        <div id="note-pos-bg-treble"></div>
+        <input type="range" id="note-pos-treble" min="0" max="100" step="1" value="30"
           oninput="onNotePosInput(this.value,'treble')"
           ontouchstart="activateNotePosSlider('treble')"
           ontouchend="deactivateNotePosSlider('treble')"
@@ -947,28 +939,13 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 <!-- PAGE 2: Bassleutel -->
 <div class="page staff-page" id="page2">
   <!-- TOP: toonsoortnaam gecentreerd onder tab1, midi-vol breed onder tab2+3 -->
-  <div class="staff-top-bar" id="staff-top-bar-bass">
-    <div style="display:flex;align-items:center;width:100%;gap:0;">
-      <div style="width:33.33%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <span class="staff-key-label-top" id="staff-key-label-top-bass" onclick="showTab(0)" title="Toonsoort">C Groot</span>
-      </div>
-      <div style="flex:1;padding:0 4px;">
-        <div class="h-vol-wrap" style="height:24px;">
-          <div class="h-vol-bg"></div>
-          <input type="range" class="h-vol-thumb" id="pvol-note-2"
-            min="20" max="100" step="1" value="20"
-            oninput="setNoteVol(this.value,'note-2')"
-           
-           
-            onchange="setNoteVol(this.value,'note-2')">
-        </div>
-      </div>
-    </div>
-    <div class="note-pos-row" id="note-pos-row-bass">
-      <div class="note-pos-slider-wrap" id="note-pos-wrap-bass">
-        <div class="note-pos-slider-bg" id="note-pos-bg-bass"></div>
-        <input type="range" class="note-pos-slider-thumb" id="note-pos-bass"
-          min="0" max="100" step="1" value="30"
+  <!-- note-pos-slider: bewaard voor nootpositie functie, verborgen -->
+  <div style="display:none">
+    <input type="range" id="pvol-note-2" min="20" max="100" step="1" value="20">
+    <div id="note-pos-row-bass">
+      <div id="note-pos-wrap-bass">
+        <div id="note-pos-bg-bass"></div>
+        <input type="range" id="note-pos-bass" min="0" max="100" step="1" value="30"
           oninput="onNotePosInput(this.value,'bass')"
           ontouchstart="activateNotePosSlider('bass')"
           ontouchend="deactivateNotePosSlider('bass')"
@@ -1026,6 +1003,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
     </div>
   </div>
 </div>
+
 
 </div>
 <script>
@@ -2609,14 +2587,12 @@ function setupTouch(clef){
   // MULTITOUCH handlers
   cv.ontouchstart=e=>{
     e.preventDefault();
-    // Aanraken notenbalk sluit instellingenvensters
     const panel  = document.getElementById('settings-panel');
     const apanel = document.getElementById('app-panel');
     if((panel && panel.classList.contains('open')) || (apanel && apanel.classList.contains('open'))){
-      closeSettings();
+      closeSettings(); return;
     }
-    // Max 3 gelijktijdige aanrakingen
-    const activeTouches = Object.keys(st.touches).length;
+    // Noten activeren
     for(const t of e.changedTouches){
       if(Object.keys(st.touches).length >= 3) break;
       const note=noteAt(t.clientX,t.clientY); if(!note) continue;
@@ -2624,14 +2600,36 @@ function setupTouch(clef){
       const node=playN(midi, 0.50);
       st.touches[t.identifier]={step:note.step, node};
     }
-    // Legacy: eerste touch ook in st.step
     const first=Object.values(st.touches)[0];
     st.step=first?first.step:null; st.accFired=true;
     renderStaff(clef);
+    // Single touch: registreer bij swipe-engine (prepareert pages direct)
+    if(e.touches.length === 1){
+      swipeStart(e.touches[0].clientX, e.touches[0].clientY, true);
+      st._swipeIsHoriz = false;
+    } else {
+      swipeCancel(); // multitouch: cancel preparation
+      st._swipeIsHoriz = false;
+    }
   };
 
   cv.ontouchmove=e=>{
     e.preventDefault();
+    if(e.touches.length === 1){
+      const isSwipe = window.swipeMove(e.touches[0].clientX, e.touches[0].clientY);
+      if(isSwipe){
+        // Horizontale swipe: stop noten
+        if(!st._swipeIsHoriz){
+          st._swipeIsHoriz = true;
+          for(const slot of Object.values(st.touches)) stopN(slot.node);
+          st.touches = {};
+          st.step = null;
+          renderStaff(clef);
+        }
+        return;
+      }
+    }
+    if(st._swipeIsHoriz) return;
     let changed=false;
     for(const t of e.changedTouches){
       const slot=st.touches[t.identifier]; if(!slot) continue;
@@ -2646,6 +2644,13 @@ function setupTouch(clef){
 
   cv.ontouchend=cv.ontouchcancel=e=>{
     e.preventDefault();
+    if(st._swipeIsHoriz){
+      if(e.touches.length === 0){
+        window.swipeEnd(e.changedTouches[0].clientX);
+        st._swipeIsHoriz = false;
+      }
+      return;
+    }
     for(const t of e.changedTouches){
       const slot=st.touches[t.identifier];
       if(slot){ stopN(slot.node); delete st.touches[t.identifier]; }
@@ -2830,7 +2835,8 @@ function buildPlayerMini(mountId){
   //   mp3-balk: player-open-row heeft padding:4px 2px → 2px links
   mount.innerHTML = `
     <div id="pmini-wrap-${idx}" style="margin-top:4px;">
-      <div style="display:flex;justify-content:flex-end;padding-right:8px;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;padding:0 8px 4px 8px;gap:8px;">
+        <div class="pitch-section" id="pitch-section-0" style="flex:1;min-width:0;"></div>
         <div class="player-play-btn" id="pplaybtn-${idx}" role="button" tabindex="0"
              onclick="togglePlay()" ontouchend="togglePlay();event.preventDefault()">▶</div>
       </div>
@@ -3194,23 +3200,28 @@ function midiToStaffStep(midi, clef){
 }
 
 function setupVolSliderListeners(){
-  // Tab0 horizontale vol slider
+  // Enige zichtbare slider is pvol-h0 op de statische top-bar
+  // Deze stuurt alle drie kanalen aan, en speelt een preview-noot
+  // op basis van welk tabblad actief is
   const s0 = document.getElementById('pvol-h0');
   if(s0){
-    s0.addEventListener('touchstart', e=>{ volTabStart(); }, {passive:true});
-    s0.addEventListener('touchend',   e=>{ volTabEnd(); },   {passive:true});
-  }
-  // Tab1 (viool) vol slider
-  const s1 = document.getElementById('pvol-note-1');
-  if(s1){
-    s1.addEventListener('touchstart', e=>{ volTouchStart(1); }, {passive:true});
-    s1.addEventListener('touchend',   e=>{ volTouchEnd(); },    {passive:true});
-  }
-  // Tab2 (bas) vol slider
-  const s2 = document.getElementById('pvol-note-2');
-  if(s2){
-    s2.addEventListener('touchstart', e=>{ volTouchStart(2); }, {passive:true});
-    s2.addEventListener('touchend',   e=>{ volTouchEnd(); },    {passive:true});
+    s0.addEventListener('touchstart', e=>{
+      if(currentTab === 0) volTabStart();
+      else volTouchStart(currentTab); // tab1=viool, tab2=bas
+    }, {passive:true});
+    s0.addEventListener('touchend', e=>{
+      if(currentTab === 0) volTabEnd();
+      else volTouchEnd();
+    }, {passive:true});
+    // Ook muis-preview
+    s0.addEventListener('mousedown', e=>{
+      if(currentTab === 0) volTabStart();
+      else volTouchStart(currentTab);
+    });
+    s0.addEventListener('mouseup', e=>{
+      if(currentTab === 0) volTabEnd();
+      else volTouchEnd();
+    });
   }
 }
 
@@ -3752,10 +3763,10 @@ function updateStaffZone(){
     const zone = document.getElementById('staff-zone-'+clef);
     if(!ctrl || !zone) return;
 
-    // staff-zone: volledig scherm (achter alles), maar start onder de staff-top-bar
-    const topBar    = document.getElementById('staff-top-bar-'+clef);
-    const topBarH   = topBar ? topBar.offsetHeight : 0;
-    zone.style.top    = topBarH + 'px';
+    // staff-zone start direct bovenaan de page (staff-top-bar is verwijderd)
+    const topBar    = null;
+    const topBarH   = 0;
+    zone.style.top    = '0';
     zone.style.bottom = '0';
 
     // Schaalslider hoogte = 25% van appH, maar minstens 60px
@@ -3908,7 +3919,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   // Personaliseer init: knoppen + icoon
   persInit();
 
-  buildPitch(); updateLabels(); renderQuint();
+  updateLabels(); renderQuint();
 
   // Teken tab-iconen: wacht op Bravura, teken dan op canvas
   if(document.fonts && document.fonts.load){
@@ -3920,6 +3931,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     }).catch(()=>{ renderMiniStaves(); });
   }
   buildPlayerMini('player-mount-0');
+  buildPitch();
   buildPlayer('player-mount-1');
   buildPlayer('player-mount-2');
   applyTranslations();
@@ -4261,6 +4273,9 @@ function persSetKarakter(t, g){
   _persUpdateGrid();
   persApplyIcon();
   _updateInstallLabel();
+  // Sluit alle menu's en ga naar tab 0
+  closeSettings();
+  showTab(0);
 }
 
 // Behoud backwards-compatibiliteit (gebruikt elders in de code)
@@ -4382,101 +4397,244 @@ window.addEventListener('popstate', ()=>{
 });
 
 // ════════════════════════════════════════
-// SWIPE NAVIGATIE TUSSEN TABBLADEN
+// SWIPE NAVIGATIE — live drag + snap
 // ════════════════════════════════════════
 (function(){
-  let sx=0, sy=0, st=0, ok=false;
-  const THRESH=50, MAX_Y=80, MAX_MS=500;
+  const SNAP_THRESH = 0.35;  // >35% van schermbreedte = wissel tab
+  const FLICK_V     = 0.4;   // px/ms snelheid = flick = altijd wissel
+  const MAX_Y_RATIO = 0.7;   // verticaal/horizontaal ratio om swipe te blokkeren
+
+  let drag = null; // actieve sleep-staat
 
   function blocked(el){
-    // Nooit swipen op sliders, knoppen, of de canvas (notenbalken / kwintencirkel)
-    return !!el.closest('input[type=range], button, canvas, .player-waveform-wrap');
+    return !!el.closest('input[type=range], button, .player-waveform-wrap');
   }
-  function blockedForTab(el, tab){
+  function canvasBlocked(el){
+    // Canvas van notenbalk: behandeld door eigen handler (die roept swipeStart/Move/End aan)
+    // Canvas van kwintencirkel: geblokkeerd
+    const cv = el.closest('canvas');
+    if(!cv) return false;
+    return cv.id === 'quint-canvas' || cv.id === 'mini-system-canvas';
+  }
+  function blockedForTab(el){
     if(blocked(el)) return true;
-    // Tab 0: ook uitgesloten = pitch-sectie
-    if(tab===0 && el.closest('.pitch-section')) return true;
-    // Tabs 1&2: ook uitgesloten = alles behalve de onderste bedieningsrij
-    if((tab===1||tab===2) && !el.closest('.control-block')) return true;
+    if(canvasBlocked(el)) return true;
+    // pitch-section is nu statisch in top-bar, geen blokkade nodig
     return false;
   }
 
-  document.addEventListener('touchstart', e=>{
-    ok = false;
-    if(e.touches.length!==1) return;
-    if(blockedForTab(e.target, currentTab)) return;
-    sx = e.touches[0].clientX;
-    sy = e.touches[0].clientY;
-    st = Date.now();
-    ok = true;
-  }, {passive:true, capture:true});
+  function getPages(){ return Array.from(document.querySelectorAll('.page')); }
+  function getW(){ return document.getElementById('app').offsetWidth || window.innerWidth; }
 
-  document.addEventListener('touchend', e=>{
-    if(!ok) return;
-    ok = false;
-    if(e.changedTouches.length!==1) return;
-    const dx = e.changedTouches[0].clientX - sx;
-    const dy = Math.abs(e.changedTouches[0].clientY - sy);
-    const dt = Date.now() - st;
-    if(Math.abs(dx) < THRESH) return;   // te kort
-    if(dy > MAX_Y)            return;   // te verticaal
-    if(dt > MAX_MS)           return;   // te traag
-    if(dy > Math.abs(dx)*0.7) return;   // meer verticaal dan horizontaal
-    const next = dx<0 ? Math.min(currentTab+1,2) : Math.max(currentTab-1,0);
-    if(next!==currentTab) showTabAnimated(next, dx<0?'left':'right');
-  }, {passive:true, capture:true});
-})();
-
-// Prevent pinch-zoom (multi-finger touchmove)
-document.addEventListener('touchmove', e=>{
-  if(e.touches.length > 1) e.preventDefault();
-},{passive:false});
-
-function showTabAnimated(i, dir){
-  const pages = Array.from(document.querySelectorAll('.page'));
-  const cur   = pages[currentTab];
-  const tgt   = pages[i];
-  if(!cur || !tgt){ showTab(i); return; }
-
-  const appEl = document.getElementById('app');
-  const W = appEl.offsetWidth || window.innerWidth;
-  const inX  = dir === 'left' ?  W : -W;
-  const outX = dir === 'left' ? -W :  W;
-
-  // Zet beide pagina's in sliding-modus (zichtbaar, absoluut in #app)
-  const applyBase = (p, x, z) => {
-    p.classList.add('sliding');
-    p.style.position  = 'absolute';
-    p.style.top       = '0';
-    p.style.left      = '0';
-    p.style.width     = '100%';
-    p.style.height    = '100%';
-    p.style.zIndex    = z;
-    p.style.transform = `translateX(${x}px)`;
-    p.style.transition= 'none';
+  // Initialiseer drag-staat en zet pagina's klaar
+  window.swipeStart = function(clientX, clientY, fromCanvas){
+    if(drag) return;
+    const W = getW();
+    drag = {
+      x0: clientX, y0: clientY,
+      t0: Date.now(),
+      dx: 0,
+      decided: false,
+      isHoriz: false,
+      fromCanvas: !!fromCanvas,
+      W: W,
+    };
+    // Prepareer pages direct bij aanraking — zodat ze meteen zichtbaar zijn
+    // zodra de vinger begint te bewegen (echte launcher-ervaring)
+    _swipePrepare(W);
   };
 
-  applyBase(cur, 0, '5');
-  applyBase(tgt, inX, '10');
+  window.swipeMove = function(clientX, clientY){
+    if(!drag) return false;
+    const dx = clientX - drag.x0;
+    const dy = clientY - drag.y0;
+    drag.dx = dx;
 
-  // Force reflow zodat de begintransform is toegepast
-  void tgt.offsetWidth;
+    if(!drag.decided){
+      if(Math.abs(dx) < 4 && Math.abs(dy) < 4) return false;
+      const horizRatio = Math.abs(dx) / (Math.abs(dy) + 0.001);
+      drag.isHoriz = horizRatio > 1.2;
+      drag.decided = true;
+      if(!drag.isHoriz){
+        // Verticale intentie: herstel pages en stop tracking
+        const W = drag.W;
+        drag = null;
+        _swipeCancel(W);
+        return false;
+      }
+    }
+    if(!drag.isHoriz) return false;
 
-  // Start de transitie
-  const ease = 'transform 0.27s cubic-bezier(.4,0,.2,1)';
-  cur.style.transition = ease;
-  tgt.style.transition = ease;
-  cur.style.transform  = `translateX(${outX}px)`;
-  tgt.style.transform  = 'translateX(0)';
+    const next = dx < 0 ? currentTab + 1 : currentTab - 1;
+    let clampedDx = dx;
+    if(next < 0 || next > 2) clampedDx = dx * 0.15; // rubber-band
+    _swipeDrag(clampedDx, drag.W);
+    return true;
+  };
 
-  setTimeout(()=>{
-    // Opruimen: alles terug naar normale toestand
-    pages.forEach(p=>{
-      p.classList.remove('sliding');
-      p.style.cssText = '';
+  window.swipeEnd = function(clientX){
+    if(!drag){ return; }
+    const W = drag.W;
+    if(!drag.decided || !drag.isHoriz){
+      drag = null;
+      _swipeCancel(W);
+      return;
+    }
+    const dx    = clientX - drag.x0;
+    const dt    = Date.now() - drag.t0;
+    const vel   = Math.abs(dx) / (dt + 1);
+    const flick = vel > FLICK_V && Math.abs(dx) > 20;
+    const far   = Math.abs(dx) > W * SNAP_THRESH;
+    drag = null;
+
+    const next = dx < 0 ? currentTab + 1 : currentTab - 1;
+    if((flick || far) && next >= 0 && next <= 2){
+      _swipeCommit(next, dx < 0 ? 'left' : 'right', W);
+    } else {
+      _swipeCancel(W);
+    }
+  };
+
+  window.swipeCancel = function(){
+    if(!drag) return;
+    const W = drag.W;
+    drag = null;
+    _swipeCancel(W);
+  };
+
+  // ── Interne helpers ──────────────────────────────────
+  function _getStaticTop(){
+    // Meet de onderkant van het laatste statische element boven de pages
+    const topBar = document.getElementById('top-bar');
+    if(topBar){
+      const r = topBar.getBoundingClientRect();
+      const appR = document.getElementById('app').getBoundingClientRect();
+      return Math.round(r.bottom - appR.top);
+    }
+    const tabs = document.getElementById('tabs');
+    return tabs ? tabs.offsetHeight : 72;
+  }
+
+  function _swipePrepare(W){
+    const pages  = getPages();
+    const staticTop = _getStaticTop();
+    pages.forEach((p, idx) => {
+      p.style.display       = 'flex';
+      p.style.flexDirection = 'column';
+      p.classList.add('sliding');
+      p.style.position   = 'absolute';
+      p.style.top        = staticTop + 'px';
+      p.style.left       = '0';
+      p.style.width      = '100%';
+      p.style.bottom     = '0';
+      p.style.height     = '';          // laat bottom bepalen
+      p.style.transition = 'none';
+      p.style.transform  = `translateX(${(idx - currentTab) * W}px)`;
+      p.style.zIndex     = idx === currentTab ? '5' : '3';
     });
+  }
+
+  function _swipeDrag(dx, W){
+    const pages = getPages();
+    pages.forEach((p, idx) => {
+      const base = (idx - currentTab) * W;
+      p.style.transition = 'none';
+      p.style.transform  = `translateX(${base + dx}px)`;
+    });
+  }
+
+  function _swipeCommit(next, dir, W){
+    const pages = getPages();
+    const ease  = 'transform 0.26s cubic-bezier(.4,0,.2,1)';
+    pages.forEach((p, idx) => {
+      p.style.transition = ease;
+      p.style.transform  = `translateX(${(idx - next) * W}px)`;
+    });
+    setTimeout(() => {
+      pages.forEach(p => { p.classList.remove('sliding'); p.style.cssText = ''; });
+      showTab(next);
+    }, 270);
+  }
+
+  function _swipeCancel(W){
+    const pages = getPages();
+    const ease = 'transform 0.18s cubic-bezier(.4,0,.2,1)';
+    pages.forEach((p, idx) => {
+      p.style.transition = ease;
+      p.style.transform  = `translateX(${(idx - currentTab) * W}px)`;
+    });
+    setTimeout(() => {
+      pages.forEach(p => { p.classList.remove('sliding'); p.style.cssText = ''; });
+    }, 190);
+  }
+
+  // ── Globale handler (buiten canvas en geblokte elementen) ────
+  document.addEventListener('touchstart', e => {
+    if(e.touches.length !== 1) return;
+    const el = e.target;
+    if(blockedForTab(el)) return;
+    swipeStart(e.touches[0].clientX, e.touches[0].clientY, false);
+  }, {passive:true, capture:false});
+
+  document.addEventListener('touchmove', e => {
+    if(!drag || !drag.decided) return;
+    if(drag.isHoriz) e.preventDefault();
+  }, {passive:false, capture:false});
+
+  document.addEventListener('touchmove', e => {
+    if(e.touches.length !== 1) return;
+    swipeMove(e.touches[0].clientX, e.touches[0].clientY);
+  }, {passive:true, capture:false});
+
+  document.addEventListener('touchend', e => {
+    if(e.changedTouches.length !== 1) return;
+    swipeEnd(e.changedTouches[0].clientX);
+  }, {passive:true, capture:false});
+
+  document.addEventListener('touchcancel', () => swipeCancel(), {passive:true});
+
+  // Prevent pinch-zoom
+  document.addEventListener('touchmove', e => {
+    if(e.touches.length > 1) e.preventDefault();
+  }, {passive:false});
+})();
+
+function showTabAnimated(i, dir){
+  if(i === currentTab) return;
+  const W = document.getElementById('app').offsetWidth || window.innerWidth;
+  const pages = Array.from(document.querySelectorAll('.page'));
+  if(!pages[currentTab] || !pages[i]){ showTab(i); return; }
+  // Maak alle pages zichtbaar op startpositie
+  // Meet onderkant van statische balk boven de pages
+  const _tb = document.getElementById('top-bar');
+  const _app = document.getElementById('app');
+  const staticTop = _tb && _app
+    ? Math.round(_tb.getBoundingClientRect().bottom - _app.getBoundingClientRect().top)
+    : (document.getElementById('tabs') || {offsetHeight:72}).offsetHeight;
+  pages.forEach((p, idx) => {
+    p.style.display       = 'flex';
+    p.style.flexDirection = 'column';
+    p.classList.add('sliding');
+    p.style.position     = 'absolute';
+    p.style.top          = staticTop + 'px';
+    p.style.left         = '0';
+    p.style.width        = '100%';
+    p.style.bottom       = '0';
+    p.style.height       = '';
+    p.style.transition   = 'none';
+    p.style.zIndex       = idx === currentTab ? '5' : '3';
+    p.style.transform    = `translateX(${(idx - currentTab) * W}px)`;
+  });
+  void pages[0].offsetWidth; // force reflow
+  const ease = 'transform 0.26s cubic-bezier(.4,0,.2,1)';
+  pages.forEach((p, idx) => {
+    p.style.transition = ease;
+    p.style.transform  = `translateX(${(idx - i) * W}px)`;
+  });
+  setTimeout(() => {
+    pages.forEach(p => { p.classList.remove('sliding'); p.style.cssText = ''; });
     showTab(i);
-  }, 290);
+  }, 270);
 }
 </script>
 
@@ -4714,7 +4872,7 @@ async function adminUpdateApp(){
 }
 
 function adminShowStats(){
-  alert('Gebruikersstatistieken — nog te configureren.');
+  window.open('https://analytics.google.com/analytics/web/#/p' + 'G-YS5METEHJ5'.replace('G-','') + '/reports/reportinghub', '_blank');
 }
 </script>
 
