@@ -203,11 +203,7 @@ input[type=range].seek-slider::-webkit-slider-thumb {
   padding:0 1px 2px; font-family:Georgia,serif; letter-spacing:.2px;
 }
 /* Nootpositieslider: nu inline in staff-top-bar, alleen zichtbaar bij open instellingen */
-.note-pos-row {
-  padding:2px 0 0 0;
-  visibility:hidden;
-}
-.settings-open .note-pos-row { visibility:visible; }
+/* note-pos-row: absoluut in .staff-page, zichtbaar bij settings-open */
 .staff-zone {
   position:absolute; top:0; left:0; right:0; bottom:0; z-index:1;
   display:flex; align-items:center; justify-content:stretch;
@@ -233,15 +229,22 @@ input[type=range].seek-slider::-webkit-slider-thumb {
 .notepos-slider-active #app-panel,
 .scale-slider-active   #settings-panel,
 .scale-slider-active   #app-panel   { display:none !important; }
-/* Nootpositieslider opgesplitst */
+/* Nootpositiesliders: position:fixed — buiten alle overflow:hidden containers */
 .note-pos-row {
-  position:relative; height:26px;
-  visibility:hidden; margin:2px 0 0;
+  position:fixed;
+  left:0; right:0;
+  top:0; bottom:auto; /* top wordt via JS gezet = onderkant top-bar */
+  height:26px;
+  visibility:hidden;
+  z-index:150;
+  pointer-events:none;
 }
-.settings-open .note-pos-row { visibility:visible; }
+.note-pos-row .note-pos-slider-wrap { pointer-events:auto; }
+/* Zichtbaar als actieve staff-page settings-open heeft OF via body */
+body.settings-open-staff .note-pos-row { visibility:visible; }
 .note-pos-slider-wrap {
   position:absolute; top:0; bottom:0;
-  /* left/right worden door JS ingesteld op basis van nxMin/nxMax */
+  left:0; right:0; /* default volle breedte; wordt via JS verfijnd */
 }
 .note-pos-slider-bg {
   position:absolute; top:50%; transform:translateY(-50%);
@@ -264,8 +267,7 @@ input[type=range].note-pos-slider-thumb::-webkit-slider-thumb {
 }
 .staff-wrap canvas { width:100%; height:100%; display:block; }
 .acc-row { display:flex; align-items:center; justify-content:space-between;
-  height:52px; padding:0 8px; flex-shrink:0; background:#fff;
-  border-top:1px solid #f0e8dc; }
+  height:52px; padding:0 8px; flex-shrink:0; background:#fff; }
 /* staff-outer en scale-col volledig ontkoppeld — beide absolute in staff-zone */
 .staff-outer { position:absolute; inset:0; }
 .scale-col {
@@ -281,6 +283,7 @@ input[type=range].note-pos-slider-thumb::-webkit-slider-thumb {
   width:4px; height:var(--scale-slider-h, 20vh); max-height:25vh; flex-shrink:0;
   background:linear-gradient(to top,#c8bfa8 calc(var(--pct,66.7%)),#e8e0d0 calc(var(--pct,66.7%)));
   border-radius:3px; outline:none; cursor:pointer;
+  touch-action:none; user-select:none; -webkit-user-select:none;
 }
 .scale-slider-v::-webkit-slider-thumb {
   -webkit-appearance:none; width:22px; height:22px;
@@ -311,27 +314,40 @@ input[type=range].note-pos-slider-thumb::-webkit-slider-thumb {
 /* Settings-knop: 90° gedraaid, 25% kleiner dan acc-btn (54*0.75=40px) */
 .settings-btn {
   flex-shrink:0;
-  width:40px; height:40px;
-  background:#fff; border:1.5px solid #aaa; border-radius:50%;
-  color:#444; font-size:13px; font-family:Georgia,serif; cursor:pointer;
+  width:60px; height:36px;
+  background:#fff; border:1.5px solid #aaa;
+  border-radius:50%;
+  transform:none;
+  color:#111; font-size:16px; font-family:Georgia,serif; cursor:pointer;
   white-space:nowrap; touch-action:none; user-select:none; -webkit-user-select:none;
-  transform:rotate(90deg);
   display:flex; align-items:center; justify-content:center;
-  transition:background .2s,border-color .2s,color .2s,box-shadow .2s;
+  transition:background .2s, border-color .2s, color .2s;
 }
-.settings-btn.held, .settings-btn.active {
-  background:#f5f0e8; color:#444; border-color:#888; border-width:2px;
-  box-shadow:0 0 0 3px rgba(160,140,110,0.35), inset 0 1px 3px rgba(0,0,0,0.08);
-}
+.settings-btn .settings-btn-icon { display:inline-block; transform:none; }
+.settings-gear-svg { display:block; fill:#111; transition:fill .2s; }
+.settings-btn.held,
+.settings-btn.active { background:#222; border-color:#222; }
+.settings-btn.held .settings-btn-icon,
+.settings-btn.active .settings-btn-icon { color:#fff; }
+.settings-btn.held .settings-gear-svg,
+.settings-btn.active .settings-gear-svg { fill:#fff; }
+
+/* Dikkere rand op tab1&2 instellingenknop (6× = 6×1.5px = 9px) */
+.acc-row .settings-btn { border-width:9px; }
 
 /* Acc-row: settings-btn-wrap smal, zodat settings gecentreerd is tussen zoom en ♮ */
 .acc-row {
   display:flex; align-items:center; justify-content:space-between;
   min-height:58px; padding:4px 8px; flex-shrink:0; background:#fff;
-  border-top:1px solid #f0e8dc; gap:6px;
+  gap:6px;
 }
-.acc-btns-center { display:flex; gap:14px; flex:1; justify-content:center; }
-.settings-btn-wrap { width:40px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.acc-btns-center { display:flex; gap:clamp(4px,2.5vw,14px); flex:1; justify-content:center; align-items:center; }
+.acc-btns-center .acc-btn,
+.acc-btns-center .shift-btn {
+  width:clamp(38px,10.5vw,54px); height:clamp(38px,10.5vw,54px);
+  font-size:clamp(20px,6.5vw,28px); flex-shrink:0;
+}
+.settings-btn-wrap { width:60px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 
 /* Zoom-slider zelfde afmeting als mp3-vol slider (staff-vol-abs: 22px breed, volle hoogte) */
 .zoom-slider-wrap {
@@ -442,11 +458,11 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
 
 /* Zoomslider: zelfde afmeting als mp3-volumeslider, links in player-mount */
 .zoom-col-abs {
-  width:26px; display:none; align-items:flex-start; flex-shrink:0;
+  width:33px; display:none; align-items:flex-start; flex-shrink:0;
 }
 .zoom-col-abs.visible { display:flex; }
 .zoom-col-abs .zoom-slider-wrap {
-  position:relative; width:22px; margin:0 2px; flex:1;
+  position:relative; width:28px; margin:0 2px; flex:1;
 }
 
 /* Mp3-volumeslider onderaan tabs 2&3: zelfde staff-vol-abs maar voor mp3 */
@@ -516,6 +532,9 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
   background:#fff; border:1.5px solid #c8bfa8; border-radius:12px;
   box-shadow:0 4px 24px rgba(0,0,0,0.15); padding:12px;
   width:auto; min-width:0; white-space:nowrap;
+  max-height:calc(var(--panel-bottom, 80px) - 8px);
+  overflow-y:auto; overflow-x:hidden;
+  box-sizing:border-box;
 }
 #settings-panel.open { display:block; }
 .settings-title { font-size:13px; font-weight:600; color:#333;
@@ -593,7 +612,7 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
 .install-theme-btn span { font-size:10px; font-family:Arial,sans-serif; color:#555; }
 .app-panel-row {
   display:flex; align-items:center; justify-content:space-between; gap:9px;
-  height:36px; padding:0 6px; border-radius:7px; cursor:pointer;
+  min-height:36px; padding:5px 6px; border-radius:7px; cursor:pointer;
   font-size:12.5px; font-family:Arial,sans-serif; color:#333;
   transition:background .15s; user-select:none; flex-shrink:0;
 }
@@ -638,7 +657,7 @@ body.is-admin #admin-update-status { display:block; }
 .lang-option.active { font-weight:700; color:#111; }
 /* Settings-knop wrapper: gecentreerd links, gelijke breedte als play-knop */
 .settings-btn-wrap {
-  width:48px; display:flex; align-items:center; justify-content:center;
+  width:60px; display:flex; align-items:center; justify-content:center;
   flex-shrink:0;
 }
 /* Hint-pijl boven instellingenknop */
@@ -809,6 +828,65 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 }
 #nk-share-icon { display:flex; align-items:center; flex-shrink:0; }
 
+/* Analyse-toast: toonsoort + stemming detectie */
+#analysis-toast {
+  position:fixed; bottom:86px; left:50%; transform:translateX(-50%) translateY(16px);
+  background:#2a2a2a; color:#fff; font-family:Georgia,serif; font-size:13px;
+  padding:9px 18px; border-radius:22px; white-space:pre-line; text-align:center;
+  max-width:92vw; box-sizing:border-box;
+  box-shadow:0 3px 14px rgba(0,0,0,0.28); z-index:998;
+  opacity:0; pointer-events:none;
+  transition:opacity .28s, transform .28s;
+  line-height:1.55;
+}
+#analysis-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* Settings-panel: verberg notenbalk-items als geopend vanuit tab0 */
+#settings-panel[data-ctx="tab0"] .settings-staff-only { display:none; }
+/* Meer-knop: alleen op tab0 */
+#settings-panel[data-ctx="staff"] .settings-meer-row { display:none; }
+
+/* Mp3-volumeslider: uitlijnen op border-top van control-block (geen extra top-offset) */
+.mp3-vol-abs { top:26px !important; } /* 26px = hoogte note-pos-row → uitlijnen met acc-row bovenkant */
+
+/* Lijntje bovenaan mp3-volumeslider verwijderen */
+.mp3-vol-abs .staff-vol-wrap::before { display:none; }
+
+/* Tab0 settings-knop: zelfde formaat als play-knop (54px) */
+#settings-btn-tab0 {
+  /* 90° gedraaid: staande ellips, hoogte=54px (=playknop), breedte=36px */
+  width:36px !important; height:54px !important;
+  transform:none !important;
+  font-size:16px !important;
+  padding:0 !important;
+  box-sizing:border-box !important;
+}
+
+/* Voortgangscirkel analyse */
+#analyse-ring-wrap {
+  position:fixed; z-index:500; pointer-events:none;
+  display:none;
+}
+#analyse-ring-wrap.visible { display:block; }
+#analyse-ring-svg { display:block; }
+
+/* Sounds Familiar knop op tab0 */
+#sounds-familiar-btn {
+  display:none;
+  position:absolute;
+  left:50%; transform:translateX(-50%) translateY(-100%);
+  top:0;
+  width:auto; white-space:nowrap;
+  padding:10px 14px; background:#f5f0e8;
+  border:1.5px solid #c8bfa8; border-radius:10px;
+  color:#444; font-size:13px; font-family:Georgia,serif;
+  cursor:pointer; text-align:center; letter-spacing:0.3px;
+  transition:background .15s;
+  z-index:10;
+}
+#sounds-familiar-btn.visible { display:block; }
+#sounds-familiar-btn:active { background:#e8e0d4; }
+
 </style>
 </head>
 <body>
@@ -881,28 +959,15 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
     </div>
   </div>
   <!-- Mp3-balk en player: blijft op tab0 -->
-  <div style="margin-top:auto;">
+  <div style="margin-top:auto;padding:0 2px;">
     <div id="player-mount-0"></div>
   </div>
 </div>
 
 <!-- PAGE 1: Vioolsleutel -->
 <div class="page staff-page" id="page1">
-  <!-- TOP: toonsoortnaam gecentreerd onder tab1, midi-vol breed onder tab2+3 -->
-  <!-- note-pos-slider: bewaard voor nootpositie functie, verborgen -->
   <div style="display:none">
     <input type="range" id="pvol-note-1" min="20" max="100" step="1" value="20">
-    <div id="note-pos-row-treble">
-      <div id="note-pos-wrap-treble">
-        <div id="note-pos-bg-treble"></div>
-        <input type="range" id="note-pos-treble" min="0" max="100" step="1" value="30"
-          oninput="onNotePosInput(this.value,'treble')"
-          ontouchstart="activateNotePosSlider('treble')"
-          ontouchend="deactivateNotePosSlider('treble')"
-          onmousedown="activateNotePosSlider('treble')"
-          onmouseup="deactivateNotePosSlider('treble')">
-      </div>
-    </div>
   </div>
   <!-- MIDDEN: notenbalk zone (vult ruimte tussen top en bedieningsblok) -->
   <div class="staff-zone" id="staff-zone-treble">
@@ -914,8 +979,10 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
           onchange="onScaleInput(this.value,'treble')"
           ontouchstart="activateScaleSlider('treble')"
           ontouchend="deactivateScaleSlider('treble')"
+          ontouchcancel="deactivateScaleSlider('treble')"
           onmousedown="activateScaleSlider('treble')"
-          onmouseup="deactivateScaleSlider('treble')">
+          onmouseup="deactivateScaleSlider('treble')"
+          onmouseleave="if(_sliderActiveClef==='treble')deactivateScaleSlider('treble')">
       </div>
       <div class="staff-right">
         <div class="staff-wrap" id="treble-wrap"><canvas id="treble-canvas"></canvas></div>
@@ -927,7 +994,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
     <div class="settings-hint-arrow hidden" id="settings-arrow-treble">▼</div>
     <div class="acc-row">
       <div class="settings-btn-wrap">
-        <button class="settings-btn" onclick="toggleSettings(this)" title="Instellingen">⚙︎</button>
+        <button class="settings-btn" onclick="toggleSettings(this)" title="Instellingen"><span class="settings-btn-icon"><svg class="settings-gear-svg" width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.92c.04-.34.07-.69.07-1.08s-.03-.73-.07-1.08l2.33-1.82c.21-.16.27-.45.13-.69l-2.21-3.83c-.13-.24-.42-.32-.66-.24l-2.75 1.1c-.57-.44-1.19-.81-1.87-1.09L14.05 1.6c-.05-.27-.29-.46-.57-.46h-4.42c-.28 0-.52.19-.57.46L8.05 4.76c-.68.28-1.3.65-1.87 1.09L3.43 4.75c-.24-.08-.53 0-.66.24L.56 8.82c-.14.24-.08.53.13.69l2.33 1.82c-.04.35-.07.7-.07 1.08s.03.73.07 1.08L.69 15.31c-.21.16-.27.45-.13.69l2.21 3.83c.13.24.42.32.66.24l2.75-1.1c.57.44 1.19.81 1.87 1.09l.44 2.93c.05.27.29.46.57.46h4.42c.28 0 .52-.19.57-.46l.44-2.93c.68-.28 1.3-.65 1.87-1.09l2.75 1.1c.24.08.53 0 .66-.24l2.21-3.83c.14-.24.08-.53-.13-.69l-2.33-1.82z"/></svg></span></button>
       </div>
       <div class="acc-btns-center">
         <button class="acc-btn" id="acc-natural-treble" ontouchstart="accTouch('treble','natural',event)" onmousedown="accMouse('treble','natural')">♮</button>
@@ -957,21 +1024,8 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 
 <!-- PAGE 2: Bassleutel -->
 <div class="page staff-page" id="page2">
-  <!-- TOP: toonsoortnaam gecentreerd onder tab1, midi-vol breed onder tab2+3 -->
-  <!-- note-pos-slider: bewaard voor nootpositie functie, verborgen -->
   <div style="display:none">
     <input type="range" id="pvol-note-2" min="20" max="100" step="1" value="20">
-    <div id="note-pos-row-bass">
-      <div id="note-pos-wrap-bass">
-        <div id="note-pos-bg-bass"></div>
-        <input type="range" id="note-pos-bass" min="0" max="100" step="1" value="30"
-          oninput="onNotePosInput(this.value,'bass')"
-          ontouchstart="activateNotePosSlider('bass')"
-          ontouchend="deactivateNotePosSlider('bass')"
-          onmousedown="activateNotePosSlider('bass')"
-          onmouseup="deactivateNotePosSlider('bass')">
-      </div>
-    </div>
   </div>
   <!-- MIDDEN: notenbalk zone (vult ruimte tussen top en bedieningsblok) -->
   <div class="staff-zone" id="staff-zone-bass">
@@ -983,8 +1037,10 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
           onchange="onScaleInput(this.value,'bass')"
           ontouchstart="activateScaleSlider('bass')"
           ontouchend="deactivateScaleSlider('bass')"
+          ontouchcancel="deactivateScaleSlider('bass')"
           onmousedown="activateScaleSlider('bass')"
-          onmouseup="deactivateScaleSlider('bass')">
+          onmouseup="deactivateScaleSlider('bass')"
+          onmouseleave="if(_sliderActiveClef==='bass')deactivateScaleSlider('bass')">
       </div>
       <div class="staff-right">
         <div class="staff-wrap" id="bass-wrap"><canvas id="bass-canvas"></canvas></div>
@@ -996,7 +1052,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
     <div class="settings-hint-arrow hidden" id="settings-arrow-bass">▼</div>
     <div class="acc-row">
       <div class="settings-btn-wrap">
-        <button class="settings-btn" onclick="toggleSettings(this)" title="Instellingen">⚙︎</button>
+        <button class="settings-btn" onclick="toggleSettings(this)" title="Instellingen"><span class="settings-btn-icon"><svg class="settings-gear-svg" width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.92c.04-.34.07-.69.07-1.08s-.03-.73-.07-1.08l2.33-1.82c.21-.16.27-.45.13-.69l-2.21-3.83c-.13-.24-.42-.32-.66-.24l-2.75 1.1c-.57-.44-1.19-.81-1.87-1.09L14.05 1.6c-.05-.27-.29-.46-.57-.46h-4.42c-.28 0-.52.19-.57.46L8.05 4.76c-.68.28-1.3.65-1.87 1.09L3.43 4.75c-.24-.08-.53 0-.66.24L.56 8.82c-.14.24-.08.53.13.69l2.33 1.82c-.04.35-.07.7-.07 1.08s.03.73.07 1.08L.69 15.31c-.21.16-.27.45-.13.69l2.21 3.83c.13.24.42.32.66.24l2.75-1.1c.57.44 1.19.81 1.87 1.09l.44 2.93c.05.27.29.46.57.46h4.42c.28 0 .52-.19.57-.46l.44-2.93c.68-.28 1.3-.65 1.87-1.09l2.75 1.1c.24.08.53 0 .66-.24l2.21-3.83c.14-.24.08-.53-.13-.69l-2.33-1.82z"/></svg></span></button>
       </div>
       <div class="acc-btns-center">
         <button class="acc-btn" id="acc-natural-bass" ontouchstart="accTouch('bass','natural',event)" onmousedown="accMouse('bass','natural')">♮</button>
@@ -1144,6 +1200,81 @@ const PITCH_MIN=410, PITCH_MAX=446;
 // STATE
 // ════════════════════════════════════════════════════
 let currentTab=0, isMinor=false, keyIdx=0, pitchHz=440;
+
+// ── Auto-toonsoortdetectie state ──
+// ── Auto-toonsoortdetectie state: standaard UIT bij eerste keer ──
+(function(){
+  const stored = localStorage.getItem('nk_autokey');
+  window._autoKeyDetect = stored === null ? false : stored === '1';
+  if(stored === null) try{ localStorage.setItem('nk_autokey','0'); }catch(e){}
+})();
+
+// Laatste toast-inhoud voor Sounds Familiar knop
+let _lastToastLines = null;
+let _lastToastDuration = 4000;
+
+function _updateSoundsFamiliarBtn(){
+  const btn = document.getElementById('sounds-familiar-btn');
+  if(!btn) return;
+  // Zichtbaar als: auto-detect aan én er is een toast-resultaat
+  const show = !!window._autoKeyDetect && !!_lastToastLines;
+  btn.classList.toggle('visible', show);
+}
+
+function showLastToast(){
+  if(!_lastToastLines) return;
+  _showAnalysisToast(_lastToastLines, _lastToastDuration, true); // persistent: sluit alleen via klik
+}
+
+// ── Voortgangscirkel (analyse-ring) ──
+const _RING_CIRC = 2 * Math.PI * 16; // r=16 → ≈100.5
+let _ringRafId = null;
+let _ringProgress = 0; // 0..1
+
+function _ringShow(tabIdx){
+  const wrap = document.getElementById('analyse-ring-wrap');
+  if(!wrap) return;
+  // Positioneer op actieve tab-knop
+  const tabEl = document.getElementById('tab'+tabIdx);
+  if(tabEl){
+    const r = tabEl.getBoundingClientRect();
+    wrap.style.left = (r.right - 44) + 'px';
+    wrap.style.top  = (r.bottom - 44) + 'px';
+  }
+  _ringProgress = 0;
+  wrap.classList.add('visible');
+  _ringSetProgress(0);
+}
+
+function _ringSetProgress(pct){ // 0..1
+  const arc = document.getElementById('analyse-ring-arc');
+  if(!arc) return;
+  const filled = _RING_CIRC * pct;
+  const empty  = _RING_CIRC - filled;
+  arc.setAttribute('stroke-dasharray', filled.toFixed(1)+' '+empty.toFixed(1));
+}
+
+function _ringAnimate(targetPct, durationMs, onDone){
+  if(_ringRafId) cancelAnimationFrame(_ringRafId);
+  const start = performance.now();
+  const from  = _ringProgress;
+  function step(now){
+    const t = Math.min(1, (now - start) / durationMs);
+    _ringProgress = from + (targetPct - from) * t;
+    _ringSetProgress(_ringProgress);
+    if(t < 1){ _ringRafId = requestAnimationFrame(step); }
+    else { _ringRafId = null; if(onDone) onDone(); }
+  }
+  _ringRafId = requestAnimationFrame(step);
+}
+
+function _ringHide(delay){
+  setTimeout(()=>{
+    const wrap = document.getElementById('analyse-ring-wrap');
+    if(wrap) wrap.classList.remove('visible');
+    _ringProgress = 0;
+  }, delay||0);
+}
 let audioCtx=null, chordNodes=[], masterGain=null;
 // enharmMode[pos]: 'A' = spellingA (kruizen-kant), 'B' = spellingB (mollen-kant)
 // Standaard: pos6 = 'B' (Ges/es), pos7 = 'B' (Des/bes) — meest gebruikt in praktijk
@@ -2258,6 +2389,11 @@ function toggleSetting(type){
   if(type==='below')    window._showNameBelow = !window._showNameBelow;
   if(type==='solfege')  window._showSolfege   = !window._showSolfege;
   if(type==='interval') window._showInterval  = (window._showInterval + 1) % 3;
+  if(type==='autokey'){
+    window._autoKeyDetect = !window._autoKeyDetect;
+    try{ localStorage.setItem('nk_autokey', window._autoKeyDetect?'1':'0'); }catch(e){}
+    _updateSoundsFamiliarBtn();
+  }
   syncToggleBtns();
   renderStaff('treble'); renderStaff('bass');
   saveStaffSettings();
@@ -2269,14 +2405,15 @@ function syncToggleBtns(){
   const sb=document.getElementById('set-below');
   const ss=document.getElementById('set-solfege');
   const si=document.getElementById('set-interval');
+  const sk=document.getElementById('set-autokey');
   if(so) so.classList.toggle('on', window._showOctave);
   if(sa) sa.classList.toggle('on', window._showNameAbove);
   if(sb) sb.classList.toggle('on', window._showNameBelow);
   if(ss) ss.classList.toggle('on', window._showSolfege);
+  if(sk) sk.classList.toggle('on', !!window._autoKeyDetect);
   if(si){
     const iv = window._showInterval || 0;
     si.classList.toggle('on', iv > 0);
-    // Tekst naast de schakelaar aanpassen per stand
     const intLabel = si.querySelector('.interval-label');
     if(intLabel){
       intLabel.textContent = iv === 0 ? 'Interval' : iv === 1 ? 'Interval boven' : 'Interval onder';
@@ -2319,6 +2456,10 @@ function toggleSettings(btn){
 
   document.getElementById('page1').classList.add('settings-open');
   document.getElementById('page2').classList.add('settings-open');
+  document.body.classList.add('settings-open-staff');
+
+  // Staffcontext: notenbalk-items tonen
+  panel.dataset.ctx = 'staff';
 
   const btnRect = btn.getBoundingClientRect();
   const leftS   = Math.round(btnRect.right) + 6;
@@ -2329,6 +2470,7 @@ function toggleSettings(btn){
   panel.style.right  = 'auto';
   panel.style.bottom = botPx + 'px';
   panel.style.top    = 'auto';
+  document.documentElement.style.setProperty('--panel-bottom', (window.innerHeight - botPx) + 'px');
   panel.classList.add('open');
 
   _settingsAnchor = btn;
@@ -2337,6 +2479,43 @@ function toggleSettings(btn){
   showSettingsPreview();
   updateStaffZone();
   updateNotePosSliderPadding();
+  requestAnimationFrame(()=>{
+    updateNotePosSliderPadding();
+    // Toon alleen de slider van de actieve tab, na bottom-berekening
+    const activeClef = currentTab === 1 ? 'treble' : currentTab === 2 ? 'bass' : null;
+    ['treble','bass'].forEach(cl=>{
+      const r = document.getElementById('note-pos-row-'+cl);
+      if(r) r.style.visibility = (cl===activeClef) ? 'visible' : 'hidden';
+    });
+  });
+}
+
+function toggleSettingsTab0(btn){
+  const panel  = document.getElementById('settings-panel');
+  const apanel = document.getElementById('app-panel');
+  if(panel.classList.contains('open') || apanel.classList.contains('open')){
+    closeSettings();
+    return;
+  }
+
+  // Tab0-context: verberg notenbalk-items
+  panel.dataset.ctx = 'tab0';
+
+  const btnRect = btn.getBoundingClientRect();
+  // Paneel rechts van knop, onderkant gelijk aan onderkant knop + wat ruimte
+  const leftS = Math.round(btnRect.right) + 6;
+  const botPx = Math.round(window.innerHeight - btnRect.bottom) + 4;
+
+  panel.style.width  = 'auto';
+  panel.style.left   = leftS + 'px';
+  panel.style.right  = 'auto';
+  panel.style.bottom = botPx + 'px';
+  panel.style.top    = 'auto';
+  document.documentElement.style.setProperty('--panel-bottom', (window.innerHeight - botPx) + 'px');
+  panel.classList.add('open');
+
+  _settingsAnchor = btn;
+  btn.classList.add('held');
 }
 function closeSettings(){
   document.getElementById('settings-panel').classList.remove('open');
@@ -2345,6 +2524,11 @@ function closeSettings(){
   document.getElementById('personaliseer-panel').classList.remove('open');
   document.getElementById('page1').classList.remove('settings-open');
   document.getElementById('page2').classList.remove('settings-open');
+  document.body.classList.remove('settings-open-staff');
+  ['treble','bass'].forEach(cl=>{
+    const r = document.getElementById('note-pos-row-'+cl);
+    if(r) r.style.visibility = 'hidden';
+  });
   document.querySelectorAll('.settings-btn').forEach(b=>b.classList.remove('held'));
   hideSettingsPreview();
 }
@@ -2878,17 +3062,27 @@ function buildPlayerMini(mountId){
   //   playknop: acc-row heeft padding:4px 8px → 8px rechts
   //   mp3-balk: player-open-row heeft padding:4px 2px → 2px links
   mount.innerHTML = `
-    <div id="pmini-wrap-${idx}" style="margin-top:4px;">
-      <div style="display:flex;align-items:center;padding:0 8px 4px 8px;gap:8px;">
-        <div class="pitch-section" id="pitch-section-0" style="flex:1;min-width:0;"></div>
-        <div class="player-play-btn" id="pplaybtn-${idx}" role="button" tabindex="0"
-             onclick="togglePlay()" ontouchend="togglePlay();event.preventDefault()">▶</div>
+    <div id="pmini-wrap-${idx}" style="margin-top:4px;position:relative;">
+      <!-- Sounds Familiar knop: absoluut, eigen hoogte boven container -->
+      <div style="position:relative;height:0;">
+        <button id="sounds-familiar-btn" onclick="showLastToast()">🔍 Sounds Familiar</button>
       </div>
-      <div style="padding:4px 2px 4px;">
+      <!-- Hz-slider: volle breedte -->
+      <div style="padding:0 0 4px;">
+        <div class="pitch-section" id="pitch-section-0"></div>
+      </div>
+      <!-- Mp3-rij: settings-knop | mp3-balk | play-knop -->
+      <div style="display:flex;align-items:center;gap:6px;padding:0 0 4px;">
+        <button class="settings-btn" id="settings-btn-tab0"
+          onclick="toggleSettingsTab0(this)" title="Instellingen"
+          style="flex-shrink:0;"><span class="settings-btn-icon"><svg class="settings-gear-svg" width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.92c.04-.34.07-.69.07-1.08s-.03-.73-.07-1.08l2.33-1.82c.21-.16.27-.45.13-.69l-2.21-3.83c-.13-.24-.42-.32-.66-.24l-2.75 1.1c-.57-.44-1.19-.81-1.87-1.09L14.05 1.6c-.05-.27-.29-.46-.57-.46h-4.42c-.28 0-.52.19-.57.46L8.05 4.76c-.68.28-1.3.65-1.87 1.09L3.43 4.75c-.24-.08-.53 0-.66.24L.56 8.82c-.14.24-.08.53.13.69l2.33 1.82c-.04.35-.07.7-.07 1.08s.03.73.07 1.08L.69 15.31c-.21.16-.27.45-.13.69l2.21 3.83c.13.24.42.32.66.24l2.75-1.1c.57.44 1.19.81 1.87 1.09l.44 2.93c.05.27.29.46.57.46h4.42c.28 0 .52-.19.57-.46l.44-2.93c.68-.28 1.3-.65 1.87-1.09l2.75 1.1c.24.08.53 0 .66-.24l2.21-3.83c.14-.24.08-.53-.13-.69l-2.33-1.82z"/></svg></span></button>
         <button class="player-file-btn" id="pfbtn-${idx}" onclick="openMp3()"
-                style="width:100%;padding:18px 10px;border-radius:10px;text-align:left;">
+                style="flex:1;min-width:0;padding:18px 10px;border-radius:10px;text-align:left;">
           🎵 <span id="t-mp3-label">Open mp3-bestand…</span>
         </button>
+        <div class="player-play-btn" id="pplaybtn-${idx}" role="button" tabindex="0"
+             onclick="togglePlay()" ontouchend="togglePlay();event.preventDefault()"
+             style="flex-shrink:0;">▶</div>
       </div>
     </div>`;
   updateDuration();
@@ -2899,7 +3093,6 @@ function buildPlayer(mountId){
   if(!mount) return;
   const idx = mountId.slice(-1);
   mount.innerHTML = `
-    <hr class="div" style="margin:0;">
     <div style="display:flex;align-items:stretch;min-height:0;" id="player-flex-${idx}">
       <!-- Zoomslider: 3-laags geheel (bg+label+thumb), verborgen zonder mp3 -->
       <div class="zoom-col-abs" id="zoom-col-${idx}">
@@ -2997,6 +3190,10 @@ function loadAudioFile(file){
   playerState.duration = 0;
   audio.playbackRate = playerState.speed;
 
+  // Reset analyse-resultaat bij nieuw bestand
+  _lastToastLines = null;
+  _updateSoundsFamiliarBtn();
+
   // Volume resetten naar 100% bij nieuw bestand
   window._noteVol = 1.0;
   if(masterGain) masterGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
@@ -3053,11 +3250,333 @@ function loadAudioFile(file){
     navigator.mediaSession.setActionHandler('stop',  ()=>{ if(playerState.isPlaying)  togglePlay(); });
   }
 
-  // Decode waveform first, then set src (avoids mobile autoplay restrictions)
-  decodeWaveform(file).then(() => {
-    audio.src = url;
-    audio.load();
-  });
+  // Audio direct inladen zodat interface werkt; waveform + analyse daarna asynchroon
+  audio.src = url;
+  audio.load();
+  // Toon wacht-toast als auto-detect aan
+  if(window._autoKeyDetect){
+    _showAnalysisToast(['⏳ Auto herkenning…'], 120000); // lang timeout, wordt overschreven door analyse
+  }
+  decodeWaveform(file);
+}
+
+// ════════════════════════════════════════════════════
+// AUDIO-ANALYSE: toonsoort + stemming (Krumhansl-Schmuckler + periodogram)
+// ════════════════════════════════════════════════════
+
+const KS_MAJOR = [6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88];
+const KS_MINOR = [6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
+
+function _pearson(a, b){
+  const n=a.length; let sa=0,sb=0,sa2=0,sb2=0,sab=0;
+  for(let i=0;i<n;i++){ sa+=a[i];sb+=b[i];sa2+=a[i]*a[i];sb2+=b[i]*b[i];sab+=a[i]*b[i]; }
+  const num=sab-sa*sb/n, den=Math.sqrt((sa2-sa*sa/n)*(sb2-sb*sb/n));
+  return den<1e-10?0:num/den;
+}
+function _rot(profile,s){ const n=profile.length,r=new Array(n); for(let i=0;i<n;i++) r[i]=profile[(i+n-s%n)%n]; return r; }
+
+function _chromaBlock(raw, offset, blockSize, sr, refA4){
+  const noteFreqs=new Array(12);
+  for(let p=0;p<12;p++) noteFreqs[p]=refA4*Math.pow(2,(p-9)/12);
+  const octaves=[2,3,4,5,6], chroma=new Float32Array(12);
+  for(let p=0;p<12;p++){
+    let energy=0;
+    for(const oct of octaves){
+      const freq=noteFreqs[p]*Math.pow(2,oct-4);
+      if(freq<40||freq>sr/2) continue;
+      const omega=2*Math.PI*freq/sr, coeff=2*Math.cos(omega);
+      let s1=0,s2=0;
+      for(let n=0;n<blockSize;n++){ const s=raw[offset+n]+coeff*s1-s2; s2=s1;s1=s; }
+      energy+=s1*s1+s2*s2-coeff*s1*s2;
+    }
+    chroma[p]+=energy;
+  }
+  return chroma;
+}
+
+function _bestKey(chroma){
+  let bMaj=-Infinity,bMin=-Infinity,rMaj=0,rMin=0;
+  const arr=Array.from(chroma);
+  for(let r=0;r<12;r++){
+    const mj=_pearson(arr,_rot(KS_MAJOR,r)), mn=_pearson(arr,_rot(KS_MINOR,r));
+    if(mj>bMaj){bMaj=mj;rMaj=r;} if(mn>bMin){bMin=mn;rMin=mn;}
+  }
+  // fix: rMin moet de root-index zijn, niet de score
+  bMaj=-Infinity;bMin=-Infinity;
+  for(let r=0;r<12;r++){
+    const mj=_pearson(arr,_rot(KS_MAJOR,r)), mn=_pearson(arr,_rot(KS_MINOR,r));
+    if(mj>bMaj){bMaj=mj;rMaj=r;} if(mn>bMin){bMin=mn;rMin=r;}
+  }
+  const isMaj=bMaj>=bMin, midiRoot=60+(isMaj?rMaj:rMin);
+  const pc=((midiRoot%12)+12)%12, circ=isMaj?CIRCLE_MAJOR:CIRCLE_MINOR;
+  let idx=0; for(let i=0;i<circ.length;i++) if(((circ[i].root%12)+12)%12===pc){idx=i;break;}
+  return {isMinor:!isMaj,idx,score:isMaj?bMaj:bMin};
+}
+
+function _keyLabel(result){
+  const circ=result.isMinor?CIRCLE_MINOR:CIRCLE_MAJOR;
+  const entry=circ[result.idx], mode=enharmMode[entry.pos]||'A';
+  const sp=(mode==='B'&&entry.spellingB)?entry.spellingB:entry.spellingA;
+  return sp.name;
+}
+
+function _applyKey(result){
+  isMinor=result.isMinor;
+  const bMaj=document.getElementById('btn-maj'), bMin=document.getElementById('btn-min');
+  if(bMaj) bMaj.classList.toggle('active',!isMinor);
+  if(bMin) bMin.classList.toggle('active', isMinor);
+  selectKey(result.idx);
+}
+
+function _detectTuningHz(decoded){
+  const sr=decoded.sampleRate, raw=decoded.getChannelData(0);
+  const maxS=Math.min(decoded.length,sr*60), fftSize=8192, hop=4096;
+  const numBlocks=Math.floor((maxS-fftSize)/hop);
+  if(numBlocks<4) return null;
+  const candidates=[], step=0.25;
+  for(let hz=410;hz<=446;hz+=step) candidates.push(hz);
+  const power=new Float64Array(candidates.length);
+  for(let b=0;b<numBlocks;b++){
+    const off=b*hop;
+    for(let ci=0;ci<candidates.length;ci++){
+      const freq=candidates[ci], omega=2*Math.PI*freq/sr;
+      let re=0,im=0;
+      for(let n=0;n<fftSize;n++){ re+=raw[off+n]*Math.cos(omega*n); im+=raw[off+n]*Math.sin(omega*n); }
+      power[ci]+=re*re+im*im;
+    }
+  }
+  let peakPow=0,peakIdx=0;
+  for(let i=0;i<power.length;i++) if(power[i]>peakPow){peakPow=power[i];peakIdx=i;}
+  const sorted=Float64Array.from(power).sort(), median=sorted[Math.floor(sorted.length/2)];
+  if(peakPow<2*median) return null;
+  return Math.round(candidates[peakIdx]);
+}
+
+// ── Exacte toonsoortovergangsdetectie via chroma-onset-analyse ──
+// Strategie:
+//   1. Bereken chroma per hop-venster (hopSecs stap, winSecs breed)
+//   2. Meet chroma-afstand tussen aangrenzende vensters → onset-curve
+//   3. Zoek lokale pieken in de onset-curve boven drempel → kandidaat-overgangen
+//   4. Verfijn elke kandidaat: bepaal toonsoort links én rechts van de overgang
+//      door een groter venster (contextSecs) te gebruiken
+//   5. Rapporteer alleen overgangen waarbij de toonsoort echt verschilt
+function _detectKeyTransitions(decoded){
+  const sr       = decoded.sampleRate;
+  const raw      = decoded.getChannelData(0);
+  const refA4    = pitchHz;
+  const totalSec = decoded.duration;
+
+  // Parameters
+  const winSecs     = 3.0;   // analysisvenster per frame
+  const hopSecs     = 0.5;   // stapgrootte
+  const contextSecs = 8.0;   // venster voor toonsoortbepaling rond overgang
+  const blockSize   = 4096;
+  const winSamples  = Math.floor(winSecs * sr);
+  const hopSamples  = Math.floor(hopSecs * sr);
+  const totalFrames = Math.floor((decoded.length - winSamples) / hopSamples);
+
+  if(totalFrames < 4) return [];
+
+  // Stap 1: chroma per frame
+  const frames = [];
+  for(let f=0; f<totalFrames; f++){
+    const startS = f * hopSamples;
+    const chroma = new Float32Array(12);
+    for(let off=startS; off+blockSize<=startS+winSamples && off+blockSize<=decoded.length; off+=blockSize){
+      const bc = _chromaBlock(raw, off, blockSize, sr, refA4);
+      for(let p=0;p<12;p++) chroma[p] += bc[p];
+    }
+    // Normaliseer
+    let sum=0; for(let p=0;p<12;p++) sum+=chroma[p];
+    if(sum>0) for(let p=0;p<12;p++) chroma[p]/=sum;
+    frames.push({ timeSec: startS/sr, chroma });
+  }
+
+  // Stap 2: chroma-afstand tussen aangrenzende frames (1 - cosinus-gelijkenis)
+  function chromaDist(a, b){
+    let dot=0, na=0, nb=0;
+    for(let p=0;p<12;p++){ dot+=a[p]*b[p]; na+=a[p]*a[p]; nb+=b[p]*b[p]; }
+    const denom = Math.sqrt(na)*Math.sqrt(nb);
+    return denom<1e-10 ? 0 : 1 - dot/denom;
+  }
+
+  // Gebruik venster van 3 frames voor smoothing
+  const onset = [];
+  for(let f=1; f<frames.length-1; f++){
+    const d = (chromaDist(frames[f-1].chroma, frames[f].chroma) +
+               chromaDist(frames[f].chroma,   frames[f+1].chroma)) / 2;
+    onset.push({ f, d, timeSec: frames[f].timeSec });
+  }
+
+  // Stap 3: adaptieve drempel (mediaan + 1.2× standaardafwijking)
+  const vals = onset.map(o=>o.d).sort((a,b)=>a-b);
+  const median = vals[Math.floor(vals.length/2)] || 0;
+  let variance=0; for(const v of vals) variance+=(v-median)*(v-median);
+  const stddev = Math.sqrt(variance/vals.length);
+  const threshold = median + 1.2 * stddev;
+
+  // Zoek lokale maxima boven drempel (minimale afstand: 5 frames ≈ 2.5s)
+  const MIN_FRAMES_APART = Math.max(3, Math.floor(2.5 / hopSecs));
+  const candidates = [];
+  for(let i=1; i<onset.length-1; i++){
+    if(onset[i].d >= threshold &&
+       onset[i].d >= onset[i-1].d &&
+       onset[i].d >= onset[i+1].d){
+      // Sla over als te dicht bij vorige kandidaat
+      if(candidates.length===0 || onset[i].f - candidates[candidates.length-1].f >= MIN_FRAMES_APART){
+        candidates.push(onset[i]);
+      } else if(onset[i].d > onset[candidates[candidates.length-1].d]){
+        candidates[candidates.length-1] = onset[i]; // vervang door sterkere piek
+      }
+    }
+  }
+
+  // Stap 4: bepaal toonsoort links en rechts van elke kandidaat-overgang
+  const contextSamples = Math.floor(contextSecs * sr);
+  function chromaAroundTime(centerSec, direction){
+    // direction: -1 = vóór, +1 = na
+    const centerS = Math.floor(centerSec * sr);
+    const startS  = direction < 0
+      ? Math.max(0, centerS - contextSamples)
+      : centerS;
+    const endS    = direction < 0
+      ? centerS
+      : Math.min(decoded.length, centerS + contextSamples);
+    const chroma  = new Float32Array(12);
+    for(let off=startS; off+blockSize<=endS; off+=blockSize){
+      const bc = _chromaBlock(raw, off, blockSize, sr, refA4);
+      for(let p=0;p<12;p++) chroma[p] += bc[p];
+    }
+    return chroma;
+  }
+
+  // Stap 5: filter echte overgangen
+  const transitions = [];
+  let prevLabel = _keyLabel(_bestKey(chromaAroundTime(0, 1))); // toonsoort aan het begin
+
+  for(const cand of candidates){
+    const chromaBefore = chromaAroundTime(cand.timeSec, -1);
+    const chromaAfter  = chromaAroundTime(cand.timeSec,  1);
+    const keyBefore = _bestKey(chromaBefore);
+    const keyAfter  = _bestKey(chromaAfter);
+    const lblBefore = _keyLabel(keyBefore);
+    const lblAfter  = _keyLabel(keyAfter);
+    if(lblAfter !== lblBefore && lblAfter !== prevLabel){
+      transitions.push({ timeSec: cand.timeSec, label: lblAfter, strength: cand.d });
+      prevLabel = lblAfter;
+    }
+  }
+
+  return transitions;
+}
+
+function _detectKeySegments(decoded, segSecs){
+  const sr=decoded.sampleRate, raw=decoded.getChannelData(0), refA4=pitchHz;
+  const blockSize=4096, totalSec=decoded.duration, numSegs=Math.max(1,Math.floor(totalSec/segSecs));
+  const results=[];
+  for(let s=0;s<numSegs;s++){
+    const startS=Math.floor(s*segSecs*sr), endS=Math.min(decoded.length,Math.floor((s+1)*segSecs*sr));
+    const chroma=new Float32Array(12);
+    for(let off=startS;off+blockSize<=endS;off+=blockSize){
+      const bc=_chromaBlock(raw,off,blockSize,sr,refA4);
+      for(let p=0;p<12;p++) chroma[p]+=bc[p];
+    }
+    results.push({timeSec:s*segSecs, key:_bestKey(chroma)});
+  }
+  return results;
+}
+
+function _fmtTime(sec){ const m=Math.floor(sec/60),s=Math.floor(sec%60); return m+':'+String(s).padStart(2,'0'); }
+
+let _analysisToastTimer = null;
+let _toastPersistent = false; // true = geen auto-hide (Sounds Familiar modus)
+
+function _showAnalysisToast(lines, durationMs, persistent){
+  let el=document.getElementById('analysis-toast');
+  if(!el){el=document.createElement('div');el.id='analysis-toast';document.body.appendChild(el);}
+  el.textContent=lines.join('\n');
+  el.classList.add('show');
+  _toastPersistent = !!persistent;
+  if(_analysisToastTimer) clearTimeout(_analysisToastTimer);
+  if(!persistent){
+    _analysisToastTimer=setTimeout(()=>el.classList.remove('show'), durationMs||4000);
+  }
+}
+
+function _dismissToast(){
+  const el=document.getElementById('analysis-toast');
+  if(el) el.classList.remove('show');
+  if(_analysisToastTimer){ clearTimeout(_analysisToastTimer); _analysisToastTimer=null; }
+  _toastPersistent = false;
+}
+
+// Klik buiten de toast sluit hem
+document.addEventListener('click', function(e){
+  const el=document.getElementById('analysis-toast');
+  if(el && el.classList.contains('show') && !el.contains(e.target)){
+    _dismissToast();
+  }
+});
+
+async function _analyseAudio(decoded){
+  if(!window._autoKeyDetect) return;
+  try{
+    // Ring starten op actief tabblad
+    _ringShow(currentTab);
+    _ringAnimate(0.3, 400);
+
+    // 1. Stemming
+    const detHz=_detectTuningHz(decoded);
+    _ringAnimate(0.55, 600);
+    let pitchLine=null;
+    if(detHz!==null && Math.abs(detHz-pitchHz)>=2){
+      const clamped=Math.max(PITCH_MIN,Math.min(PITCH_MAX,detHz));
+      pitchHz=clamped;
+      const sl=document.getElementById('ps-0'); if(sl) sl.value=clamped;
+      updPitch(clamped,null);
+      const near=PITCH_STOPS.reduce((a,b)=>Math.abs(b.hz-clamped)<Math.abs(a.hz-clamped)?b:a);
+      const lbl=Math.abs(near.hz-clamped)<=1?near.name:clamped+' Hz';
+      pitchLine='🎵 Stemming: '+clamped+' Hz ('+lbl+')';
+    }
+
+    // 2. Globale toonsoort (max 120s)
+    const sr=decoded.sampleRate, raw=decoded.getChannelData(0);
+    const maxS=Math.min(decoded.length,sr*120), bSize=4096;
+    const chroma=new Float32Array(12);
+    for(let off=0;off+bSize<=maxS;off+=bSize){
+      const bc=_chromaBlock(raw,off,bSize,sr,pitchHz);
+      for(let p=0;p<12;p++) chroma[p]+=bc[p];
+    }
+    const globalKey=_bestKey(chroma);
+    _applyKey(globalKey);
+    const globalLabel=_keyLabel(globalKey);
+    _ringAnimate(0.8, 500);
+
+    // 3. Exacte toonsoortovergangen via onset-analyse
+    const changes = _detectKeyTransitions(decoded);
+
+    // Ring voltooien
+    _ringAnimate(1.0, 300, ()=>_ringHide(600));
+
+    // 4. Toast samenstellen
+    const lines=['🎼 '+globalLabel+' gedetecteerd'];
+    if(changes.length>0&&changes.length<=8){
+      lines.push('');
+      for(const ch of changes) lines.push(_fmtTime(ch.timeSec)+'  →  '+ch.label);
+    } else if(changes.length>8) lines.push('+ '+changes.length+' toonsoortwijzigingen');
+    if(pitchLine){ lines.push(''); lines.push(pitchLine); }
+    const dur=3500+changes.length*600+(pitchLine?1000:0);
+
+    // Opslaan voor Sounds Familiar
+    _lastToastLines = lines;
+    _lastToastDuration = dur;
+    _updateSoundsFamiliarBtn();
+
+    _showAnalysisToast(lines,dur);
+  } catch(e){
+    _ringHide(0);
+    console.warn('Audio-analyse mislukt:',e);
+  }
 }
 
 async function decodeWaveform(file){
@@ -3084,6 +3603,8 @@ async function decodeWaveform(file){
     const norm = new Float32Array(pts);
     for(let i=0;i<pts;i++) norm[i] = data[i]/peak;
     playerState.waveformData = norm;
+    // Toonsoort- en stemmingsdetectie (non-blocking)
+    _analyseAudio(decoded).catch(e=>console.warn('Analyse fout:',e));
     actx.close();
     drawWaveforms();
   } catch(e){
@@ -3914,18 +4435,26 @@ function updateNotePosSliderPadding(clef){
   const nr = ls * 0.52;
   const halfNoteW = Math.round(nr * 1.35);
   const staffLeft = 6;
-  const nxMin = staffLeft + 2 * halfNoteW;
-  // Canvas = volledige paginabreedte (staff-zone absolute left:0 right:0)
   const W = window.innerWidth;
+  const nxMin = staffLeft + 2 * halfNoteW;
   const nxMax = W - halfNoteW - 4;
-  const thumbR = 11; // helft van thumb (22px)
-  // wrap.left  = nxMin - thumbR  (zodat thumb-center bij 0% = nxMin)
-  // wrap.right = W - nxMax - thumbR (zodat thumb-center bij 100% = nxMax)
+  const thumbR = 11;
   const wrapLeft  = nxMin - thumbR;
   const wrapRight = W - nxMax - thumbR;
+
+  // Slider staat direct onder de top-bar (midivolumeslider)
+  const topBarEl = document.getElementById('top-bar');
+  const topPx = topBarEl ? Math.round(topBarEl.getBoundingClientRect().bottom) : 120;
+
   const clefs = clef ? [clef] : ['treble','bass'];
   clefs.forEach(cl=>{
+    const row  = document.getElementById('note-pos-row-'+cl);
     const wrap = document.getElementById('note-pos-wrap-'+cl);
+
+    if(row){
+      row.style.top    = topPx + 'px';
+      row.style.bottom = 'auto';
+    }
     if(wrap){
       wrap.style.left  = wrapLeft  + 'px';
       wrap.style.right = wrapRight + 'px';
@@ -3987,6 +4516,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   syncToggleBtns();
   initHintArrows();
   setupVolSliderListeners();
+  _updateSoundsFamiliarBtn();
   // Preload: teken beide notenbalkpagina's direct zodat swipe soepel is
   document.getElementById('page1').classList.add('preloaded');
   document.getElementById('page2').classList.add('preloaded');
@@ -4738,25 +5268,30 @@ function showTabAnimated(i, dir){
 <!-- Instellingenvenster -->
 <div id="settings-panel">
   <div class="settings-toggle-row">
-    <div class="settings-toggle-item on" id="set-above" onclick="toggleSetting('above')">
-      <div class="settings-switch"></div>Nootnaam boven
+    <div class="settings-toggle-item" id="set-autokey" onclick="toggleSetting('autokey')" style="border-bottom:1px solid #f0e8dc;padding-bottom:6px;margin-bottom:4px;">
+      <div class="settings-switch"></div>Toonsoortherkenning
     </div>
-    <div class="settings-toggle-item" id="set-below" onclick="toggleSetting('below')">
-      <div class="settings-switch"></div>Nootnaam onder
-    </div>
-    <div class="settings-toggle-item on" id="set-octave" onclick="toggleSetting('octave')">
-      <div class="settings-switch"></div>Octaafnummer
-    </div>
-    <div class="settings-toggle-item" id="set-solfege" onclick="toggleSetting('solfege')">
-      <div class="settings-switch"></div>Solfège
-    </div>
-    <div class="settings-toggle-item" id="set-interval" onclick="toggleSetting('interval')">
-      <div class="settings-switch"></div><span class="interval-label">Interval</span>
+    <div class="settings-staff-only" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;margin-bottom:2px;">
+      <div class="settings-toggle-item on" id="set-above" onclick="toggleSetting('above')">
+        <div class="settings-switch"></div>Nootnaam boven
+      </div>
+      <div class="settings-toggle-item" id="set-below" onclick="toggleSetting('below')">
+        <div class="settings-switch"></div>Nootnaam onder
+      </div>
+      <div class="settings-toggle-item on" id="set-octave" onclick="toggleSetting('octave')">
+        <div class="settings-switch"></div>Octaafnummer
+      </div>
+      <div class="settings-toggle-item" id="set-solfege" onclick="toggleSetting('solfege')">
+        <div class="settings-switch"></div>Solfège
+      </div>
+      <div class="settings-toggle-item" id="set-interval" onclick="toggleSetting('interval')">
+        <div class="settings-switch"></div><span class="interval-label">Interval</span>
+      </div>
     </div>
   </div>
-  <div style="margin-top:6px;padding-top:2px;">
+  <div class="settings-meer-row" style="margin-top:6px;padding-top:2px;">
     <button onclick="showAppPanelAtSettingsPos()" style="background:none;border:none;font-size:12px;font-family:Arial,sans-serif;color:#888;cursor:pointer;padding:2px 0;width:100%;display:flex;justify-content:space-between;align-items:center;">
-      <span style="padding-left:46px;">meer</span><span>▶</span>
+      <span style="padding-left:0;">meer</span><span>▶</span>
     </button>
   </div>
 </div>
@@ -5042,6 +5577,46 @@ function adminShowStats(){
   <div class="lang-option" data-lang="it" onclick="selectLang('it')"><span style="font-size:20px">🇮🇹</span>Italiano</div>
   <div class="lang-option" data-lang="pt" onclick="selectLang('pt')"><span style="font-size:20px">🇵🇹</span>Português</div>
   <div class="lang-option" data-lang="zh" onclick="selectLang('zh')"><span style="font-size:20px">🇨🇳</span>中文</div>
+</div>
+
+<!-- Analyse-toast -->
+<div id="analysis-toast"></div>
+
+<!-- Voortgangscirkel analyse -->
+<div id="analyse-ring-wrap">
+  <svg id="analyse-ring-svg" width="40" height="40" viewBox="0 0 40 40">
+    <circle cx="20" cy="20" r="16" fill="none" stroke="#e8e0d0" stroke-width="3"/>
+    <circle id="analyse-ring-arc" cx="20" cy="20" r="16" fill="none"
+      stroke="#2a2a2a" stroke-width="3" stroke-linecap="round"
+      stroke-dasharray="0 101" stroke-dashoffset="25"
+      transform="rotate(-90 20 20)"/>
+  </svg>
+</div>
+
+<!-- Nootpositiesliders: position:fixed zodat overflow:hidden van pages ze nooit clipt -->
+<div class="note-pos-row" id="note-pos-row-treble">
+  <div class="note-pos-slider-wrap" id="note-pos-wrap-treble">
+    <div class="note-pos-slider-bg" id="note-pos-bg-treble"></div>
+    <input type="range" class="note-pos-slider-thumb" id="note-pos-treble" min="0" max="100" step="1" value="30"
+      oninput="onNotePosInput(this.value,'treble')"
+      ontouchstart="activateNotePosSlider('treble')"
+      ontouchend="deactivateNotePosSlider('treble')"
+      ontouchcancel="deactivateNotePosSlider('treble')"
+      onmousedown="activateNotePosSlider('treble')"
+      onmouseup="deactivateNotePosSlider('treble')">
+  </div>
+</div>
+<div class="note-pos-row" id="note-pos-row-bass">
+  <div class="note-pos-slider-wrap" id="note-pos-wrap-bass">
+    <div class="note-pos-slider-bg" id="note-pos-bg-bass"></div>
+    <input type="range" class="note-pos-slider-thumb" id="note-pos-bass" min="0" max="100" step="1" value="30"
+      oninput="onNotePosInput(this.value,'bass')"
+      ontouchstart="activateNotePosSlider('bass')"
+      ontouchend="deactivateNotePosSlider('bass')"
+      ontouchcancel="deactivateNotePosSlider('bass')"
+      onmousedown="activateNotePosSlider('bass')"
+      onmouseup="deactivateNotePosSlider('bass')">
+  </div>
 </div>
 
 <!-- Notenkraker splash-overlay -->
