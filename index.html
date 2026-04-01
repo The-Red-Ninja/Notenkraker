@@ -845,10 +845,11 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 
 /* Settings-panel: verberg notenbalk-items als geopend vanuit tab0 */
 #settings-panel[data-ctx="tab0"] .settings-staff-only { display:none; }
+#settings-panel[data-ctx="tab0"] .settings-toggle-row { display:none; }
 /* Meer-knop: alleen op tab0 */
 #settings-panel[data-ctx="staff"] .settings-meer-row { display:none; }
-/* Toonsoortherkenning: alleen op tab0 */
-#settings-panel[data-ctx="staff"] #set-autokey { display:none; }
+/* Scheidingslijntje boven toonsoortherkenning: alleen op stafftabs */
+#settings-panel[data-ctx="tab0"] .settings-autokey-divider { display:none; }
 
 /* Mp3-volumeslider: uitlijnen op border-top van control-block (geen extra top-offset) */
 .mp3-vol-abs { top:26px !important; } /* 26px = hoogte note-pos-row → uitlijnen met acc-row bovenkant */
@@ -5289,14 +5290,15 @@ function showTabAnimated(i, dir){
         <div class="settings-switch"></div><span class="interval-label">Interval</span>
       </div>
     </div>
-    <div class="settings-toggle-item" id="set-autokey" onclick="toggleSetting('autokey')" style="border-top:1px solid #f0e8dc;padding-top:6px;margin-top:2px;">
-      <div class="settings-switch"></div>Toonsoortherkenning
-    </div>
   </div>
-  <div class="settings-meer-row" style="margin-top:6px;padding-top:2px;">
+  <div class="settings-meer-row" style="margin-top:4px;padding-top:2px;">
     <button onclick="showAppPanelAtSettingsPos()" style="background:none;border:none;font-size:12px;font-family:Arial,sans-serif;color:#888;cursor:pointer;padding:2px 0;width:100%;display:flex;justify-content:space-between;align-items:center;">
       <span style="padding-left:0;">meer</span><span>▶</span>
     </button>
+  </div>
+  <hr class="settings-autokey-divider" style="border:none;border-top:1px solid #e0d8cc;margin:6px 0 4px;">
+  <div class="settings-toggle-item" id="set-autokey" onclick="toggleSetting('autokey')">
+    <div class="settings-switch"></div>Toonsoortherkenning
   </div>
 </div>
 
