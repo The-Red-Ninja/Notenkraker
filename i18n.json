@@ -48,7 +48,11 @@
     "install": "Installeer",
     "cancel": "Annuleren",
     "more": "meer",
-    "featrequest": "Featrequest"
+    "featrequest": "5 woorden over\nhoe je deze app\ngraag gebruikt",
+    "pitchBarok": "Barok",
+    "pitchKlassiek": "Klassiek",
+    "pitchStandaard": "Standaard",
+    "pitchModern": "Modern Orkest"
   },
   "en": {
     "tab1": "Key",
@@ -99,7 +103,11 @@
     "install": "Install",
     "cancel": "Cancel",
     "more": "more",
-    "featrequest": "Feature request"
+    "featrequest": "5 words about\nhow you like\nusing this app",
+    "pitchBarok": "Baroque",
+    "pitchKlassiek": "Classical",
+    "pitchStandaard": "Standard",
+    "pitchModern": "Modern Orchestra"
   },
   "de": {
     "tab1": "Tonart",
@@ -150,7 +158,11 @@
     "install": "Installieren",
     "cancel": "Abbrechen",
     "more": "mehr",
-    "featrequest": "Funktionswunsch"
+    "featrequest": "5 Wörter darüber,\nwie du diese App\ngerne nutzt",
+    "pitchBarok": "Barock",
+    "pitchKlassiek": "Klassik",
+    "pitchStandaard": "Standard",
+    "pitchModern": "Modernes Orchester"
   },
   "fr": {
     "tab1": "Tonalité",
@@ -201,7 +213,11 @@
     "install": "Installer",
     "cancel": "Annuler",
     "more": "plus",
-    "featrequest": "Demande de fonction"
+    "featrequest": "5 mots sur\nla façon dont tu\nutilises cette app",
+    "pitchBarok": "Baroque",
+    "pitchKlassiek": "Classique",
+    "pitchStandaard": "Standard",
+    "pitchModern": "Orchestre moderne"
   },
   "es": {
     "tab1": "Tonalidad",
@@ -252,7 +268,11 @@
     "install": "Instalar",
     "cancel": "Cancelar",
     "more": "más",
-    "featrequest": "Solicitud de función"
+    "featrequest": "5 palabras sobre\ncómo usas\nesta app",
+    "pitchBarok": "Barroco",
+    "pitchKlassiek": "Clásico",
+    "pitchStandaard": "Estándar",
+    "pitchModern": "Orquesta moderna"
   },
   "it": {
     "tab1": "Tonalità",
@@ -303,7 +323,11 @@
     "install": "Installa",
     "cancel": "Annulla",
     "more": "altro",
-    "featrequest": "Richiesta funzione"
+    "featrequest": "5 parole su\ncome usi\nquest'app",
+    "pitchBarok": "Barocco",
+    "pitchKlassiek": "Classico",
+    "pitchStandaard": "Standard",
+    "pitchModern": "Orchestra moderna"
   },
   "pt": {
     "tab1": "Tonalidade",
@@ -354,7 +378,11 @@
     "install": "Instalar",
     "cancel": "Cancelar",
     "more": "mais",
-    "featrequest": "Pedido de função"
+    "featrequest": "5 palavras sobre\ncomo usas\nesta app",
+    "pitchBarok": "Barroco",
+    "pitchKlassiek": "Clássico",
+    "pitchStandaard": "Padrão",
+    "pitchModern": "Orquestra moderna"
   },
   "zh": {
     "tab1": "调性",
@@ -405,6 +433,10 @@
     "install": "安装",
     "cancel": "取消",
     "more": "更多",
-    "featrequest": "功能请求"
+    "featrequest": "5个词描述\n你如何使用\n这款应用",
+    "pitchBarok": "巴洛克",
+    "pitchKlassiek": "古典",
+    "pitchStandaard": "标准",
+    "pitchModern": "现代管弦乐"
   }
 }

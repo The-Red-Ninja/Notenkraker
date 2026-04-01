@@ -50,6 +50,7 @@
   ║  · avatarMale / avatarFemale  (personaliseer + install-overlay) ║
   ║  · install / installAs / installChoose / cancel                 ║
   ║  · more / featrequest                                           ║
+  ║  · pitchBarok / pitchKlassiek / pitchStandaard / pitchModern    ║
   ║                                                                  ║
   ║  Fallback NL-strings: _i18nFallback in NK_I18N-blok in <script> ║
   ╚══════════════════════════════════════════════════════════════════╝
@@ -1216,12 +1217,19 @@ const BASS_NOTES = [
 const T_SHARPS=[8,5,9,6,3,7,4], T_FLATS=[4,7,3,6,2,5,1];
 const B_SHARPS=[6,3,7,4,1,5,2], B_FLATS=[7,4,8,5,2,6,3];
 
-const PITCH_STOPS=[
-  {hz:415,name:'Barok'},{hz:422,name:'Klassiek'},
-  {hz:430,name:'430 Hz'},{hz:435,name:'435 Hz'},
-  {hz:440,name:'Standaard'},{hz:442,name:'Modern Orkest'},
-  {hz:443,name:'Modern Orkest'},{hz:444,name:'Modern Orkest'},
+const PITCH_STOPS_KEYS=[
+  {hz:415,key:'pitchBarok'},{hz:422,key:'pitchKlassiek'},
+  {hz:430,key:null},{hz:435,key:null},
+  {hz:440,key:'pitchStandaard'},{hz:442,key:'pitchModern'},
+  {hz:443,key:'pitchModern'},{hz:444,key:'pitchModern'},
 ];
+// Gebruik altijd via PITCH_STOPS() zodat namen live vertaald zijn
+function PITCH_STOPS(){
+  return PITCH_STOPS_KEYS.map(s=>({
+    hz:s.hz,
+    name:s.key ? T(s.key) : s.hz+' Hz'
+  }));
+}
 const PITCH_MIN=410, PITCH_MAX=446;
 
 // ════════════════════════════════════════════════════
@@ -2513,7 +2521,7 @@ function toggleSettings(btn){
   requestAnimationFrame(()=>{
     updateNotePosSliderPadding();
     // Toon alleen de slider van de actieve tab, na bottom-berekening
-    const activeClef = currentTab === 0 ? 'treble' : currentTab === 1 ? 'bass' : null;
+    const activeClef = currentTab === 0 ? 'treble' : currentTab === 2 ? 'bass' : null;
     ['treble','bass'].forEach(cl=>{
       const r = document.getElementById('note-pos-row-'+cl);
       if(r) r.style.visibility = (cl===activeClef) ? 'visible' : 'hidden';
@@ -3060,7 +3068,7 @@ function pCh(v,s){
 }
 function updPitch(v,active){
   const hz=parseFloat(v);
-  const near=PITCH_STOPS.reduce((a,b)=>Math.abs(b.hz-hz)<Math.abs(a.hz-hz)?b:a);
+  const near=PITCH_STOPS().reduce((a,b)=>Math.abs(b.hz-hz)<Math.abs(a.hz-hz)?b:a);
   const nm=Math.abs(near.hz-hz)<=1?near.name:'';
   ['0'].forEach(s=>{
     const ne=document.getElementById('pn-'+s),he=document.getElementById('ph-'+s);
@@ -3570,7 +3578,7 @@ async function _analyseAudio(decoded){
       pitchHz=clamped;
       const sl=document.getElementById('ps-0'); if(sl) sl.value=clamped;
       updPitch(clamped,null);
-      const near=PITCH_STOPS.reduce((a,b)=>Math.abs(b.hz-clamped)<Math.abs(a.hz-clamped)?b:a);
+      const near=PITCH_STOPS().reduce((a,b)=>Math.abs(b.hz-clamped)<Math.abs(a.hz-clamped)?b:a);
       const lbl=Math.abs(near.hz-clamped)<=1?near.name:clamped+' Hz';
       pitchLine='🎵 Stemming: '+clamped+' Hz ('+lbl+')';
     }
@@ -4572,7 +4580,10 @@ const _i18nFallback = {
   settingsTitle:'Instellingen', soundsFamiliar:'Sounds Familiar',
   avatarMale:'Notenkraker', avatarFemale:'Notenkraakster',
   installAs:'Installeer als…', installChoose:'Kies welk icoon je op je scherm wil zien',
-  install:'Installeer', cancel:'Annuleren', more:'meer', featrequest:'Featrequest',
+  install:'Installeer', cancel:'Annuleren', more:'meer',
+  featrequest:'5 woorden over\nhoe je deze app\ngraag gebruikt',
+  pitchBarok:'Barok', pitchKlassiek:'Klassiek',
+  pitchStandaard:'Standaard', pitchModern:'Modern Orkest',
   intervalNames:[
     'Unisono','Kleine secunde','Grote secunde',
     'Kleine terts','Grote terts','Reine kwart',
@@ -4617,6 +4628,10 @@ function applyTranslations(){
   document.querySelectorAll('.interval-label').forEach(el => {
     el.textContent = iv === 0 ? T('interval') : iv === 1 ? T('intervalAbove') : T('intervalBelow');
   });
+  // 4. Toonsoort­naam en enharm-knoppen live hertalen
+  if(typeof updateLabels === 'function') updateLabels();
+  // 5. Hz-slider label hertalen
+  if(typeof updPitch === 'function') updPitch(window.pitchHz || 440, null);
 }
 
 function translateKeyName(n){
