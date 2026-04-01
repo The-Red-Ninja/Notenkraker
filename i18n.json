@@ -40,7 +40,15 @@
       "Kleine septiem",
       "Grote septiem",
       "Octaaf"
-    ]
+    ],
+    "avatarMale": "Notenkraker",
+    "avatarFemale": "Notenkraakster",
+    "installAs": "Installeer als…",
+    "installChoose": "Kies welk icoon je op je scherm wil zien",
+    "install": "Installeer",
+    "cancel": "Annuleren",
+    "more": "meer",
+    "featrequest": "Featrequest"
   },
   "en": {
     "tab1": "Key",
@@ -83,7 +91,15 @@
       "Minor seventh",
       "Major seventh",
       "Octave"
-    ]
+    ],
+    "avatarMale": "Nutcracker",
+    "avatarFemale": "Nutcracker",
+    "installAs": "Install as…",
+    "installChoose": "Choose which icon to show on your screen",
+    "install": "Install",
+    "cancel": "Cancel",
+    "more": "more",
+    "featrequest": "Feature request"
   },
   "de": {
     "tab1": "Tonart",
@@ -126,7 +142,15 @@
       "Kleine Septime",
       "Große Septime",
       "Oktave"
-    ]
+    ],
+    "avatarMale": "Nussknacker",
+    "avatarFemale": "Nussknacker",
+    "installAs": "Installieren als…",
+    "installChoose": "Wähle das Symbol für deinen Bildschirm",
+    "install": "Installieren",
+    "cancel": "Abbrechen",
+    "more": "mehr",
+    "featrequest": "Funktionswunsch"
   },
   "fr": {
     "tab1": "Tonalité",
@@ -169,7 +193,15 @@
       "Septième mineure",
       "Septième majeure",
       "Octave"
-    ]
+    ],
+    "avatarMale": "Casse-noisette",
+    "avatarFemale": "Casse-noisette",
+    "installAs": "Installer comme…",
+    "installChoose": "Choisissez quelle icône afficher sur votre écran",
+    "install": "Installer",
+    "cancel": "Annuler",
+    "more": "plus",
+    "featrequest": "Demande de fonction"
   },
   "es": {
     "tab1": "Tonalidad",
@@ -212,7 +244,15 @@
       "Séptima menor",
       "Séptima mayor",
       "Octava"
-    ]
+    ],
+    "avatarMale": "Cascanueces",
+    "avatarFemale": "Cascanueces",
+    "installAs": "Instalar como…",
+    "installChoose": "Elige qué icono mostrar en tu pantalla",
+    "install": "Instalar",
+    "cancel": "Cancelar",
+    "more": "más",
+    "featrequest": "Solicitud de función"
   },
   "it": {
     "tab1": "Tonalità",
@@ -255,7 +295,15 @@
       "Settima minore",
       "Settima maggiore",
       "Ottava"
-    ]
+    ],
+    "avatarMale": "Schiaccianoci",
+    "avatarFemale": "Schiaccianoci",
+    "installAs": "Installa come…",
+    "installChoose": "Scegli quale icona mostrare sullo schermo",
+    "install": "Installa",
+    "cancel": "Annulla",
+    "more": "altro",
+    "featrequest": "Richiesta funzione"
   },
   "pt": {
     "tab1": "Tonalidade",
@@ -298,7 +346,15 @@
       "Sétima menor",
       "Sétima maior",
       "Oitava"
-    ]
+    ],
+    "avatarMale": "Quebra-nozes",
+    "avatarFemale": "Quebra-nozes",
+    "installAs": "Instalar como…",
+    "installChoose": "Escolha o ícone a mostrar no ecrã",
+    "install": "Instalar",
+    "cancel": "Cancelar",
+    "more": "mais",
+    "featrequest": "Pedido de função"
   },
   "zh": {
     "tab1": "调性",
@@ -341,6 +397,14 @@
       "小七度",
       "大七度",
       "八度"
-    ]
+    ],
+    "avatarMale": "胡桃夹子",
+    "avatarFemale": "胡桃夹子",
+    "installAs": "安装为…",
+    "installChoose": "选择显示在屏幕上的图标",
+    "install": "安装",
+    "cancel": "取消",
+    "more": "更多",
+    "featrequest": "功能请求"
   }
 }
