@@ -4582,6 +4582,7 @@ const _i18nFallback = {
   installAs:'Installeer als…', installChoose:'Kies welk icoon je op je scherm wil zien',
   install:'Installeer', cancel:'Annuleren', more:'meer',
   featrequest:'5 woorden over\nhoe je deze app\ngraag gebruikt',
+  featrequestShort:'Featrequest',
   pitchBarok:'Barok', pitchKlassiek:'Klassiek',
   pitchStandaard:'Standaard', pitchModern:'Modern Orkest',
   intervalNames:[
@@ -4615,7 +4616,13 @@ function applyTranslations(){
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
     const val = T(key);
-    if(val) el.textContent = val;
+    if(!val) return;
+    // Gebruik innerHTML voor strings met \n (worden <br>)
+    if(val.includes('\n')){
+      el.innerHTML = val.replace(/\n/g,'<br>');
+    } else {
+      el.textContent = val;
+    }
   });
   // 2. Elementen zonder data-i18n maar wel vertaalbaar (legacy + dynamisch)
   const ch = document.getElementById('chord-btn-main');
@@ -4632,6 +4639,8 @@ function applyTranslations(){
   if(typeof updateLabels === 'function') updateLabels();
   // 5. Hz-slider label hertalen
   if(typeof updPitch === 'function') updPitch(window.pitchHz || 440, null);
+  // 6. Installeer-label hertalen (avatar + werkwoord)
+  if(typeof _updateInstallLabel === 'function') _updateInstallLabel();
 }
 
 function translateKeyName(n){
@@ -4828,6 +4837,43 @@ function toggleLangPicker(e){
   picker.classList.add('open');
   _positionSubPanel(picker);
 }
+
+// Windows hover-to-open voor submenurijen
+(function initHoverSubmenus(){
+  function onHoverOpen(rowId, openFn, closeOtherFn){
+    const row = document.getElementById(rowId);
+    if(!row) return;
+    let _leaveTimer = null;
+    const panel = document.getElementById(
+      rowId === 'personaliseer-row' ? 'personaliseer-panel' : 'lang-picker'
+    );
+    function cancelLeave(){ clearTimeout(_leaveTimer); }
+    function scheduleClose(){
+      _leaveTimer = setTimeout(()=>{
+        if(panel && !panel.matches(':hover')) panel.classList.remove('open');
+      }, 180);
+    }
+    row.addEventListener('mouseenter', ()=>{
+      if(!document.body.classList.contains('is-windows')) return;
+      cancelLeave();
+      const apanel = document.getElementById('app-panel');
+      if(!apanel || !apanel.classList.contains('open')) return;
+      openFn({ stopPropagation:()=>{} });
+    });
+    row.addEventListener('mouseleave', ()=>{
+      if(!document.body.classList.contains('is-windows')) return;
+      scheduleClose();
+    });
+    if(panel){
+      panel.addEventListener('mouseenter', cancelLeave);
+      panel.addEventListener('mouseleave', scheduleClose);
+    }
+  }
+  document.addEventListener('DOMContentLoaded', ()=>{
+    onHoverOpen('personaliseer-row', togglePersonaliseerMenu);
+    onHoverOpen('lang-row',          toggleLangPicker);
+  });
+})();
 
 function openContact(){
   window.location.href = 'mailto:useful.nuts.apps@gmail.com';
@@ -5466,7 +5512,7 @@ function showTabAnimated(i, dir){
   </div>
   <hr class="app-panel-divider">
   <div class="app-panel-row" onclick="openFeedback()">
-    <span class="app-panel-label" style="line-height:1.4">5 woorden over<br>hoe je deze app<br>graag gebruikt</span>
+    <span class="app-panel-label" data-i18n="featrequest" style="line-height:1.4">5 woorden over<br>hoe je deze app<br>graag gebruikt</span>
     <span class="app-panel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="20" height="16" rx="2" fill="#222"/><path d="M2 7 L12 13 L22 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
   </div>
   <hr class="app-panel-divider">
@@ -5571,7 +5617,7 @@ function showTabAnimated(i, dir){
   <hr class="app-panel-divider">
   <div class="app-panel-row" onclick="openContact()">
     <span class="app-panel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="20" height="16" rx="2" fill="#222"/><path d="M2 7 L12 13 L22 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
-    <span class="app-panel-label" data-i18n="featrequest">Featrequest</span>
+    <span class="app-panel-label" data-i18n="featrequestShort">Featrequest</span>
   </div>
   <hr class="app-panel-divider admin-row">
   <div class="app-panel-row admin-row" onclick="adminUpdateApp()">
