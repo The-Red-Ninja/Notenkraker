@@ -4678,6 +4678,10 @@ window.addEventListener('DOMContentLoaded',()=>{
   updateNotePosSliderPadding();
   updateStaffZone(); setTimeout(updateStaffZone, 200);
   resizeQuintCanvas();
+  // Windows: herteken na korte delay zodat layout volledig berekend is
+  if(document.body.classList.contains('is-windows')){
+    setTimeout(()=>{ resizeQuintCanvas(); renderMiniStaves(); }, 120);
+  }
   loadStaffSettings();
   syncToggleBtns();
   initHintArrows();
@@ -4930,13 +4934,7 @@ function flagImg(code, size){
 }
 
 function initFlags(){
-  // Vul alle .lang-flag spans met Twemoji SVG (werkt ook op Windows)
-  document.querySelectorAll('.lang-option').forEach(el=>{
-    const code = el.dataset.lang;
-    if(!code || !LANGS[code]) return;
-    const flagSpan = el.querySelector('.lang-flag');
-    if(flagSpan) flagSpan.innerHTML = flagImg(code, 20);
-  });
+  // Imgs zijn al inline in de HTML — alleen current-flag bijwerken naar actieve taal
   const cf = document.getElementById('current-flag');
   if(cf) cf.innerHTML = flagImg(_currentLang || 'nl', 17);
 }
@@ -5546,7 +5544,7 @@ function showTabAnimated(i, dir){
   <div class="app-panel-row" id="lang-row" onclick="toggleLangPicker(event)">
     <span class="app-panel-label" data-i18n="language">Taal</span>
     <span style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
-      <span id="current-flag" style="font-size:17px;line-height:1;">🇳🇱</span>
+      <span id="current-flag" style="line-height:1;"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f3-1f1f1.svg" width="17" height="17" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt=""></span>
       <span class="app-panel-chevron">▶</span>
     </span>
   </div>
@@ -5799,14 +5797,14 @@ function adminShowStats(){
 
 <!-- Taalkiezer -->
 <div id="lang-picker">
-  <div class="lang-option active" data-lang="nl" onclick="selectLang('nl')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>Nederlands</div>
-  <div class="lang-option" data-lang="en" onclick="selectLang('en')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>English</div>
-  <div class="lang-option" data-lang="de" onclick="selectLang('de')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>Deutsch</div>
-  <div class="lang-option" data-lang="fr" onclick="selectLang('fr')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>Français</div>
-  <div class="lang-option" data-lang="es" onclick="selectLang('es')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>Español</div>
-  <div class="lang-option" data-lang="it" onclick="selectLang('it')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>Italiano</div>
-  <div class="lang-option" data-lang="pt" onclick="selectLang('pt')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>Português</div>
-  <div class="lang-option" data-lang="zh" onclick="selectLang('zh')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>中文</div>
+  <div class="lang-option active" data-lang="nl" onclick="selectLang('nl')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f3-1f1f1.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Nederlands</div>
+  <div class="lang-option" data-lang="en" onclick="selectLang('en')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1ec-1f1e7.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">English</div>
+  <div class="lang-option" data-lang="de" onclick="selectLang('de')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1e9-1f1ea.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Deutsch</div>
+  <div class="lang-option" data-lang="fr" onclick="selectLang('fr')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1eb-1f1f7.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Français</div>
+  <div class="lang-option" data-lang="es" onclick="selectLang('es')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1ea-1f1f8.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Español</div>
+  <div class="lang-option" data-lang="it" onclick="selectLang('it')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1ee-1f1f9.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Italiano</div>
+  <div class="lang-option" data-lang="pt" onclick="selectLang('pt')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f5-1f1f9.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Português</div>
+  <div class="lang-option" data-lang="zh" onclick="selectLang('zh')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1e8-1f1f3.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">中文</div>
 </div>
 
 <!-- Analyse-toast -->
