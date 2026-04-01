@@ -1741,7 +1741,8 @@ function drawMiniSystem(){
   //   noot+rechterrand: ls*1.8
   //   Totaal: ls*(4.2+2.1+0.85+5.46+1.352+1.8) + 4 = ls*15.762 + 4
   // => ls = floor((W-4) / 15.762), begrensd op [7, 11] (= 75% van vroegere max 15)
-  const ls = Math.max(7, Math.min(11, Math.floor((W - 4) / 15.762)));
+  const lsMax = document.body.classList.contains('is-windows') ? 16 : 11;
+  const ls = Math.max(7, Math.min(lsMax, Math.floor((W - 4) / 15.762)));
 
   const k=cKey(), n2=k.sharps||k.flats;
 
@@ -4476,7 +4477,8 @@ function resizeQuintCanvas(){
   const appH  = getAppHeight ? getAppHeight() : window.innerHeight;
   const cvTop = cv.getBoundingClientRect().top;
   const maxH  = Math.max(140, Math.round(appH * 0.65) - Math.round(cvTop));
-  const size  = Math.max(140, Math.min(220, Math.min(w, Math.max(140, maxH))));
+  const maxSize = document.body.classList.contains('is-windows') ? 300 : 220;
+  const size  = Math.max(140, Math.min(maxSize, Math.min(w, Math.max(140, maxH))));
   cv.width  = size;
   cv.height = size;
   cv.style.width  = size + 'px';
@@ -4798,7 +4800,7 @@ function shareApp(){
 }
 
 // Gedeelde positionering voor subpanelen (personaliseer, taal):
-// linkerkant gelijk aan app-panel.left, minimale breedte = breedste subpaneel
+// Positioneer subpaneel: op touch naast moedermenu, op Windows rechts ernaast
 function _positionSubPanel(el){
   const apanel  = document.getElementById('app-panel');
   const apr     = apanel.getBoundingClientRect();
@@ -4807,17 +4809,37 @@ function _positionSubPanel(el){
   const siblings = ['personaliseer-panel','lang-picker']
     .map(id => document.getElementById(id))
     .filter(Boolean);
-  // Maak ze tijdelijk zichtbaar om breedte te meten
   const wasHidden = siblings.filter(s => s !== el && !s.classList.contains('open'));
   wasHidden.forEach(s => { s.style.visibility='hidden'; s.style.display='block'; });
   const maxSibW = Math.max(...siblings.map(s => s.offsetWidth), apanel.offsetWidth);
   wasHidden.forEach(s => { s.style.visibility=''; s.style.display=''; });
 
-  el.style.minWidth = maxSibW + 'px';
-  el.style.left     = apr.left + 'px';
-  el.style.right    = 'auto';
-  el.style.bottom   = apanel.style.bottom || (window.innerHeight - apr.bottom) + 'px';
-  el.style.top      = 'auto';
+  const botVal = apanel.style.bottom || (window.innerHeight - apr.bottom) + 'px';
+
+  if(document.body.classList.contains('is-windows')){
+    // Windows: subpaneel rechts naast app-panel, vertikaal uitgelijnd
+    // Meet tijdelijk om breedte te weten
+    el.style.visibility = 'hidden';
+    el.style.display    = 'block';
+    const elW = el.offsetWidth || maxSibW;
+    el.style.visibility = '';
+    el.style.display    = '';
+
+    const leftOfSub = apr.right + 4;
+    // Zorg dat het niet buiten het scherm valt
+    const clampedLeft = Math.min(leftOfSub, window.innerWidth - elW - 4);
+    el.style.left   = clampedLeft + 'px';
+    el.style.right  = 'auto';
+    el.style.bottom = botVal;
+    el.style.top    = 'auto';
+  } else {
+    // Touch/mobiel: subpaneel op zelfde positie als app-panel (schuift eroverheen)
+    el.style.minWidth = maxSibW + 'px';
+    el.style.left     = apr.left + 'px';
+    el.style.right    = 'auto';
+    el.style.bottom   = botVal;
+    el.style.top      = 'auto';
+  }
 }
 
 function togglePersonaliseerMenu(e){
@@ -4904,19 +4926,19 @@ function flagImg(code, size){
   const lang = LANGS[code];
   if(!lang) return '';
   const sz = size || 20;
-  return `<img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/${lang.twemoji}.svg" width="${sz}" height="${sz}" style="vertical-align:middle;display:inline-block;" alt="${lang.flag}" onerror="this.replaceWith(document.createTextNode('${lang.flag}'))">`;
+  return `<img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/${lang.twemoji}.svg" width="${sz}" height="${sz}" style="vertical-align:middle;display:inline-block;" alt="" onerror="this.style.display='none'">`;
 }
 
 function initFlags(){
-  // Vervang alle vlag-emoji's in lang-picker en current-flag door Twemoji SVG
+  // Vul alle .lang-flag spans met Twemoji SVG (werkt ook op Windows)
   document.querySelectorAll('.lang-option').forEach(el=>{
     const code = el.dataset.lang;
     if(!code || !LANGS[code]) return;
-    const flagSpan = el.querySelector('span');
+    const flagSpan = el.querySelector('.lang-flag');
     if(flagSpan) flagSpan.innerHTML = flagImg(code, 20);
   });
   const cf = document.getElementById('current-flag');
-  if(cf) cf.innerHTML = flagImg('nl', 17);
+  if(cf) cf.innerHTML = flagImg(_currentLang || 'nl', 17);
 }
 
 function selectLang(code){
@@ -5777,14 +5799,14 @@ function adminShowStats(){
 
 <!-- Taalkiezer -->
 <div id="lang-picker">
-  <div class="lang-option active" data-lang="nl" onclick="selectLang('nl')"><span style="font-size:20px">🇳🇱</span>Nederlands</div>
-  <div class="lang-option" data-lang="en" onclick="selectLang('en')"><span style="font-size:20px">🇬🇧</span>English</div>
-  <div class="lang-option" data-lang="de" onclick="selectLang('de')"><span style="font-size:20px">🇩🇪</span>Deutsch</div>
-  <div class="lang-option" data-lang="fr" onclick="selectLang('fr')"><span style="font-size:20px">🇫🇷</span>Français</div>
-  <div class="lang-option" data-lang="es" onclick="selectLang('es')"><span style="font-size:20px">🇪🇸</span>Español</div>
-  <div class="lang-option" data-lang="it" onclick="selectLang('it')"><span style="font-size:20px">🇮🇹</span>Italiano</div>
-  <div class="lang-option" data-lang="pt" onclick="selectLang('pt')"><span style="font-size:20px">🇵🇹</span>Português</div>
-  <div class="lang-option" data-lang="zh" onclick="selectLang('zh')"><span style="font-size:20px">🇨🇳</span>中文</div>
+  <div class="lang-option active" data-lang="nl" onclick="selectLang('nl')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>Nederlands</div>
+  <div class="lang-option" data-lang="en" onclick="selectLang('en')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>English</div>
+  <div class="lang-option" data-lang="de" onclick="selectLang('de')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>Deutsch</div>
+  <div class="lang-option" data-lang="fr" onclick="selectLang('fr')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>Français</div>
+  <div class="lang-option" data-lang="es" onclick="selectLang('es')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>Español</div>
+  <div class="lang-option" data-lang="it" onclick="selectLang('it')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>Italiano</div>
+  <div class="lang-option" data-lang="pt" onclick="selectLang('pt')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>Português</div>
+  <div class="lang-option" data-lang="zh" onclick="selectLang('zh')"><span class="lang-flag" style="font-size:20px;display:inline-block;width:20px;height:20px;"></span>中文</div>
 </div>
 
 <!-- Analyse-toast -->
