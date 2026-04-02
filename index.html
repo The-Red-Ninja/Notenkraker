@@ -1253,7 +1253,8 @@ function _updateSoundsFamiliarBtn(){
   btn.classList.toggle('visible', show);
 }
 
-function showLastToast(){
+function showLastToast(e){
+  if(e) e.stopPropagation(); // voorkomt dat document-click de toast meteen sluit
   if(!_lastToastLines) return;
   const el = document.getElementById('analysis-toast');
   if(el && el.classList.contains('show')){
@@ -3318,7 +3319,7 @@ function loadAudioFile(file){
   audio.load();
   // Toon wacht-toast als auto-detect aan
   if(window._autoKeyDetect){
-    _showAnalysisToast(['⏳ Auto herkenning…'], 120000); // lang timeout, wordt overschreven door analyse
+    _showAnalysisToast([T('analysisWaiting')], 120000); // lang timeout, wordt overschreven door analyse
   }
   decodeWaveform(file);
 }
@@ -3381,6 +3382,15 @@ function _keyLabel(result){
   const entry=circ[result.idx], mode=enharmMode[entry.pos]||'A';
   const sp=(mode==='B'&&entry.spellingB)?entry.spellingB:entry.spellingA;
   return sp.name;
+}
+
+// Vertaalde versie: nootnaam + modus via T()
+function _keyLabelI18n(result){
+  const circ=result.isMinor?CIRCLE_MINOR:CIRCLE_MAJOR;
+  const entry=circ[result.idx], mode=enharmMode[entry.pos]||'A';
+  const sp=(mode==='B'&&entry.spellingB)?entry.spellingB:entry.spellingA;
+  const modus = result.isMinor ? T('minor') : T('major');
+  return sp.name + ' ' + modus;
 }
 
 function _applyKey(result){
@@ -3599,7 +3609,7 @@ async function _analyseAudio(decoded){
       updPitch(clamped,null);
       const near=PITCH_STOPS.reduce((a,b)=>Math.abs(b.hz-clamped)<Math.abs(a.hz-clamped)?b:a);
       const lbl=Math.abs(near.hz-clamped)<=1?near.name:clamped+' Hz';
-      pitchLine='🎵 Stemming: '+clamped+' Hz ('+lbl+')';
+      pitchLine=T('analysisTuning').replace('{hz}',clamped).replace('{lbl}',lbl);
     }
 
     // 2. Globale toonsoort (max 120s)
@@ -3612,7 +3622,7 @@ async function _analyseAudio(decoded){
     }
     const globalKey=_bestKey(chroma);
     _applyKey(globalKey);
-    const globalLabel=_keyLabel(globalKey);
+    const globalLabel=_keyLabelI18n(globalKey);
     _ringAnimate(0.8, 500);
 
     // 3. Exacte toonsoortovergangen via onset-analyse
@@ -3622,11 +3632,11 @@ async function _analyseAudio(decoded){
     _ringAnimate(1.0, 300, ()=>_ringHide(600));
 
     // 4. Toast samenstellen
-    const lines=['🎼 '+globalLabel+' gedetecteerd'];
+    const lines=[T('analysisDetected').replace('{key}', globalLabel)];
     if(changes.length>0&&changes.length<=8){
       lines.push('');
-      for(const ch of changes) lines.push(_fmtTime(ch.timeSec)+'  →  '+ch.label);
-    } else if(changes.length>8) lines.push('+ '+changes.length+' toonsoortwijzigingen');
+      for(const ch of changes) lines.push(_fmtTime(ch.timeSec)+'  →  '+_keyLabelI18n(ch.key));
+    } else if(changes.length>8) lines.push(T('analysisChanges').replace('{n}',changes.length));
     if(pitchLine){ lines.push(''); lines.push(pitchLine); }
     const dur=3500+changes.length*600+(pitchLine?1000:0);
 
@@ -4614,6 +4624,10 @@ const _I18N_NL_FALLBACK = {
   install:'Installeer', cancel:'Annuleren',
   reinstallMsg:'Ook de app opnieuw installeren met dit icoon?',
   reinstallNo:'Nee', reinstallYes:'Ja',
+  analysisWaiting:'⏳ Auto herkenning…',
+  analysisDetected:'🎼 {key} gedetecteerd',
+  analysisTuning:'🎵 Stemming: {hz} Hz ({lbl})',
+  analysisChanges:'+ {n} toonsoortwijzigingen',
   featrequest:'5 woorden over\nhoe je deze app\ngraag gebruikt',
   pitchBarok:'Barok', pitchKlassiek:'Klassiek', pitchStandaard:'Standaard',
   pitchModern:'Modern Orkest',
