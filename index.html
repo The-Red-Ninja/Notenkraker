@@ -4612,6 +4612,8 @@ const _I18N_NL_FALLBACK = {
   avatarMale:'Notenkraker', avatarFemale:'Notenkraakster',
   installAs:'Installeer als…', installChoose:'Kies welk icoon je op je scherm wil zien',
   install:'Installeer', cancel:'Annuleren',
+  reinstallMsg:'Ook de app opnieuw installeren met dit icoon?',
+  reinstallNo:'Nee', reinstallYes:'Ja',
   featrequest:'5 woorden over\nhoe je deze app\ngraag gebruikt',
   pitchBarok:'Barok', pitchKlassiek:'Klassiek', pitchStandaard:'Standaard',
   pitchModern:'Modern Orkest',
@@ -4691,6 +4693,16 @@ function applyTranslations(){
   if(typeof _updateInstallLabel === 'function') _updateInstallLabel();
   // 7. Pitch-stop namen bijwerken
   _updatePitchStopNames();
+  // 8. Reinstall-toast hertalen (knoppen + bericht, als toast zichtbaar)
+  const rtMsg    = document.getElementById('reinstall-toast-msg');
+  const rtBtnNo  = document.getElementById('reinstall-btn-no');
+  const rtBtnYes = document.getElementById('reinstall-btn-yes');
+  if(rtBtnNo)  rtBtnNo.textContent  = T('reinstallNo');
+  if(rtBtnYes) rtBtnYes.textContent = T('reinstallYes');
+  if(rtMsg){
+    const appNaam = (window._persGender === 'v') ? T('avatarFemale') : T('avatarMale');
+    rtMsg.innerHTML = T('reinstallMsg').replace('?', '?<br><b>' + appNaam + '</b>');
+  }
 }
 window.addEventListener('DOMContentLoaded',()=>{
   // Laad taalpakketten op de achtergrond
@@ -5151,7 +5163,16 @@ function persSetKarakter(t, g){
   // Herinstallatie-toast tonen als de prompt beschikbaar is
   if(_deferredInstall){
     const toast = document.getElementById('reinstall-toast');
-    if(toast) toast.style.display = 'flex';
+    if(toast){
+      const appNaam = (_persGender === 'v') ? T('avatarFemale') : T('avatarMale');
+      const msg = document.getElementById('reinstall-toast-msg');
+      const btnNo  = document.getElementById('reinstall-btn-no');
+      const btnYes = document.getElementById('reinstall-btn-yes');
+      if(msg)    msg.innerHTML = T('reinstallMsg').replace('?', '?<br><b>' + appNaam + '</b>') ;
+      if(btnNo)  btnNo.textContent  = T('reinstallNo');
+      if(btnYes) btnYes.textContent = T('reinstallYes');
+      toast.style.display = 'flex';
+    }
   }
 }
 
@@ -5647,35 +5668,31 @@ function showTabAnimated(i, dir){
   background:#2a2a2a; color:#fff; font-family:Arial,sans-serif;
   padding:14px 16px; align-items:center; justify-content:space-between; gap:10px;
   box-shadow:0 -2px 12px rgba(0,0,0,0.3);">
-  <span style="font-size:13px; line-height:1.3; flex:1;">Ook de app opnieuw<br>installeren met dit icoon?</span>
+  <span id="reinstall-toast-msg" style="font-size:13px; line-height:1.3; flex:1;"></span>
   <div style="display:flex; gap:8px; flex-shrink:0;">
-    <button onclick="closeReinstallToast()" style="
+    <button onclick="closeReinstallToast()" id="reinstall-btn-no" style="
       padding:8px 14px; border-radius:8px; border:1.5px solid #666;
       background:transparent; color:#ccc; font-size:13px; cursor:pointer;
-      font-family:Arial,sans-serif;">Nee</button>
-    <button onclick="reinstallWithCurrentTheme()" style="
+      font-family:Arial,sans-serif;"></button>
+    <button onclick="reinstallWithCurrentTheme()" id="reinstall-btn-yes" style="
       padding:8px 14px; border-radius:8px; border:none;
       background:#f5f0e8; color:#222; font-size:13px; font-weight:bold;
-      cursor:pointer; font-family:Arial,sans-serif;">Ja</button>
+      cursor:pointer; font-family:Arial,sans-serif;"></button>
   </div>
 </div>
 <div id="personaliseer-panel">
   <div id="pers-avatar-grid">
     <button class="pers-avatar-btn active" id="pers-btn-lm" onclick="persSetKarakter('l','m')">
       <img src="icons/icon-lm-96.png" alt="Blanke man">
-      <span class="pers-avatar-lbl">Notenkraker</span>
     </button>
     <button class="pers-avatar-btn" id="pers-btn-dm" onclick="persSetKarakter('d','m')">
       <img src="icons/icon-dm-96.png" alt="Donkere man">
-      <span class="pers-avatar-lbl">Notenkraker</span>
     </button>
     <button class="pers-avatar-btn" id="pers-btn-lv" onclick="persSetKarakter('l','v')">
       <img src="icons/icon-lv-96.png" alt="Blanke vrouw">
-      <span class="pers-avatar-lbl">Notenkraakster</span>
     </button>
     <button class="pers-avatar-btn" id="pers-btn-dv" onclick="persSetKarakter('d','v')">
       <img src="icons/icon-dv-96.png" alt="Donkere vrouw">
-      <span class="pers-avatar-lbl">Notenkraakster</span>
     </button>
   </div>
   <hr class="app-panel-divider">
