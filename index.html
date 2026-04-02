@@ -4951,14 +4951,19 @@ function openFeedback(){
 // Twemoji SVG-vlaggen voor Windows-compatibiliteit
 // Vlag-emoji → Twemoji codepoint: regional indicator A=1f1e6, B=1f1e7, ... Z=1f1ff
 const LANGS = {
-  nl:{ flag:'🇳🇱', twemoji:'1f1f3-1f1f1', label:'Nederlands' },
-  en:{ flag:'🇬🇧', twemoji:'1f1ec-1f1e7', label:'English' },
+  en:{ flag:'🇺🇸', twemoji:'1f1fa-1f1f8', label:'English' },
+  zh:{ flag:'🇨🇳', twemoji:'1f1e8-1f1f3', label:'中文' },
+  ru:{ flag:'🇷🇺', twemoji:'1f1f7-1f1fa', label:'Русский' },
+  hi:{ flag:'🇮🇳', twemoji:'1f1ee-1f1f3', label:'हिन्दी' },
   de:{ flag:'🇩🇪', twemoji:'1f1e9-1f1ea', label:'Deutsch' },
   fr:{ flag:'🇫🇷', twemoji:'1f1eb-1f1f7', label:'Français' },
-  es:{ flag:'🇪🇸', twemoji:'1f1ea-1f1f8', label:'Español' },
   it:{ flag:'🇮🇹', twemoji:'1f1ee-1f1f9', label:'Italiano' },
   pt:{ flag:'🇵🇹', twemoji:'1f1f5-1f1f9', label:'Português' },
-  zh:{ flag:'🇨🇳', twemoji:'1f1e8-1f1f3', label:'中文' },
+  pl:{ flag:'🇵🇱', twemoji:'1f1f5-1f1f1', label:'Polski' },
+  nl:{ flag:'🇳🇱', twemoji:'1f1f3-1f1f1', label:'Nederlands' },
+  es:{ flag:'🇪🇸', twemoji:'1f1ea-1f1f8', label:'Español' },
+  cs:{ flag:'🇨🇿', twemoji:'1f1e8-1f1ff', label:'Čeština' },
+  sv:{ flag:'🇸🇪', twemoji:'1f1f8-1f1ea', label:'Svenska' },
 };
 let _currentLang = 'nl';
 
@@ -5836,14 +5841,19 @@ function adminShowStats(){
 
 <!-- Taalkiezer -->
 <div id="lang-picker">
-  <div class="lang-option active" data-lang="nl" onclick="selectLang('nl')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f3-1f1f1.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Nederlands</div>
-  <div class="lang-option" data-lang="en" onclick="selectLang('en')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1ec-1f1e7.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">English</div>
+  <div class="lang-option" data-lang="en" onclick="selectLang('en')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1fa-1f1f8.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">English</div>
+  <div class="lang-option" data-lang="zh" onclick="selectLang('zh')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1e8-1f1f3.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">中文</div>
+  <div class="lang-option" data-lang="ru" onclick="selectLang('ru')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f7-1f1fa.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Русский</div>
+  <div class="lang-option" data-lang="hi" onclick="selectLang('hi')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1ee-1f1f3.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">हिन्दी</div>
   <div class="lang-option" data-lang="de" onclick="selectLang('de')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1e9-1f1ea.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Deutsch</div>
   <div class="lang-option" data-lang="fr" onclick="selectLang('fr')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1eb-1f1f7.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Français</div>
-  <div class="lang-option" data-lang="es" onclick="selectLang('es')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1ea-1f1f8.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Español</div>
   <div class="lang-option" data-lang="it" onclick="selectLang('it')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1ee-1f1f9.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Italiano</div>
   <div class="lang-option" data-lang="pt" onclick="selectLang('pt')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f5-1f1f9.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Português</div>
-  <div class="lang-option" data-lang="zh" onclick="selectLang('zh')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1e8-1f1f3.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">中文</div>
+  <div class="lang-option" data-lang="pl" onclick="selectLang('pl')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f5-1f1f1.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Polski</div>
+  <div class="lang-option active" data-lang="nl" onclick="selectLang('nl')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f3-1f1f1.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Nederlands</div>
+  <div class="lang-option" data-lang="es" onclick="selectLang('es')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1ea-1f1f8.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Español</div>
+  <div class="lang-option" data-lang="cs" onclick="selectLang('cs')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1e8-1f1ff.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Čeština</div>
+  <div class="lang-option" data-lang="sv" onclick="selectLang('sv')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f8-1f1ea.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Svenska</div>
 </div>
 
 </div>
