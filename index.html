@@ -1026,8 +1026,8 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
       <div id="quint-acc-label" style="text-align:center;font-size:18px;font-weight:bold;font-family:Georgia,serif;color:#555;min-height:22px;margin-top:4px;"></div>
       <!-- Enharm: dynamisch gecentreerd onder midden van kwintencirkel -->
       <div class="enharm-row" id="enharm-row" style="visibility:hidden;margin-top:6px;">
-        <button class="enharm-btn" id="enharm-sharp" onclick="setEnharm('A')">kruizen</button>
-        <button class="enharm-btn" id="enharm-flat"  onclick="setEnharm('B')">mollen</button>
+        <button class="enharm-btn" id="enharm-sharp" onclick="setEnharm('A')" data-i18n="sharps">kruizen</button>
+        <button class="enharm-btn" id="enharm-flat"  onclick="setEnharm('B')" data-i18n="flats">mollen</button>
       </div>
     </div>
     <div id="p0-right-col" style="display:flex;flex-direction:column;flex:1;min-height:0;gap:4px;">
@@ -1217,10 +1217,14 @@ const T_SHARPS=[8,5,9,6,3,7,4], T_FLATS=[4,7,3,6,2,5,1];
 const B_SHARPS=[6,3,7,4,1,5,2], B_FLATS=[7,4,8,5,2,6,3];
 
 const PITCH_STOPS=[
-  {hz:415,name:'Barok'},{hz:422,name:'Klassiek'},
-  {hz:430,name:'430 Hz'},{hz:435,name:'435 Hz'},
-  {hz:440,name:'Standaard'},{hz:442,name:'Modern Orkest'},
-  {hz:443,name:'Modern Orkest'},{hz:444,name:'Modern Orkest'},
+  {hz:415,key:'pitchBarok',   name:'Barok'},
+  {hz:422,key:'pitchKlassiek',name:'Klassiek'},
+  {hz:430,name:'430 Hz'},
+  {hz:435,name:'435 Hz'},
+  {hz:440,key:'pitchStandaard',name:'Standaard'},
+  {hz:442,key:'pitchModern',   name:'Modern Orkest'},
+  {hz:443,key:'pitchModern',   name:'Modern Orkest'},
+  {hz:444,key:'pitchModern',   name:'Modern Orkest'},
 ];
 const PITCH_MIN=410, PITCH_MAX=446;
 
@@ -2213,16 +2217,11 @@ function renderStaff(clef){
         soundingMidi(a,clef) - soundingMidi(b,clef)
       );
 
-      // Nederlandse intervalnamen op basis van aantal halve tonen
-      const NL_INTERVAL = [
-        'Unisono','Kleine secunde','Grote secunde',
-        'Kleine terts','Grote terts','Reine kwart',
-        'Tritonus','Reine kwint','Kleine sext',
-        'Grote sext','Kleine septiem','Grote septiem','Octaaf'
-      ];
+      // Intervalnamen in actieve taal
+      const _INTERVAL_NAMES = T('intervalNames');
       function intervalName(semi){
         const s = ((semi % 12) + 12) % 12;
-        return NL_INTERVAL[s] || NL_INTERVAL[s % 12];
+        return (_INTERVAL_NAMES && _INTERVAL_NAMES[s]) || String(s);
       }
 
       const intFont = `${Math.round(lsNote*0.88)}px Arial,Helvetica,sans-serif`;
@@ -3125,7 +3124,7 @@ function buildPlayerMini(mountId){
     <div id="pmini-wrap-${idx}" style="margin-top:4px;position:relative;margin-left:calc(-1*var(--safe));margin-right:calc(-1*var(--safe));width:calc(100% + 2*var(--safe));">
       <!-- Sounds Familiar knop: absoluut, eigen hoogte boven container -->
       <div style="position:relative;height:0;">
-        <button id="sounds-familiar-btn" onclick="showLastToast()">🔍 Sounds Familiar</button>
+        <button id="sounds-familiar-btn" onclick="showLastToast()">🔍 <span data-i18n="soundsFamiliar">Sounds Familiar</span></button>
       </div>
       <!-- Hz-slider: volle breedte -->
       <div style="padding:0 0 4px;">
@@ -4588,26 +4587,112 @@ function updateNotePosSliderPadding(clef){
 // ════════════════════════════════════════
 // TAAL — vast Nederlands
 // ════════════════════════════════════════
+// ════════════════════════════════════════════════════
+// I18N — meertalige interface
+// ════════════════════════════════════════════════════
+let _i18nData = null;   // geladen JSON: { nl:{...}, en:{...}, ... }
+let _i18nLang = 'nl';   // actieve taal
+
+// NL-fallback zodat app werkt vóór JSON geladen is
+const _I18N_NL_FALLBACK = {
+  tab1:'Toonsoort', major:'Majeur', minor:'Mineur', chord:'Akkoord',
+  openMp3:'Open mp3-bestand…', keyMajor:'Groot', keyMinor:'Klein',
+  zoom:'Zoom', tempo:'Tempo', recZoom:'opnamezoom',
+  sharps:'kruizen', flats:'mollen',
+  noteAbove:'Nootnaam boven', noteBelow:'Nootnaam onder',
+  octave:'Octaafnummer', solfege:'Solfège',
+  interval:'Interval', intervalAbove:'Interval boven', intervalBelow:'Interval onder',
+  autokey:'Toonsoortherkenning', share:'Delen', personalize:'Personaliseer',
+  language:'Taal', shareSlogan:'Zing het voort!', settingsTitle:'Instellingen',
+  soundsFamiliar:'Sounds Familiar', more:'meer',
+  avatarMale:'Notenkraker', avatarFemale:'Notenkraakster',
+  installAs:'Installeer als…', installChoose:'Kies welk icoon je op je scherm wil zien',
+  install:'Installeer', cancel:'Annuleren',
+  featrequest:'5 woorden over
+hoe je deze app
+graag gebruikt',
+  pitchBarok:'Barok', pitchKlassiek:'Klassiek', pitchStandaard:'Standaard',
+  pitchModern:'Modern Orkest',
+  intervalNames:['Unisono','Kleine secunde','Grote secunde','Kleine terts','Grote terts',
+    'Reine kwart','Tritonus','Reine kwint','Kleine sext','Grote sext',
+    'Kleine septiem','Grote septiem','Octaaf'],
+};
+
 function T(k){
-  const NL={
-    tab0:'Toonsoort', major:'Majeur', minor:'Mineur', chord:'Akkoord',
-    openMp3:'Open mp3-bestand…', keyMajor:'Groot', keyMinor:'Klein',
-    zoom:'Zoom', tempo:'Tempo', recZoom:'opnamezoom'
-  };
-  return NL[k]||k;
+  const pack = (_i18nData && _i18nData[_i18nLang]) || _I18N_NL_FALLBACK;
+  const val  = pack[k];
+  if(val !== undefined) return val;
+  // Fallback naar NL als sleutel ontbreekt in actieve taal
+  return _I18N_NL_FALLBACK[k] !== undefined ? _I18N_NL_FALLBACK[k] : k;
 }
-function translateKeyName(n){ return n; } // namen al in het Nederlands
+
+async function loadI18n(){
+  try{
+    const r = await fetch('i18n.json');
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    _i18nData = await r.json();
+    // Herstel pitch-stop namen na laden
+    _updatePitchStopNames();
+    return _i18nData;
+  } catch(e){
+    console.warn('i18n.json niet geladen, gebruik NL fallback:', e.message);
+    return null;
+  }
+}
+
+function _updatePitchStopNames(){
+  // Hernoem PITCH_STOPS naar de actieve taal via hun sleutel
+  PITCH_STOPS.forEach(s => { if(s.key) s.name = T(s.key); });
+  // Herteken Hz-label als dat al zichtbaar is
+  if(typeof updPitch === 'function') updPitch(pitchHz, null);
+}
+
+function translateKeyName(n){
+  return n
+    .replace(/Groot/, T('keyMajor'))
+    .replace(/Klein/, T('keyMinor'));
+}
+
 function applyTranslations(){
-  const maj=document.getElementById('btn-maj');if(maj)maj.textContent=T('major');
-  const min=document.getElementById('btn-min');if(min)min.textContent=T('minor');
-  const ch=document.getElementById('chord-btn-main');if(ch)ch.innerHTML='🎵 '+T('chord');
-  const m=document.getElementById('t-mp3-label');if(m)m.textContent=T('openMp3');
-  document.querySelectorAll('.t-mp3-label-staff').forEach(el=>el.textContent=T('openMp3'));
-  document.querySelectorAll('.player-speed-label').forEach(el=>el.textContent=T('tempo'));
-  document.querySelectorAll('[data-t="zoom"]').forEach(el=>el.textContent=T('zoom'));
-  document.querySelectorAll('[data-t="reczoom"]').forEach(el=>el.textContent=T('recZoom'));
+  // 1. Alle data-i18n elementen in één slag
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    const val = T(key);
+    if(val === undefined || val === null) return;
+    if(typeof val === 'string' && val.includes('\n')){
+      el.innerHTML = val.replace(/\n/g,'<br>');
+    } else if(typeof val === 'string'){
+      el.textContent = val;
+    }
+  });
+  // 2. Elementen zonder data-i18n (legacy + dynamisch gegenereerd)
+  const maj = document.getElementById('btn-maj');  if(maj) maj.textContent = T('major');
+  const min = document.getElementById('btn-min');  if(min) min.textContent = T('minor');
+  const ch  = document.getElementById('chord-btn-main');
+  if(ch) ch.innerHTML = '🎵 ' + T('chord');
+  const m = document.getElementById('t-mp3-label');
+  if(m) m.textContent = T('openMp3');
+  document.querySelectorAll('.t-mp3-label-staff').forEach(el => el.textContent = T('openMp3'));
+  document.querySelectorAll('.player-speed-label').forEach(el => el.textContent = T('tempo'));
+  document.querySelectorAll('[data-t="zoom"]').forEach(el => el.textContent = T('zoom'));
+  document.querySelectorAll('[data-t="reczoom"]').forEach(el => el.textContent = T('recZoom'));
+  // 3. Interval-label (cyclische waarde)
+  const iv = window._showInterval || 0;
+  document.querySelectorAll('.interval-label').forEach(el => {
+    el.textContent = iv === 0 ? T('interval') : iv === 1 ? T('intervalAbove') : T('intervalBelow');
+  });
+  // 4. Toonsoort naam + enharm knoppen hertalen
+  if(typeof updateLabels === 'function') updateLabels();
+  // 5. Hz-slider label
+  if(typeof updPitch === 'function') updPitch(window.pitchHz || 440, null);
+  // 6. Install-label
+  if(typeof _updateInstallLabel === 'function') _updateInstallLabel();
+  // 7. Pitch-stop namen bijwerken
+  _updatePitchStopNames();
 }
 window.addEventListener('DOMContentLoaded',()=>{
+  // Laad taalpakketten op de achtergrond
+  loadI18n().then(applyTranslations);
   // Personaliseer init: knoppen + icoon
   persInit();
 
@@ -4656,8 +4741,8 @@ let _deferredInstall = null;
 function _updateInstallLabel(){
   const lbl = document.getElementById('install-label');
   if(!lbl) return;
-  const naam = (_persGender === 'v') ? 'de Notenkraakster' : 'de Notenkraker';
-  lbl.innerHTML = 'Installeer<br>' + naam;
+  const naam = (_persGender === 'v') ? T('avatarFemale') : T('avatarMale');
+  lbl.innerHTML = T('install') + '<br>' + naam;
 }
 
 function _updateInstallRow(visible){
@@ -4889,6 +4974,7 @@ function initFlags(){
 
 function selectLang(code){
   _currentLang = code;
+  _i18nLang    = code;
   const l = LANGS[code];
   const cf = document.getElementById('current-flag');
   if(cf) cf.innerHTML = flagImg(code, 17);
@@ -4898,6 +4984,12 @@ function selectLang(code){
     el.classList.toggle('active', el.dataset.lang === code)
   );
   document.getElementById('lang-picker').classList.remove('open');
+  // Hertaal de hele interface
+  if(!_i18nData){
+    loadI18n().then(applyTranslations);
+  } else {
+    applyTranslations();
+  }
 }
 // ════════════════════════════════════════════════════
 // WINDOWS DETECTIE
@@ -5438,40 +5530,40 @@ function showTabAnimated(i, dir){
   <div class="settings-toggle-row">
     <div class="settings-staff-only" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;margin-bottom:4px;">
       <div class="settings-toggle-item on" id="set-above" onclick="toggleSetting('above')">
-        <div class="settings-switch"></div>Nootnaam boven
+        <div class="settings-switch"></div><span data-i18n="noteAbove">Nootnaam boven</span>
       </div>
       <div class="settings-toggle-item" id="set-interval" onclick="toggleSetting('interval')">
-        <div class="settings-switch"></div><span class="interval-label">Interval</span>
+        <div class="settings-switch"></div><span class="interval-label" data-i18n="interval">Interval</span>
       </div>
       <div class="settings-toggle-item" id="set-below" onclick="toggleSetting('below')">
-        <div class="settings-switch"></div>Nootnaam onder
+        <div class="settings-switch"></div><span data-i18n="noteBelow">Nootnaam onder</span>
       </div>
       <div class="settings-toggle-item on" id="set-octave" onclick="toggleSetting('octave')">
-        <div class="settings-switch"></div>Octaafnummer
+        <div class="settings-switch"></div><span data-i18n="octave">Octaafnummer</span>
       </div>
     </div>
   </div>
   <!-- Solfège: zichtbaar in beide contexten (staff én kwintencirkel) -->
   <div class="settings-toggle-item" id="set-solfege" onclick="toggleSetting('solfege')">
-    <div class="settings-switch"></div><span>Solfège</span>
+    <div class="settings-switch"></div><span data-i18n="solfege">Solfège</span>
   </div>
   <div class="settings-meer-row">
     <button onclick="showAppPanelAtSettingsPos()" style="background:none;border:none;width:100%;display:flex;align-items:center;cursor:pointer;padding:0;">
       <div style="width:36px;height:22px;flex-shrink:0;"></div>
-      <span style="flex:1;padding-left:9px;font-size:12.5px;font-family:Arial,sans-serif;color:#888;text-align:left;">meer</span>
+      <span style="flex:1;padding-left:9px;font-size:12.5px;font-family:Arial,sans-serif;color:#888;text-align:left;" data-i18n="more">meer</span>
       <span style="font-size:10px;color:#bbb;flex-shrink:0;">▶</span>
     </button>
   </div>
   <hr class="settings-autokey-divider">
   <div class="settings-toggle-item" id="set-autokey" onclick="toggleSetting('autokey')">
-    <div class="settings-switch"></div>Toonsoortherkenning
+    <div class="settings-switch"></div><span data-i18n="autokey">Toonsoortherkenning</span>
   </div>
 </div>
 
 <!-- App-paneel: Delen / Personaliseer / Taal -->
 <div id="app-panel">
   <div class="app-panel-row" id="share-row" onclick="shareApp()">
-    <span class="app-panel-label">Delen</span>
+    <span class="app-panel-label" data-i18n="share">Delen</span>
     <span class="app-panel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></span>
   </div>
   <hr class="app-panel-divider">
@@ -5481,12 +5573,12 @@ function showTabAnimated(i, dir){
   </div>
   <hr class="app-panel-divider">
   <div class="app-panel-row" id="personaliseer-row" onclick="togglePersonaliseerMenu(event)">
-    <span class="app-panel-label">Personaliseer</span>
+    <span class="app-panel-label" data-i18n="personalize">Personaliseer</span>
     <span class="app-panel-chevron">▶</span>
   </div>
   <hr class="app-panel-divider">
   <div class="app-panel-row" id="lang-row" onclick="toggleLangPicker(event)">
-    <span class="app-panel-label">Taal</span>
+    <span class="app-panel-label" data-i18n="language">Taal</span>
     <span style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
       <span id="current-flag" style="line-height:1;"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f3-1f1f1.svg" width="17" height="17" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt=""></span>
       <span class="app-panel-chevron">▶</span>
@@ -5513,31 +5605,31 @@ function showTabAnimated(i, dir){
     background:#fff; border-radius:16px; padding:20px 18px 16px;
     max-width:300px; width:88%; box-shadow:0 8px 32px rgba(0,0,0,0.25);
     font-family:Georgia,serif; text-align:center;">
-    <div style="font-size:15px; font-weight:bold; color:#2a2a2a; margin-bottom:4px;">Installeer als…</div>
-    <div style="font-size:12px; color:#888; margin-bottom:14px;">Kies welk icoon je op je scherm wil zien</div>
+    <div style="font-size:15px; font-weight:bold; color:#2a2a2a; margin-bottom:4px;" data-i18n="installAs">Installeer als…</div>
+    <div style="font-size:12px; color:#888; margin-bottom:14px;" data-i18n="installChoose">Kies welk icoon je op je scherm wil zien</div>
     <div id="install-theme-grid" style="
       display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
       <button class="install-theme-btn" id="itbtn-lm" onclick="installWithTheme('l','m')">
         <img src="icons/icon-lm-96.png" alt="Blanke man">
-        <span>Notenkraker</span>
+        <span data-i18n="avatarMale">Notenkraker</span>
       </button>
       <button class="install-theme-btn" id="itbtn-dm" onclick="installWithTheme('d','m')">
         <img src="icons/icon-dm-96.png" alt="Donkere man">
-        <span>Notenkraker</span>
+        <span data-i18n="avatarMale">Notenkraker</span>
       </button>
       <button class="install-theme-btn" id="itbtn-lv" onclick="installWithTheme('l','v')">
         <img src="icons/icon-lv-96.png" alt="Blanke vrouw">
-        <span>Notenkraakster</span>
+        <span data-i18n="avatarFemale">Notenkraakster</span>
       </button>
       <button class="install-theme-btn" id="itbtn-dv" onclick="installWithTheme('d','v')">
         <img src="icons/icon-dv-96.png" alt="Donkere vrouw">
-        <span>Notenkraakster</span>
+        <span data-i18n="avatarFemale">Notenkraakster</span>
       </button>
     </div>
     <button onclick="closeInstallThemePicker()" style="
       width:100%; padding:10px; border:1.5px solid #ccc; border-radius:8px;
       background:#f5f0e8; color:#555; font-size:13px; cursor:pointer;
-      font-family:Georgia,serif;">Annuleren</button>
+      font-family:Georgia,serif;" data-i18n="cancel">Annuleren</button>
   </div>
 </div>
 
@@ -5581,7 +5673,7 @@ function showTabAnimated(i, dir){
   <hr class="app-panel-divider">
   <div class="app-panel-row" onclick="openContact()">
     <span class="app-panel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="20" height="16" rx="2" fill="#222"/><path d="M2 7 L12 13 L22 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
-    <span class="app-panel-label">Featrequest</span>
+    <span class="app-panel-label" data-i18n="featrequest">Featrequest</span>
   </div>
   <hr class="app-panel-divider admin-row">
   <div class="app-panel-row admin-row" onclick="adminUpdateApp()">
@@ -5750,13 +5842,7 @@ function adminShowStats(){
   <div class="lang-option" data-lang="pt" onclick="selectLang('pt')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f5-1f1f9.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Português</div>
   <div class="lang-option" data-lang="zh" onclick="selectLang('zh')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1e8-1f1f3.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">中文</div>
 </div>
-  <div class="lang-option" data-lang="en" onclick="selectLang('en')"><span style="font-size:20px">🇬🇧</span>English</div>
-  <div class="lang-option" data-lang="de" onclick="selectLang('de')"><span style="font-size:20px">🇩🇪</span>Deutsch</div>
-  <div class="lang-option" data-lang="fr" onclick="selectLang('fr')"><span style="font-size:20px">🇫🇷</span>Français</div>
-  <div class="lang-option" data-lang="es" onclick="selectLang('es')"><span style="font-size:20px">🇪🇸</span>Español</div>
-  <div class="lang-option" data-lang="it" onclick="selectLang('it')"><span style="font-size:20px">🇮🇹</span>Italiano</div>
-  <div class="lang-option" data-lang="pt" onclick="selectLang('pt')"><span style="font-size:20px">🇵🇹</span>Português</div>
-  <div class="lang-option" data-lang="zh" onclick="selectLang('zh')"><span style="font-size:20px">🇨🇳</span>中文</div>
+
 </div>
 
 <!-- Analyse-toast -->
