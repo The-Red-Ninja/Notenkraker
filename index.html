@@ -5576,7 +5576,7 @@ function showTabAnimated(i, dir){
   </div>
   <hr class="app-panel-divider">
   <div class="app-panel-row" onclick="openFeedback()">
-    <span class="app-panel-label" style="line-height:1.4">5 woorden over<br>hoe je deze app<br>graag gebruikt</span>
+    <span class="app-panel-label" data-i18n="featrequest" style="line-height:1.4">5 woorden over<br>hoe je deze app<br>graag gebruikt</span>
     <span class="app-panel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="20" height="16" rx="2" fill="#222"/><path d="M2 7 L12 13 L22 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
   </div>
   <hr class="app-panel-divider">
@@ -5681,14 +5681,14 @@ function showTabAnimated(i, dir){
   <hr class="app-panel-divider">
   <div class="app-panel-row" onclick="openContact()">
     <span class="app-panel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="20" height="16" rx="2" fill="#222"/><path d="M2 7 L12 13 L22 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
-    <span class="app-panel-label" data-i18n="featrequest">Featrequest</span>
+    <span class="app-panel-label" data-i18n="featrequestShort">Schrijf ons</span>
   </div>
   <hr class="app-panel-divider admin-row">
   <div class="app-panel-row admin-row" onclick="adminUpdateApp()">
     <span class="app-panel-icon">🔄</span>
-    <span class="app-panel-label">Update de app</span>
+    <span class="app-panel-label" data-i18n="updateApp">Update de app</span>
   </div>
-  <div id="admin-update-status">Gereed.</div>
+  <div id="admin-update-status" data-i18n="ready">Gereed.</div>
   <div id="admin-token-wrap">
     <input id="admin-token-input" type="password" placeholder="GitHub token" autocomplete="off"
       onchange="adminSaveToken(this.value)" value="">

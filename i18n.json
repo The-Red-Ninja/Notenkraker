@@ -25,7 +25,7 @@
     "language": "Taal",
     "shareSlogan": "Zing het voort!",
     "settingsTitle": "Instellingen",
-    "soundsFamiliar": "Sounds Familiar",
+    "soundsFamiliar": "Klinkt bekend",
     "intervalNames": [
       "Unisono",
       "Kleine secunde",
@@ -52,7 +52,10 @@
     "pitchBarok": "Barok",
     "pitchKlassiek": "Klassiek",
     "pitchStandaard": "Standaard",
-    "pitchModern": "Modern Orkest"
+    "pitchModern": "Modern Orkest",
+    "updateApp": "Update de app",
+    "ready": "Gereed.",
+    "featrequestShort": "Schrijf ons"
   },
   "en": {
     "tab1": "Key",
@@ -107,7 +110,10 @@
     "pitchBarok": "Baroque",
     "pitchKlassiek": "Classical",
     "pitchStandaard": "Standard",
-    "pitchModern": "Modern Orchestra"
+    "pitchModern": "Modern Orchestra",
+    "updateApp": "Update app",
+    "ready": "Done.",
+    "featrequestShort": "Write to us"
   },
   "de": {
     "tab1": "Tonart",
@@ -135,7 +141,7 @@
     "language": "Sprache",
     "shareSlogan": "Musik teilen!",
     "settingsTitle": "Einstellungen",
-    "soundsFamiliar": "Sounds Familiar",
+    "soundsFamiliar": "Klingt vertraut",
     "intervalNames": [
       "Unisono",
       "Kleine Sekunde",
@@ -162,7 +168,10 @@
     "pitchBarok": "Barock",
     "pitchKlassiek": "Klassik",
     "pitchStandaard": "Standard",
-    "pitchModern": "Modernes Orchester"
+    "pitchModern": "Modernes Orchester",
+    "updateApp": "App aktualisieren",
+    "ready": "Fertig.",
+    "featrequestShort": "Schreib uns"
   },
   "fr": {
     "tab1": "Tonalité",
@@ -190,7 +199,7 @@
     "language": "Langue",
     "shareSlogan": "Partagez la musique !",
     "settingsTitle": "Paramètres",
-    "soundsFamiliar": "Sounds Familiar",
+    "soundsFamiliar": "Ça me dit quelque chose",
     "intervalNames": [
       "Unisson",
       "Seconde mineure",
@@ -217,7 +226,10 @@
     "pitchBarok": "Baroque",
     "pitchKlassiek": "Classique",
     "pitchStandaard": "Standard",
-    "pitchModern": "Orchestre moderne"
+    "pitchModern": "Orchestre moderne",
+    "updateApp": "Mettre à jour l'app",
+    "ready": "Prêt.",
+    "featrequestShort": "Écrivez-nous"
   },
   "es": {
     "tab1": "Tonalidad",
@@ -245,7 +257,7 @@
     "language": "Idioma",
     "shareSlogan": "¡Comparte la música!",
     "settingsTitle": "Configuración",
-    "soundsFamiliar": "Sounds Familiar",
+    "soundsFamiliar": "Me suena",
     "intervalNames": [
       "Unísono",
       "Segunda menor",
@@ -272,7 +284,10 @@
     "pitchBarok": "Barroco",
     "pitchKlassiek": "Clásico",
     "pitchStandaard": "Estándar",
-    "pitchModern": "Orquesta moderna"
+    "pitchModern": "Orquesta moderna",
+    "updateApp": "Actualizar app",
+    "ready": "Listo.",
+    "featrequestShort": "Escríbenos"
   },
   "it": {
     "tab1": "Tonalità",
@@ -300,7 +315,7 @@
     "language": "Lingua",
     "shareSlogan": "Diffondi la musica!",
     "settingsTitle": "Impostazioni",
-    "soundsFamiliar": "Sounds Familiar",
+    "soundsFamiliar": "Mi suona familiare",
     "intervalNames": [
       "Unisono",
       "Seconda minore",
@@ -327,7 +342,10 @@
     "pitchBarok": "Barocco",
     "pitchKlassiek": "Classico",
     "pitchStandaard": "Standard",
-    "pitchModern": "Orchestra moderna"
+    "pitchModern": "Orchestra moderna",
+    "updateApp": "Aggiorna l'app",
+    "ready": "Pronto.",
+    "featrequestShort": "Scrivici"
   },
   "pt": {
     "tab1": "Tonalidade",
@@ -355,7 +373,7 @@
     "language": "Idioma",
     "shareSlogan": "Partilhe a música!",
     "settingsTitle": "Definições",
-    "soundsFamiliar": "Sounds Familiar",
+    "soundsFamiliar": "Soa familiar",
     "intervalNames": [
       "Uníssono",
       "Segunda menor",
@@ -382,7 +400,10 @@
     "pitchBarok": "Barroco",
     "pitchKlassiek": "Clássico",
     "pitchStandaard": "Padrão",
-    "pitchModern": "Orquestra moderna"
+    "pitchModern": "Orquestra moderna",
+    "updateApp": "Atualizar app",
+    "ready": "Pronto.",
+    "featrequestShort": "Escreva-nos"
   },
   "ru": {
     "tab1": "Тональность",
@@ -410,7 +431,7 @@
     "language": "Язык",
     "shareSlogan": "Делись музыкой!",
     "settingsTitle": "Настройки",
-    "soundsFamiliar": "Sounds Familiar",
+    "soundsFamiliar": "Звучит знакомо",
     "intervalNames": [
       "Прима",
       "Малая секунда",
@@ -437,7 +458,10 @@
     "pitchBarok": "Барокко",
     "pitchKlassiek": "Классика",
     "pitchStandaard": "Стандарт",
-    "pitchModern": "Современный оркестр"
+    "pitchModern": "Современный оркестр",
+    "updateApp": "Обновить приложение",
+    "ready": "Готово.",
+    "featrequestShort": "Напишите нам"
   },
   "hi": {
     "tab1": "स्वरमान",
@@ -465,7 +489,7 @@
     "language": "भाषा",
     "shareSlogan": "संगीत फैलाएं!",
     "settingsTitle": "सेटिंग्स",
-    "soundsFamiliar": "Sounds Familiar",
+    "soundsFamiliar": "जाना-पहचाना लगता है",
     "intervalNames": [
       "सम",
       "लघु द्वितीय",
@@ -492,7 +516,10 @@
     "pitchBarok": "बरोक",
     "pitchKlassiek": "शास्त्रीय",
     "pitchStandaard": "मानक",
-    "pitchModern": "आधुनिक ऑर्केस्ट्रा"
+    "pitchModern": "आधुनिक ऑर्केस्ट्रा",
+    "updateApp": "ऐप अपडेट करें",
+    "ready": "तैयार।",
+    "featrequestShort": "हमें लिखें"
   },
   "pl": {
     "tab1": "Tonacja",
@@ -520,7 +547,7 @@
     "language": "Język",
     "shareSlogan": "Dziel się muzyką!",
     "settingsTitle": "Ustawienia",
-    "soundsFamiliar": "Sounds Familiar",
+    "soundsFamiliar": "Brzmi znajomo",
     "intervalNames": [
       "Prima",
       "Sekunda mała",
@@ -547,7 +574,10 @@
     "pitchBarok": "Barok",
     "pitchKlassiek": "Klasyczny",
     "pitchStandaard": "Standardowy",
-    "pitchModern": "Nowoczesna orkiestra"
+    "pitchModern": "Nowoczesna orkiestra",
+    "updateApp": "Aktualizuj aplikację",
+    "ready": "Gotowe.",
+    "featrequestShort": "Napisz do nas"
   },
   "cs": {
     "tab1": "Tónina",
@@ -575,7 +605,7 @@
     "language": "Jazyk",
     "shareSlogan": "Šiřte hudbu!",
     "settingsTitle": "Nastavení",
-    "soundsFamiliar": "Sounds Familiar",
+    "soundsFamiliar": "Zní povědomě",
     "intervalNames": [
       "Prima",
       "Malá sekunda",
@@ -602,7 +632,10 @@
     "pitchBarok": "Baroko",
     "pitchKlassiek": "Klasika",
     "pitchStandaard": "Standard",
-    "pitchModern": "Moderní orchestr"
+    "pitchModern": "Moderní orchestr",
+    "updateApp": "Aktualizovat aplikaci",
+    "ready": "Hotovo.",
+    "featrequestShort": "Napište nám"
   },
   "sv": {
     "tab1": "Tonart",
@@ -630,7 +663,7 @@
     "language": "Språk",
     "shareSlogan": "Sprid musiken!",
     "settingsTitle": "Inställningar",
-    "soundsFamiliar": "Sounds Familiar",
+    "soundsFamiliar": "Låter bekant",
     "intervalNames": [
       "Unison",
       "Liten sekund",
@@ -657,7 +690,10 @@
     "pitchBarok": "Barock",
     "pitchKlassiek": "Klassisk",
     "pitchStandaard": "Standard",
-    "pitchModern": "Modernt orkester"
+    "pitchModern": "Modernt orkester",
+    "updateApp": "Uppdatera appen",
+    "ready": "Klar.",
+    "featrequestShort": "Skriv till oss"
   },
   "zh": {
     "tab1": "调性",
@@ -685,7 +721,7 @@
     "language": "语言",
     "shareSlogan": "传播音乐！",
     "settingsTitle": "设置",
-    "soundsFamiliar": "Sounds Familiar",
+    "soundsFamiliar": "听起来熟悉",
     "intervalNames": [
       "同度",
       "小二度",
@@ -712,6 +748,9 @@
     "pitchBarok": "巴洛克",
     "pitchKlassiek": "古典",
     "pitchStandaard": "标准",
-    "pitchModern": "现代管弦乐"
+    "pitchModern": "现代管弦乐",
+    "updateApp": "更新应用",
+    "ready": "完成。",
+    "featrequestShort": "写信给我们"
   }
 }
