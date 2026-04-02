@@ -1554,52 +1554,56 @@ function renderQuint(){
 
 // Muis: selectie + hover/drag zoals touch (voor Windows)
 let _quintMouseDown = false;
-const _qcv = document.getElementById('quint-canvas');
+// Kwintencirkel muis-events: geregistreerd na DOM-load zodat canvas bestaat
+function _initQuintMouseEvents(){
+  const _qcv = document.getElementById('quint-canvas');
+  if(!_qcv) return;
 
-_qcv.addEventListener('mousedown', e=>{
-  _quintMouseDown = true;
-  const idx = quintPreview(e.clientX, e.clientY);
-  if(idx !== null){
-    _quintPreviewIdx = idx;
-    chordOn = false;
-    selectKey(idx);
-    chordStart();
-  } else if(quintCenterHit(e.clientX, e.clientY)){
-    // Klik op notenkraker-afbeelding in midden → splash-overlay
-    _quintMouseDown = false;
-    openNkOverlay();
-  }
-});
+  _qcv.addEventListener('mousedown', e=>{
+    _quintMouseDown = true;
+    const idx = quintPreview(e.clientX, e.clientY);
+    if(idx !== null){
+      _quintPreviewIdx = idx;
+      chordOn = false;
+      selectKey(idx);
+      chordStart();
+    } else if(quintCenterHit(e.clientX, e.clientY)){
+      // Klik op notenkraker-afbeelding in midden → splash-overlay
+      _quintMouseDown = false;
+      openNkOverlay();
+    }
+  });
 
-_qcv.addEventListener('mousemove', e=>{
-  if(!_quintMouseDown){
-    // Cursor aanpassen: handje op midden, pointer op segmenten
-    _qcv.style.cursor = quintCenterHit(e.clientX, e.clientY) ? 'pointer' : 'default';
-  }
-  if(!_quintMouseDown) return;
-  const idx = quintPreview(e.clientX, e.clientY);
-  if(idx !== null && idx !== _quintPreviewIdx){
-    _quintPreviewIdx = idx;
-    selectKey(idx);
-    chordUpdate();
-  }
-});
+  _qcv.addEventListener('mousemove', e=>{
+    if(!_quintMouseDown){
+      // Cursor aanpassen: handje op midden, pointer op segmenten
+      _qcv.style.cursor = quintCenterHit(e.clientX, e.clientY) ? 'pointer' : 'default';
+    }
+    if(!_quintMouseDown) return;
+    const idx = quintPreview(e.clientX, e.clientY);
+    if(idx !== null && idx !== _quintPreviewIdx){
+      _quintPreviewIdx = idx;
+      selectKey(idx);
+      chordUpdate();
+    }
+  });
 
-_qcv.addEventListener('mouseup', e=>{
-  if(_quintMouseDown){
-    _quintMouseDown = false;
-    _quintPreviewIdx = null;
-    chordStop();
-  }
-});
+  _qcv.addEventListener('mouseup', e=>{
+    if(_quintMouseDown){
+      _quintMouseDown = false;
+      _quintPreviewIdx = null;
+      chordStop();
+    }
+  });
 
-_qcv.addEventListener('mouseleave', e=>{
-  if(_quintMouseDown){
-    _quintMouseDown = false;
-    _quintPreviewIdx = null;
-    chordStop();
-  }
-});
+  _qcv.addEventListener('mouseleave', e=>{
+    if(_quintMouseDown){
+      _quintMouseDown = false;
+      _quintPreviewIdx = null;
+      chordStop();
+    }
+  });
+}
 
 // Touch: preview bij aanraken+slepen, finaliseer bij loslaten
 let _quintPreviewIdx = null;
@@ -4608,9 +4612,7 @@ const _I18N_NL_FALLBACK = {
   avatarMale:'Notenkraker', avatarFemale:'Notenkraakster',
   installAs:'Installeer als…', installChoose:'Kies welk icoon je op je scherm wil zien',
   install:'Installeer', cancel:'Annuleren',
-  featrequest:'5 woorden over
-hoe je deze app
-graag gebruikt',
+  featrequest:'5 woorden over\nhoe je deze app\ngraag gebruikt',
   pitchBarok:'Barok', pitchKlassiek:'Klassiek', pitchStandaard:'Standaard',
   pitchModern:'Modern Orkest',
   intervalNames:['Unisono','Kleine secunde','Grote secunde','Kleine terts','Grote terts',
@@ -4721,6 +4723,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   initHintArrows();
   setupVolSliderListeners();
   _updateSoundsFamiliarBtn();
+  _initQuintMouseEvents();
   // Preload: teken beide notenbalkpagina's direct zodat swipe soepel is
   document.querySelectorAll('.page.staff-page').forEach(p=>p.classList.add('preloaded'));
   setTimeout(()=>{
