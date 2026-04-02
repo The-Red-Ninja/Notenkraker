@@ -2417,23 +2417,33 @@ function hideSettingsPreview(){
   renderStaff('treble'); renderStaff('bass');
 }
 
+let _scaleRafId = null;
+let _scaleDebounceId = null;
 function onScaleInput(val, clef){
   const trap = parseInt(val);
   window._staffTrap = trap;
-  // Update CSS gradient op slider
+  // Update CSS gradient + label direct (lichtgewicht)
   const pct = ((trap-1)/14*100).toFixed(1)+'%';
-  const sl = document.getElementById('scale-slider-'+clef);
+  const sl  = document.getElementById('scale-slider-'+clef);
   const sl2 = document.getElementById('scale-slider-'+(clef==='treble'?'bass':'treble'));
   [sl,sl2].forEach(s=>{ if(s){ s.style.setProperty('--pct',pct); s.value=trap; } });
-  // Toon trapnummer
   const lbl = document.getElementById('scale-label-'+clef);
   if(lbl){ lbl.textContent=trap; lbl.classList.add('visible'); }
-  // Herteken de notenbalk live
-  if(clef==='treble'){ renderStaff('treble'); setupTouch('treble'); }
-  else               { renderStaff('bass');   setupTouch('bass');   }
-  // Herpositioneer scale-col zodat die meebeweegt met de notenbalk
-  requestAnimationFrame(()=>updateStaffZone());
-  saveStaffSettings();
+  // Herteken via RAF: max één render per frame
+  if(_scaleRafId) cancelAnimationFrame(_scaleRafId);
+  _scaleRafId = requestAnimationFrame(()=>{
+    if(clef==='treble') renderStaff('treble');
+    else                renderStaff('bass');
+    _scaleRafId = null;
+  });
+  // Zware ops alleen na stoppen slider (debounce 120ms)
+  clearTimeout(_scaleDebounceId);
+  _scaleDebounceId = setTimeout(()=>{
+    if(clef==='treble') setupTouch('treble');
+    else                setupTouch('bass');
+    updateStaffZone();
+    saveStaffSettings();
+  }, 120);
 }
 
 function toggleSetting(type){
