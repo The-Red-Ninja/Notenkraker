@@ -55,7 +55,14 @@
     "pitchModern": "Modern Orkest",
     "updateApp": "Update de app",
     "ready": "Gereed.",
-    "featrequestShort": "Schrijf ons"
+    "featrequestShort": "Schrijf ons",
+    "reinstallMsg": "Ook de app opnieuw installeren met dit icoon?",
+    "reinstallNo": "Nee",
+    "reinstallYes": "Ja",
+    "analysisWaiting": "⏳ Auto herkenning…",
+    "analysisDetected": "🎼 {key} gedetecteerd",
+    "analysisTuning": "🎵 Stemming: {hz} Hz ({lbl})",
+    "analysisChanges": "+ {n} toonsoortwijzigingen"
   },
   "en": {
     "tab1": "Key",
@@ -113,7 +120,14 @@
     "pitchModern": "Modern Orchestra",
     "updateApp": "Update app",
     "ready": "Done.",
-    "featrequestShort": "Write to us"
+    "featrequestShort": "Write to us",
+    "reinstallMsg": "Also reinstall the app with this icon?",
+    "reinstallNo": "No",
+    "reinstallYes": "Yes",
+    "analysisWaiting": "⏳ Detecting key…",
+    "analysisDetected": "🎼 {key} detected",
+    "analysisTuning": "🎵 Tuning: {hz} Hz ({lbl})",
+    "analysisChanges": "+ {n} key changes"
   },
   "de": {
     "tab1": "Tonart",
@@ -171,7 +185,14 @@
     "pitchModern": "Modernes Orchester",
     "updateApp": "App aktualisieren",
     "ready": "Fertig.",
-    "featrequestShort": "Schreib uns"
+    "featrequestShort": "Schreib uns",
+    "reinstallMsg": "App auch mit diesem Symbol neu installieren?",
+    "reinstallNo": "Nein",
+    "reinstallYes": "Ja",
+    "analysisWaiting": "⏳ Tonarterkennung…",
+    "analysisDetected": "🎼 {key} erkannt",
+    "analysisTuning": "🎵 Stimmung: {hz} Hz ({lbl})",
+    "analysisChanges": "+ {n} Tonartenwechsel"
   },
   "fr": {
     "tab1": "Tonalité",
@@ -229,7 +250,14 @@
     "pitchModern": "Orchestre moderne",
     "updateApp": "Mettre à jour l'app",
     "ready": "Prêt.",
-    "featrequestShort": "Écrivez-nous"
+    "featrequestShort": "Écrivez-nous",
+    "reinstallMsg": "Réinstaller l'app avec cette icône ?",
+    "reinstallNo": "Non",
+    "reinstallYes": "Oui",
+    "analysisWaiting": "⏳ Détection en cours…",
+    "analysisDetected": "🎼 {key} détecté",
+    "analysisTuning": "🎵 Accord : {hz} Hz ({lbl})",
+    "analysisChanges": "+ {n} changements de tonalité"
   },
   "es": {
     "tab1": "Tonalidad",
@@ -287,7 +315,14 @@
     "pitchModern": "Orquesta moderna",
     "updateApp": "Actualizar app",
     "ready": "Listo.",
-    "featrequestShort": "Escríbenos"
+    "featrequestShort": "Escríbenos",
+    "reinstallMsg": "¿También reinstalar la app con este icono?",
+    "reinstallNo": "No",
+    "reinstallYes": "Sí",
+    "analysisWaiting": "⏳ Detectando tonalidad…",
+    "analysisDetected": "🎼 {key} detectado",
+    "analysisTuning": "🎵 Afinación: {hz} Hz ({lbl})",
+    "analysisChanges": "+ {n} cambios de tonalidad"
   },
   "it": {
     "tab1": "Tonalità",
@@ -345,7 +380,14 @@
     "pitchModern": "Orchestra moderna",
     "updateApp": "Aggiorna l'app",
     "ready": "Pronto.",
-    "featrequestShort": "Scrivici"
+    "featrequestShort": "Scrivici",
+    "reinstallMsg": "Reinstallare l'app con questa icona?",
+    "reinstallNo": "No",
+    "reinstallYes": "Sì",
+    "analysisWaiting": "⏳ Rilevamento tonalità…",
+    "analysisDetected": "🎼 {key} rilevato",
+    "analysisTuning": "🎵 Accordatura: {hz} Hz ({lbl})",
+    "analysisChanges": "+ {n} cambi di tonalità"
   },
   "pt": {
     "tab1": "Tonalidade",
@@ -403,7 +445,14 @@
     "pitchModern": "Orquestra moderna",
     "updateApp": "Atualizar app",
     "ready": "Pronto.",
-    "featrequestShort": "Escreva-nos"
+    "featrequestShort": "Escreva-nos",
+    "reinstallMsg": "Reinstalar a app com este ícone?",
+    "reinstallNo": "Não",
+    "reinstallYes": "Sim",
+    "analysisWaiting": "⏳ A detetar tonalidade…",
+    "analysisDetected": "🎼 {key} detetado",
+    "analysisTuning": "🎵 Afinação: {hz} Hz ({lbl})",
+    "analysisChanges": "+ {n} mudanças de tonalidade"
   },
   "ru": {
     "tab1": "Тональность",
@@ -461,7 +510,14 @@
     "pitchModern": "Современный оркестр",
     "updateApp": "Обновить приложение",
     "ready": "Готово.",
-    "featrequestShort": "Напишите нам"
+    "featrequestShort": "Напишите нам",
+    "reinstallMsg": "Также переустановить приложение с этим значком?",
+    "reinstallNo": "Нет",
+    "reinstallYes": "Да",
+    "analysisWaiting": "⏳ Определение тональности…",
+    "analysisDetected": "🎼 {key} определена",
+    "analysisTuning": "🎵 Строй: {hz} Гц ({lbl})",
+    "analysisChanges": "+ {n} смен тональности"
   },
   "hi": {
     "tab1": "स्वरमान",
@@ -519,7 +575,14 @@
     "pitchModern": "आधुनिक ऑर्केस्ट्रा",
     "updateApp": "ऐप अपडेट करें",
     "ready": "तैयार।",
-    "featrequestShort": "हमें लिखें"
+    "featrequestShort": "हमें लिखें",
+    "reinstallMsg": "क्या इस आइकन के साथ ऐप फिर से इंस्टॉल करें?",
+    "reinstallNo": "नहीं",
+    "reinstallYes": "हाँ",
+    "analysisWaiting": "⏳ स्वरमान पहचान हो रही है…",
+    "analysisDetected": "🎼 {key} पहचाना गया",
+    "analysisTuning": "🎵 स्वरमेल: {hz} Hz ({lbl})",
+    "analysisChanges": "+ {n} स्वरमान परिवर्तन"
   },
   "pl": {
     "tab1": "Tonacja",
@@ -577,7 +640,14 @@
     "pitchModern": "Nowoczesna orkiestra",
     "updateApp": "Aktualizuj aplikację",
     "ready": "Gotowe.",
-    "featrequestShort": "Napisz do nas"
+    "featrequestShort": "Napisz do nas",
+    "reinstallMsg": "Zainstalować ponownie aplikację z tą ikoną?",
+    "reinstallNo": "Nie",
+    "reinstallYes": "Tak",
+    "analysisWaiting": "⏳ Wykrywanie tonacji…",
+    "analysisDetected": "🎼 {key} wykryto",
+    "analysisTuning": "🎵 Strój: {hz} Hz ({lbl})",
+    "analysisChanges": "+ {n} zmiany tonacji"
   },
   "cs": {
     "tab1": "Tónina",
@@ -635,7 +705,14 @@
     "pitchModern": "Moderní orchestr",
     "updateApp": "Aktualizovat aplikaci",
     "ready": "Hotovo.",
-    "featrequestShort": "Napište nám"
+    "featrequestShort": "Napište nám",
+    "reinstallMsg": "Přeinstalovat aplikaci s touto ikonou?",
+    "reinstallNo": "Ne",
+    "reinstallYes": "Ano",
+    "analysisWaiting": "⏳ Rozpoznávání tóniny…",
+    "analysisDetected": "🎼 {key} rozpoznána",
+    "analysisTuning": "🎵 Ladění: {hz} Hz ({lbl})",
+    "analysisChanges": "+ {n} změny tóniny"
   },
   "sv": {
     "tab1": "Tonart",
@@ -693,7 +770,14 @@
     "pitchModern": "Modernt orkester",
     "updateApp": "Uppdatera appen",
     "ready": "Klar.",
-    "featrequestShort": "Skriv till oss"
+    "featrequestShort": "Skriv till oss",
+    "reinstallMsg": "Också installera om appen med den här ikonen?",
+    "reinstallNo": "Nej",
+    "reinstallYes": "Ja",
+    "analysisWaiting": "⏳ Identifierar tonart…",
+    "analysisDetected": "🎼 {key} identifierad",
+    "analysisTuning": "🎵 Stämning: {hz} Hz ({lbl})",
+    "analysisChanges": "+ {n} tonartsskiften"
   },
   "zh": {
     "tab1": "调性",
@@ -751,6 +835,13 @@
     "pitchModern": "现代管弦乐",
     "updateApp": "更新应用",
     "ready": "完成。",
-    "featrequestShort": "写信给我们"
+    "featrequestShort": "写信给我们",
+    "reinstallMsg": "是否也用此图标重新安装应用？",
+    "reinstallNo": "否",
+    "reinstallYes": "是",
+    "analysisWaiting": "⏳ 正在识别调性…",
+    "analysisDetected": "🎼 已识别 {key}",
+    "analysisTuning": "🎵 音准：{hz} Hz（{lbl}）",
+    "analysisChanges": "+ {n} 个调性变化"
   }
 }
