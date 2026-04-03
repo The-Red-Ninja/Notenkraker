@@ -271,24 +271,31 @@ input[type=range].note-pos-slider-thumb::-webkit-slider-thumb {
 /* staff-outer en scale-col volledig ontkoppeld — beide absolute in staff-zone */
 .staff-outer { position:absolute; inset:0; }
 .scale-col {
-  position:absolute; left:3px; z-index:5;
-  width:28px; display:none;
+  position:absolute; left:33px; z-index:5;
+  width:22px; display:none;
   flex-direction:column; align-items:center; justify-content:center;
   padding:0; overflow:visible;
 }
 .settings-open .scale-col { display:flex; }
+/* Achtergrondstreep van de schaalslider — zelfde stijl als nootpositieslider */
+.scale-slider-bg {
+  position:absolute; left:50%; transform:translateX(-50%);
+  width:4px; top:0; bottom:0;
+  background:#c8bfa8; border-radius:3px; pointer-events:none;
+}
 .scale-slider-v {
   -webkit-appearance:none; appearance:none;
   /* Horizontale slider, geroteerd -90deg zodat hij verticaal oogt */
-  /* Geen writing-mode: dat breekt touch op Android Chrome */
   width:var(--scale-slider-h, 20vh); height:22px;
   flex-shrink:0;
-  background:linear-gradient(to right,#c8bfa8 calc(var(--pct,66.7%)),#e8e0d0 calc(var(--pct,66.7%)));
-  border-radius:3px; outline:none; cursor:pointer;
+  background:transparent;
+  outline:none; cursor:pointer;
   touch-action:none; user-select:none; -webkit-user-select:none;
   transform:rotate(-90deg);
   transform-origin:center center;
+  position:relative; z-index:1;
 }
+.scale-slider-v::-webkit-slider-runnable-track { background:transparent; }
 .scale-slider-v::-webkit-slider-thumb {
   -webkit-appearance:none; width:22px; height:22px;
   background:#333; border-radius:50%; border:2px solid #fff;
@@ -964,6 +971,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
   <div class="staff-zone" id="staff-zone-treble">
     <div class="staff-outer">
       <div class="scale-col">
+        <div class="scale-slider-bg"></div>
         <input type="range" class="scale-slider-v" id="scale-slider-treble"
           min="1" max="15" step="1" value="8"
           oninput="onScaleInput(this.value,'treble')"
@@ -1061,6 +1069,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
   <div class="staff-zone" id="staff-zone-bass">
     <div class="staff-outer">
       <div class="scale-col">
+        <div class="scale-slider-bg"></div>
         <input type="range" class="scale-slider-v" id="scale-slider-bass"
           min="1" max="15" step="1" value="8"
           oninput="onScaleInput(this.value,'bass')"
