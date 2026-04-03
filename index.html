@@ -1253,8 +1253,7 @@ function _updateSoundsFamiliarBtn(){
   btn.classList.toggle('visible', show);
 }
 
-function showLastToast(e){
-  if(e) e.stopPropagation(); // voorkomt dat document-click de toast meteen sluit
+function showLastToast(){
   if(!_lastToastLines) return;
   const el = document.getElementById('analysis-toast');
   if(el && el.classList.contains('show')){
@@ -1493,17 +1492,19 @@ function renderQuint(){
     // Always show the current active spelling label
     const activeK = sel ? cKey() : null;
     const spelling = activeK || entry.spellingA;
+    const entryPc = ((entry.root % 12) + 12) % 12;
+    const useFlat = (spelling.flats > 0);
     let label;
     if(window._showSolfege){
       // Solfège: toon syllabe op basis van interval t.o.v. geselecteerde toonsoort
       const selEntry = circle()[keyIdx];
       const rootPc = ((selEntry.root % 12) + 12) % 12;
-      const entryPc = ((entry.root % 12) + 12) % 12;
       const interval = ((entryPc - rootPc) + 12) % 12;
-      const useFlat = (activeK || entry.spellingA).flats > 0 || (cKey().flats > 0);
-      label = useFlat ? SOLFEGE_FLAT[interval] : SOLFEGE_SHARP[interval];
+      const selUseFlat = (cKey().flats > 0) || useFlat;
+      label = keyShortLabel(interval, selUseFlat, isMinor);
     } else {
-      label = spelling.short;
+      // Taalspecifieke nootnaam
+      label = noteShortName(entryPc, useFlat);
     }
 
     ctx.beginPath();
@@ -2417,33 +2418,21 @@ function hideSettingsPreview(){
   renderStaff('treble'); renderStaff('bass');
 }
 
-let _scaleRafId = null;
-let _scaleDebounceId = null;
 function onScaleInput(val, clef){
   const trap = parseInt(val);
   window._staffTrap = trap;
-  // Update CSS gradient + label direct (lichtgewicht)
+  // Update CSS gradient op slider
   const pct = ((trap-1)/14*100).toFixed(1)+'%';
-  const sl  = document.getElementById('scale-slider-'+clef);
+  const sl = document.getElementById('scale-slider-'+clef);
   const sl2 = document.getElementById('scale-slider-'+(clef==='treble'?'bass':'treble'));
   [sl,sl2].forEach(s=>{ if(s){ s.style.setProperty('--pct',pct); s.value=trap; } });
+  // Toon trapnummer
   const lbl = document.getElementById('scale-label-'+clef);
   if(lbl){ lbl.textContent=trap; lbl.classList.add('visible'); }
-  // Herteken via RAF: max één render per frame
-  if(_scaleRafId) cancelAnimationFrame(_scaleRafId);
-  _scaleRafId = requestAnimationFrame(()=>{
-    if(clef==='treble') renderStaff('treble');
-    else                renderStaff('bass');
-    _scaleRafId = null;
-  });
-  // Zware ops alleen na stoppen slider (debounce 120ms)
-  clearTimeout(_scaleDebounceId);
-  _scaleDebounceId = setTimeout(()=>{
-    if(clef==='treble') setupTouch('treble');
-    else                setupTouch('bass');
-    updateStaffZone();
-    saveStaffSettings();
-  }, 120);
+  // Herteken de notenbalk live (zonder setupTouch — te duur per event)
+  if(clef==='treble') renderStaff('treble');
+  else                renderStaff('bass');
+  saveStaffSettings();
 }
 
 function toggleSetting(type){
@@ -2787,7 +2776,9 @@ function deactivateScaleSlider(clef){
   _notePosPreviewing[clef] = false;
   SS[clef].step = null;
   renderStaff(clef);
+  setupTouch(clef);
   hideScaleLabel(clef);
+  requestAnimationFrame(()=>updateStaffZone());
 }
 
 function activateNotePosSlider(clef){
@@ -3329,7 +3320,7 @@ function loadAudioFile(file){
   audio.load();
   // Toon wacht-toast als auto-detect aan
   if(window._autoKeyDetect){
-    _showAnalysisToast([T('analysisWaiting')], 120000); // lang timeout, wordt overschreven door analyse
+    _showAnalysisToast(['⏳ Auto herkenning…'], 120000); // lang timeout, wordt overschreven door analyse
   }
   decodeWaveform(file);
 }
@@ -3392,15 +3383,6 @@ function _keyLabel(result){
   const entry=circ[result.idx], mode=enharmMode[entry.pos]||'A';
   const sp=(mode==='B'&&entry.spellingB)?entry.spellingB:entry.spellingA;
   return sp.name;
-}
-
-// Vertaalde versie: nootnaam + modus via T()
-function _keyLabelI18n(result){
-  const circ=result.isMinor?CIRCLE_MINOR:CIRCLE_MAJOR;
-  const entry=circ[result.idx], mode=enharmMode[entry.pos]||'A';
-  const sp=(mode==='B'&&entry.spellingB)?entry.spellingB:entry.spellingA;
-  const modus = result.isMinor ? T('minor') : T('major');
-  return sp.name + ' ' + modus;
 }
 
 function _applyKey(result){
@@ -3619,7 +3601,7 @@ async function _analyseAudio(decoded){
       updPitch(clamped,null);
       const near=PITCH_STOPS.reduce((a,b)=>Math.abs(b.hz-clamped)<Math.abs(a.hz-clamped)?b:a);
       const lbl=Math.abs(near.hz-clamped)<=1?near.name:clamped+' Hz';
-      pitchLine=T('analysisTuning').replace('{hz}',clamped).replace('{lbl}',lbl);
+      pitchLine='🎵 Stemming: '+clamped+' Hz ('+lbl+')';
     }
 
     // 2. Globale toonsoort (max 120s)
@@ -3632,7 +3614,7 @@ async function _analyseAudio(decoded){
     }
     const globalKey=_bestKey(chroma);
     _applyKey(globalKey);
-    const globalLabel=_keyLabelI18n(globalKey);
+    const globalLabel=_keyLabel(globalKey);
     _ringAnimate(0.8, 500);
 
     // 3. Exacte toonsoortovergangen via onset-analyse
@@ -3642,11 +3624,11 @@ async function _analyseAudio(decoded){
     _ringAnimate(1.0, 300, ()=>_ringHide(600));
 
     // 4. Toast samenstellen
-    const lines=[T('analysisDetected').replace('{key}', globalLabel)];
+    const lines=['🎼 '+globalLabel+' gedetecteerd'];
     if(changes.length>0&&changes.length<=8){
       lines.push('');
-      for(const ch of changes) lines.push(_fmtTime(ch.timeSec)+'  →  '+_keyLabelI18n(ch.key));
-    } else if(changes.length>8) lines.push(T('analysisChanges').replace('{n}',changes.length));
+      for(const ch of changes) lines.push(_fmtTime(ch.timeSec)+'  →  '+ch.label);
+    } else if(changes.length>8) lines.push('+ '+changes.length+' toonsoortwijzigingen');
     if(pitchLine){ lines.push(''); lines.push(pitchLine); }
     const dur=3500+changes.length*600+(pitchLine?1000:0);
 
@@ -4632,12 +4614,6 @@ const _I18N_NL_FALLBACK = {
   avatarMale:'Notenkraker', avatarFemale:'Notenkraakster',
   installAs:'Installeer als…', installChoose:'Kies welk icoon je op je scherm wil zien',
   install:'Installeer', cancel:'Annuleren',
-  reinstallMsg:'Ook de app opnieuw installeren met dit icoon?',
-  reinstallNo:'Nee', reinstallYes:'Ja',
-  analysisWaiting:'⏳ Auto herkenning…',
-  analysisDetected:'🎼 {key} gedetecteerd',
-  analysisTuning:'🎵 Stemming: {hz} Hz ({lbl})',
-  analysisChanges:'+ {n} toonsoortwijzigingen',
   featrequest:'5 woorden over\nhoe je deze app\ngraag gebruikt',
   pitchBarok:'Barok', pitchKlassiek:'Klassiek', pitchStandaard:'Standaard',
   pitchModern:'Modern Orkest',
@@ -4675,10 +4651,54 @@ function _updatePitchStopNames(){
   if(typeof updPitch === 'function') updPitch(pitchHz, null);
 }
 
+// Geeft de nootnaam terug voor een pitch-klasse (0=C..11=B) in de actieve taal
+function noteShortName(pc, useFlatSpelling){
+  const names = T('noteNames');
+  if(names){
+    const arr = useFlatSpelling ? names.flats : names.sharps;
+    if(arr && arr[pc] !== undefined) return arr[pc];
+  }
+  const NL_S = ['C','Cis','D','Dis','E','F','Fis','G','Gis','A','Ais','B'];
+  const NL_F = ['C','Des','D','Es', 'E','F','Ges','G','As', 'A','Bes','B'];
+  return (useFlatSpelling ? NL_F : NL_S)[pc];
+}
+
+// Kwintencirkel-label: solfège of taalspecifieke naam
+function keyShortLabel(pc, useFlatSpelling){
+  if(window._showSolfege){
+    const SF_S = ['Do','Do♯','Ré','Ré♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
+    const SF_F = ['Do','Ré♭','Ré','Mi♭','Mi','Fa','Sol♭','Sol','La♭','La','Si♭','Si'];
+    return (useFlatSpelling ? SF_F : SF_S)[pc];
+  }
+  return noteShortName(pc, useFlatSpelling);
+}
+
+// Vertaalt de volledige toonsoort-naam (bijv. 'Es Groot' naar 'Eb Major')
 function translateKeyName(n){
-  return n
-    .replace(/Groot/, T('keyMajor'))
-    .replace(/Klein/, T('keyMinor'));
+  const NL_S = ['C','Cis','D','Dis','E','F','Fis','G','Gis','A','Ais','B'];
+  const NL_F = ['C','Des','D','Es', 'E','F','Ges','G','As', 'A','Bes','B'];
+  // Minor nootnamen in NL zijn lowercase
+  const NL_MINOR_F = ['a','e','b','fis','cis','gis','dis','ais','f','c','g','d'];
+  const parts = n.split(' ');
+  const dutchNote = parts[0];
+  const restWords = parts.slice(1);
+  // Vertaal suffix (Groot/Klein)
+  const translatedRest = restWords.map(w =>
+    w === 'Groot' ? T('keyMajor') : w === 'Klein' ? T('keyMinor') : w
+  ).join(' ');
+  // Zoek pitch class
+  let pc = NL_S.indexOf(dutchNote);
+  let useFlat = false;
+  if(pc === -1){ pc = NL_F.indexOf(dutchNote); useFlat = true; }
+  if(pc === -1){
+    // Minor: eerste letter uppercase proberen
+    const cap = dutchNote.charAt(0).toUpperCase() + dutchNote.slice(1);
+    pc = NL_S.indexOf(cap);
+    if(pc === -1){ pc = NL_F.indexOf(cap); useFlat = true; }
+  }
+  if(pc === -1) return translatedRest ? dutchNote + ' ' + translatedRest : dutchNote;
+  const translatedNote = keyShortLabel(pc, useFlat);
+  return translatedRest ? translatedNote + ' ' + translatedRest : translatedNote;
 }
 
 function applyTranslations(){
@@ -4709,24 +4729,15 @@ function applyTranslations(){
   document.querySelectorAll('.interval-label').forEach(el => {
     el.textContent = iv === 0 ? T('interval') : iv === 1 ? T('intervalAbove') : T('intervalBelow');
   });
-  // 4. Toonsoort naam + enharm knoppen hertalen
+  // 4. Toonsoort naam + enharm knoppen hertalen + kwintencirkel hertekenen
   if(typeof updateLabels === 'function') updateLabels();
+  if(typeof renderQuint === 'function') renderQuint();
   // 5. Hz-slider label
   if(typeof updPitch === 'function') updPitch(window.pitchHz || 440, null);
   // 6. Install-label
   if(typeof _updateInstallLabel === 'function') _updateInstallLabel();
   // 7. Pitch-stop namen bijwerken
   _updatePitchStopNames();
-  // 8. Reinstall-toast hertalen (knoppen + bericht, als toast zichtbaar)
-  const rtMsg    = document.getElementById('reinstall-toast-msg');
-  const rtBtnNo  = document.getElementById('reinstall-btn-no');
-  const rtBtnYes = document.getElementById('reinstall-btn-yes');
-  if(rtBtnNo)  rtBtnNo.textContent  = T('reinstallNo');
-  if(rtBtnYes) rtBtnYes.textContent = T('reinstallYes');
-  if(rtMsg){
-    const appNaam = (window._persGender === 'v') ? T('avatarFemale') : T('avatarMale');
-    rtMsg.innerHTML = T('reinstallMsg').replace('?', '?<br><b>' + appNaam + '</b>');
-  }
 }
 window.addEventListener('DOMContentLoaded',()=>{
   // Laad taalpakketten op de achtergrond
@@ -4987,19 +4998,14 @@ function openFeedback(){
 // Twemoji SVG-vlaggen voor Windows-compatibiliteit
 // Vlag-emoji → Twemoji codepoint: regional indicator A=1f1e6, B=1f1e7, ... Z=1f1ff
 const LANGS = {
-  en:{ flag:'🇺🇸', twemoji:'1f1fa-1f1f8', label:'English' },
-  zh:{ flag:'🇨🇳', twemoji:'1f1e8-1f1f3', label:'中文' },
-  ru:{ flag:'🇷🇺', twemoji:'1f1f7-1f1fa', label:'Русский' },
-  hi:{ flag:'🇮🇳', twemoji:'1f1ee-1f1f3', label:'हिन्दी' },
+  nl:{ flag:'🇳🇱', twemoji:'1f1f3-1f1f1', label:'Nederlands' },
+  en:{ flag:'🇬🇧', twemoji:'1f1ec-1f1e7', label:'English' },
   de:{ flag:'🇩🇪', twemoji:'1f1e9-1f1ea', label:'Deutsch' },
   fr:{ flag:'🇫🇷', twemoji:'1f1eb-1f1f7', label:'Français' },
+  es:{ flag:'🇪🇸', twemoji:'1f1ea-1f1f8', label:'Español' },
   it:{ flag:'🇮🇹', twemoji:'1f1ee-1f1f9', label:'Italiano' },
   pt:{ flag:'🇵🇹', twemoji:'1f1f5-1f1f9', label:'Português' },
-  pl:{ flag:'🇵🇱', twemoji:'1f1f5-1f1f1', label:'Polski' },
-  nl:{ flag:'🇳🇱', twemoji:'1f1f3-1f1f1', label:'Nederlands' },
-  es:{ flag:'🇪🇸', twemoji:'1f1ea-1f1f8', label:'Español' },
-  cs:{ flag:'🇨🇿', twemoji:'1f1e8-1f1ff', label:'Čeština' },
-  sv:{ flag:'🇸🇪', twemoji:'1f1f8-1f1ea', label:'Svenska' },
+  zh:{ flag:'🇨🇳', twemoji:'1f1e8-1f1f3', label:'中文' },
 };
 let _currentLang = 'nl';
 
@@ -5187,16 +5193,7 @@ function persSetKarakter(t, g){
   // Herinstallatie-toast tonen als de prompt beschikbaar is
   if(_deferredInstall){
     const toast = document.getElementById('reinstall-toast');
-    if(toast){
-      const appNaam = (_persGender === 'v') ? T('avatarFemale') : T('avatarMale');
-      const msg = document.getElementById('reinstall-toast-msg');
-      const btnNo  = document.getElementById('reinstall-btn-no');
-      const btnYes = document.getElementById('reinstall-btn-yes');
-      if(msg)    msg.innerHTML = T('reinstallMsg').replace('?', '?<br><b>' + appNaam + '</b>') ;
-      if(btnNo)  btnNo.textContent  = T('reinstallNo');
-      if(btnYes) btnYes.textContent = T('reinstallYes');
-      toast.style.display = 'flex';
-    }
+    if(toast) toast.style.display = 'flex';
   }
 }
 
@@ -5621,7 +5618,7 @@ function showTabAnimated(i, dir){
   </div>
   <hr class="app-panel-divider">
   <div class="app-panel-row" onclick="openFeedback()">
-    <span class="app-panel-label" data-i18n="featrequest" style="line-height:1.4">5 woorden over<br>hoe je deze app<br>graag gebruikt</span>
+    <span class="app-panel-label" style="line-height:1.4">5 woorden over<br>hoe je deze app<br>graag gebruikt</span>
     <span class="app-panel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="20" height="16" rx="2" fill="#222"/><path d="M2 7 L12 13 L22 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
   </div>
   <hr class="app-panel-divider">
@@ -5692,44 +5689,48 @@ function showTabAnimated(i, dir){
   background:#2a2a2a; color:#fff; font-family:Arial,sans-serif;
   padding:14px 16px; align-items:center; justify-content:space-between; gap:10px;
   box-shadow:0 -2px 12px rgba(0,0,0,0.3);">
-  <span id="reinstall-toast-msg" style="font-size:13px; line-height:1.3; flex:1;"></span>
+  <span style="font-size:13px; line-height:1.3; flex:1;">Ook de app opnieuw<br>installeren met dit icoon?</span>
   <div style="display:flex; gap:8px; flex-shrink:0;">
-    <button onclick="closeReinstallToast()" id="reinstall-btn-no" style="
+    <button onclick="closeReinstallToast()" style="
       padding:8px 14px; border-radius:8px; border:1.5px solid #666;
       background:transparent; color:#ccc; font-size:13px; cursor:pointer;
-      font-family:Arial,sans-serif;"></button>
-    <button onclick="reinstallWithCurrentTheme()" id="reinstall-btn-yes" style="
+      font-family:Arial,sans-serif;">Nee</button>
+    <button onclick="reinstallWithCurrentTheme()" style="
       padding:8px 14px; border-radius:8px; border:none;
       background:#f5f0e8; color:#222; font-size:13px; font-weight:bold;
-      cursor:pointer; font-family:Arial,sans-serif;"></button>
+      cursor:pointer; font-family:Arial,sans-serif;">Ja</button>
   </div>
 </div>
 <div id="personaliseer-panel">
   <div id="pers-avatar-grid">
     <button class="pers-avatar-btn active" id="pers-btn-lm" onclick="persSetKarakter('l','m')">
       <img src="icons/icon-lm-96.png" alt="Blanke man">
+      <span class="pers-avatar-lbl">Notenkraker</span>
     </button>
     <button class="pers-avatar-btn" id="pers-btn-dm" onclick="persSetKarakter('d','m')">
       <img src="icons/icon-dm-96.png" alt="Donkere man">
+      <span class="pers-avatar-lbl">Notenkraker</span>
     </button>
     <button class="pers-avatar-btn" id="pers-btn-lv" onclick="persSetKarakter('l','v')">
       <img src="icons/icon-lv-96.png" alt="Blanke vrouw">
+      <span class="pers-avatar-lbl">Notenkraakster</span>
     </button>
     <button class="pers-avatar-btn" id="pers-btn-dv" onclick="persSetKarakter('d','v')">
       <img src="icons/icon-dv-96.png" alt="Donkere vrouw">
+      <span class="pers-avatar-lbl">Notenkraakster</span>
     </button>
   </div>
   <hr class="app-panel-divider">
   <div class="app-panel-row" onclick="openContact()">
     <span class="app-panel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="20" height="16" rx="2" fill="#222"/><path d="M2 7 L12 13 L22 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
-    <span class="app-panel-label" data-i18n="featrequestShort">Schrijf ons</span>
+    <span class="app-panel-label" data-i18n="featrequest">Featrequest</span>
   </div>
   <hr class="app-panel-divider admin-row">
   <div class="app-panel-row admin-row" onclick="adminUpdateApp()">
     <span class="app-panel-icon">🔄</span>
-    <span class="app-panel-label" data-i18n="updateApp">Update de app</span>
+    <span class="app-panel-label">Update de app</span>
   </div>
-  <div id="admin-update-status" data-i18n="ready">Gereed.</div>
+  <div id="admin-update-status">Gereed.</div>
   <div id="admin-token-wrap">
     <input id="admin-token-input" type="password" placeholder="GitHub token" autocomplete="off"
       onchange="adminSaveToken(this.value)" value="">
@@ -5882,19 +5883,14 @@ function adminShowStats(){
 
 <!-- Taalkiezer -->
 <div id="lang-picker">
-  <div class="lang-option" data-lang="en" onclick="selectLang('en')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1fa-1f1f8.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">English</div>
-  <div class="lang-option" data-lang="zh" onclick="selectLang('zh')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1e8-1f1f3.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">中文</div>
-  <div class="lang-option" data-lang="ru" onclick="selectLang('ru')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f7-1f1fa.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Русский</div>
-  <div class="lang-option" data-lang="hi" onclick="selectLang('hi')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1ee-1f1f3.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">हिन्दी</div>
+  <div class="lang-option active" data-lang="nl" onclick="selectLang('nl')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f3-1f1f1.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Nederlands</div>
+  <div class="lang-option" data-lang="en" onclick="selectLang('en')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1ec-1f1e7.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">English</div>
   <div class="lang-option" data-lang="de" onclick="selectLang('de')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1e9-1f1ea.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Deutsch</div>
   <div class="lang-option" data-lang="fr" onclick="selectLang('fr')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1eb-1f1f7.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Français</div>
+  <div class="lang-option" data-lang="es" onclick="selectLang('es')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1ea-1f1f8.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Español</div>
   <div class="lang-option" data-lang="it" onclick="selectLang('it')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1ee-1f1f9.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Italiano</div>
   <div class="lang-option" data-lang="pt" onclick="selectLang('pt')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f5-1f1f9.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Português</div>
-  <div class="lang-option" data-lang="pl" onclick="selectLang('pl')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f5-1f1f1.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Polski</div>
-  <div class="lang-option active" data-lang="nl" onclick="selectLang('nl')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f3-1f1f1.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Nederlands</div>
-  <div class="lang-option" data-lang="es" onclick="selectLang('es')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1ea-1f1f8.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Español</div>
-  <div class="lang-option" data-lang="cs" onclick="selectLang('cs')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1e8-1f1ff.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Čeština</div>
-  <div class="lang-option" data-lang="sv" onclick="selectLang('sv')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1f8-1f1ea.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">Svenska</div>
+  <div class="lang-option" data-lang="zh" onclick="selectLang('zh')"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f1e8-1f1f3.svg" width="20" height="20" style="vertical-align:middle;display:inline-block;margin-right:4px;" alt="">中文</div>
 </div>
 
 </div>
