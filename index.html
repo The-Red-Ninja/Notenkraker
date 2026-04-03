@@ -274,16 +274,20 @@ input[type=range].note-pos-slider-thumb::-webkit-slider-thumb {
   position:absolute; left:3px; z-index:5;
   width:28px; display:none;
   flex-direction:column; align-items:center; justify-content:center;
-  padding:0;
+  padding:0; overflow:visible;
 }
 .settings-open .scale-col { display:flex; }
 .scale-slider-v {
   -webkit-appearance:none; appearance:none;
-  writing-mode:vertical-lr; direction:rtl;
-  width:4px; height:var(--scale-slider-h, 20vh); max-height:25vh; flex-shrink:0;
-  background:linear-gradient(to top,#c8bfa8 calc(var(--pct,66.7%)),#e8e0d0 calc(var(--pct,66.7%)));
+  /* Horizontale slider, geroteerd -90deg zodat hij verticaal oogt */
+  /* Geen writing-mode: dat breekt touch op Android Chrome */
+  width:var(--scale-slider-h, 20vh); height:22px;
+  flex-shrink:0;
+  background:linear-gradient(to right,#c8bfa8 calc(var(--pct,66.7%)),#e8e0d0 calc(var(--pct,66.7%)));
   border-radius:3px; outline:none; cursor:pointer;
   touch-action:none; user-select:none; -webkit-user-select:none;
+  transform:rotate(-90deg);
+  transform-origin:center center;
 }
 .scale-slider-v::-webkit-slider-thumb {
   -webkit-appearance:none; width:22px; height:22px;
@@ -4484,7 +4488,7 @@ function updateStaffZone(){
 
     const sl = document.getElementById('scale-slider-'+clef);
     const scalecol = sl ? sl.closest('.scale-col') : null;
-    if(sl) sl.style.height = slH + 'px';
+    if(sl) sl.style.width = slH + 'px'; // geroteerde slider: visuele hoogte = CSS breedte
     if(scalecol){
       scalecol.style.top    = sliderTop + 'px';
       scalecol.style.height = slH + 'px';
@@ -4493,8 +4497,11 @@ function updateStaffZone(){
     if(sl && !sl._touchBound){
       sl._touchBound = true;
       const getVal = (t) => {
-        const r = sl.getBoundingClientRect();
+        // Gebruik scale-col bounding rect (niet slider, die is geroteerd)
+        const col = sl.closest('.scale-col');
+        const r = col ? col.getBoundingClientRect() : sl.getBoundingClientRect();
         if(!r.height) return parseInt(sl.value);
+        // Boven = max (hoge waarde), onder = min (lage waarde)
         const pct = Math.max(0, Math.min(1, (r.bottom - t.clientY) / r.height));
         const mn = parseInt(sl.min)||1, mx = parseInt(sl.max)||15;
         return Math.round(mn + pct * (mx - mn));
@@ -4764,12 +4771,6 @@ function applyTranslations(){
   _updatePitchStopNames();
 }
 window.addEventListener('DOMContentLoaded',()=>{
-  // Forceer service worker update bij elke pageload
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.getRegistrations().then(regs=>{
-      regs.forEach(r=>r.update());
-    });
-  }
   // Laad taalpakketten op de achtergrond
   loadI18n().then(applyTranslations);
   // Personaliseer init: knoppen + icoon
