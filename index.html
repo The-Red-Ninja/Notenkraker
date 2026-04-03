@@ -218,7 +218,7 @@ input[type=range].seek-slider::-webkit-slider-thumb {
 }
 .staff-header { padding:0 6px 4px; display:flex; align-items:center; }
 .staff-key-label { font-size:15px; color:#222; font-weight:bold; }
-.staff-wrap { position:absolute; inset:0; touch-action:none; background:transparent; overflow:visible; }
+.staff-wrap { position:absolute; inset:0; background:transparent; overflow:visible; }
 .staff-right { position:absolute; inset:0; }
 /* note-pos-row nu in .staff-page CSS */
 .scale-col-hidden .scale-col { display:none; }
@@ -265,7 +265,7 @@ input[type=range].note-pos-slider-thumb::-webkit-slider-thumb {
   background:#333; border-radius:50%; border:2px solid #fff;
   box-shadow:0 1px 4px #0003;
 }
-.staff-wrap canvas { width:100%; height:100%; display:block; }
+.staff-wrap canvas { width:100%; height:100%; display:block; touch-action:none; }
 .acc-row { display:flex; align-items:center; justify-content:space-between;
   height:52px; padding:0 8px; flex-shrink:0; background:#fff; }
 /* staff-outer en scale-col volledig ontkoppeld — beide absolute in staff-zone */
@@ -4493,41 +4493,32 @@ function updateStaffZone(){
       scalecol.style.top    = sliderTop + 'px';
       scalecol.style.height = slH + 'px';
     }
-    // Handmatige touch-afhandeling voor verticale slider op Android
-    // (writing-mode:vertical-lr werkt niet betrouwbaar met touch-action:none op parent)
+    // Handmatige touch-afhandeling: bypass Android vertical-slider bug
     if(sl && !sl._touchBound){
       sl._touchBound = true;
-      const getValFromTouch = (t) => {
+      const getVal = (t) => {
         const r = sl.getBoundingClientRect();
-        // Slider loopt van BOVEN (max) naar BENEDEN (min) door direction:rtl
+        if(!r.height) return parseInt(sl.value);
         const pct = Math.max(0, Math.min(1, (r.bottom - t.clientY) / r.height));
-        const min = parseInt(sl.min) || 1;
-        const max = parseInt(sl.max) || 15;
-        return Math.round(min + pct * (max - min));
+        const mn = parseInt(sl.min)||1, mx = parseInt(sl.max)||15;
+        return Math.round(mn + pct * (mx - mn));
       };
-      sl.addEventListener('touchstart', e => {
+      sl.addEventListener('touchstart', e=>{
         e.stopPropagation();
         activateScaleSlider(clef);
-        const val = getValFromTouch(e.touches[0]);
-        sl.value = val;
-        onScaleInput(val, clef);
-      }, {passive:true});
-      sl.addEventListener('touchmove', e => {
+        const v = getVal(e.touches[0]); sl.value=v; onScaleInput(v,clef);
+      },{passive:true});
+      sl.addEventListener('touchmove', e=>{
         e.stopPropagation();
-        const val = getValFromTouch(e.touches[0]);
-        if(parseInt(sl.value) !== val){
-          sl.value = val;
-          onScaleInput(val, clef);
-        }
-      }, {passive:true});
-      sl.addEventListener('touchend', e => {
-        e.stopPropagation();
-        deactivateScaleSlider(clef);
-      }, {passive:true});
-      sl.addEventListener('touchcancel', e => {
-        e.stopPropagation();
-        deactivateScaleSlider(clef);
-      }, {passive:true});
+        const v = getVal(e.touches[0]);
+        if(parseInt(sl.value)!==v){ sl.value=v; onScaleInput(v,clef); }
+      },{passive:true});
+      sl.addEventListener('touchend', e=>{
+        e.stopPropagation(); deactivateScaleSlider(clef);
+      },{passive:true});
+      sl.addEventListener('touchcancel', e=>{
+        e.stopPropagation(); deactivateScaleSlider(clef);
+      },{passive:true});
     }
   });
 }
