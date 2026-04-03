@@ -4493,6 +4493,42 @@ function updateStaffZone(){
       scalecol.style.top    = sliderTop + 'px';
       scalecol.style.height = slH + 'px';
     }
+    // Handmatige touch-afhandeling voor verticale slider op Android
+    // (writing-mode:vertical-lr werkt niet betrouwbaar met touch-action:none op parent)
+    if(sl && !sl._touchBound){
+      sl._touchBound = true;
+      const getValFromTouch = (t) => {
+        const r = sl.getBoundingClientRect();
+        // Slider loopt van BOVEN (max) naar BENEDEN (min) door direction:rtl
+        const pct = Math.max(0, Math.min(1, (r.bottom - t.clientY) / r.height));
+        const min = parseInt(sl.min) || 1;
+        const max = parseInt(sl.max) || 15;
+        return Math.round(min + pct * (max - min));
+      };
+      sl.addEventListener('touchstart', e => {
+        e.stopPropagation();
+        activateScaleSlider(clef);
+        const val = getValFromTouch(e.touches[0]);
+        sl.value = val;
+        onScaleInput(val, clef);
+      }, {passive:true});
+      sl.addEventListener('touchmove', e => {
+        e.stopPropagation();
+        const val = getValFromTouch(e.touches[0]);
+        if(parseInt(sl.value) !== val){
+          sl.value = val;
+          onScaleInput(val, clef);
+        }
+      }, {passive:true});
+      sl.addEventListener('touchend', e => {
+        e.stopPropagation();
+        deactivateScaleSlider(clef);
+      }, {passive:true});
+      sl.addEventListener('touchcancel', e => {
+        e.stopPropagation();
+        deactivateScaleSlider(clef);
+      }, {passive:true});
+    }
   });
 }
 function resizeQuintCanvas(){
