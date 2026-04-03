@@ -964,9 +964,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
           min="1" max="15" step="1" value="8"
           oninput="onScaleInput(this.value,'treble')"
           onchange="onScaleInput(this.value,'treble')"
-          ontouchstart="activateScaleSlider('treble')"
-          ontouchend="deactivateScaleSlider('treble')"
-          ontouchcancel="deactivateScaleSlider('treble')"
+          ontouchstart="" ontouchend="" ontouchcancel=""
           onmousedown="activateScaleSlider('treble')"
           onmouseup="deactivateScaleSlider('treble')"
           onmouseleave="if(_sliderActiveClef==='treble')deactivateScaleSlider('treble')">
@@ -1063,9 +1061,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
           min="1" max="15" step="1" value="8"
           oninput="onScaleInput(this.value,'bass')"
           onchange="onScaleInput(this.value,'bass')"
-          ontouchstart="activateScaleSlider('bass')"
-          ontouchend="deactivateScaleSlider('bass')"
-          ontouchcancel="deactivateScaleSlider('bass')"
+          ontouchstart="" ontouchend="" ontouchcancel=""
           onmousedown="activateScaleSlider('bass')"
           onmouseup="deactivateScaleSlider('bass')"
           onmouseleave="if(_sliderActiveClef==='bass')deactivateScaleSlider('bass')">
@@ -4509,10 +4505,11 @@ function updateStaffZone(){
         const v = getVal(e.touches[0]); sl.value=v; onScaleInput(v,clef);
       },{passive:true});
       sl.addEventListener('touchmove', e=>{
+        e.preventDefault();
         e.stopPropagation();
         const v = getVal(e.touches[0]);
         if(parseInt(sl.value)!==v){ sl.value=v; onScaleInput(v,clef); }
-      },{passive:true});
+      },{passive:false});
       sl.addEventListener('touchend', e=>{
         e.stopPropagation(); deactivateScaleSlider(clef);
       },{passive:true});
@@ -4767,6 +4764,12 @@ function applyTranslations(){
   _updatePitchStopNames();
 }
 window.addEventListener('DOMContentLoaded',()=>{
+  // Forceer service worker update bij elke pageload
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.getRegistrations().then(regs=>{
+      regs.forEach(r=>r.update());
+    });
+  }
   // Laad taalpakketten op de achtergrond
   loadI18n().then(applyTranslations);
   // Personaliseer init: knoppen + icoon
