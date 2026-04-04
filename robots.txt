@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://the-red-ninja.github.io/Notenkraker/sitemap.xml
