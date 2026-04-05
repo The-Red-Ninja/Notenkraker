@@ -8,7 +8,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <!-- PWA: installeerbaar als app -->
-<link rel="manifest" id="link-manifest" href="manifest-lm.json">
+<script>
+// Stel manifest in vóór browser de link leest — op basis van localStorage of URL-param
+(function(){
+  var p = new URLSearchParams(location.search).get('karakter');
+  var k = p || localStorage.getItem('nk_theme','l') + (localStorage.getItem('nk_gender') || 'm');
+  // Normaliseer: karakter-param is 'lm'/'dm'/'lv'/'dv', anders opbouwen
+  var valid = ['lm','dm','lv','dv'];
+  if(valid.indexOf(k) === -1){
+    var t = localStorage.getItem('nk_theme') || 'l';
+    var g = localStorage.getItem('nk_gender') || 'm';
+    k = t + g;
+  }
+  if(valid.indexOf(k) === -1) k = 'lm';
+  document.write('<link rel="manifest" id="link-manifest" href="manifest-' + k + '.json">');
+})();
+</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -4782,8 +4797,10 @@ function applyTranslations(){
 window.addEventListener('DOMContentLoaded',()=>{
   // ?install=1: gedeelde link opent direct het thema-keuzescherm
   if(new URLSearchParams(window.location.search).get('install') === '1'){
+    // URL direct opschonen zodat verversen niet opnieuw triggert
+    history.replaceState(null, '', window.location.pathname);
     let _installWaitTimer = setTimeout(()=> openInstallThemeOverlay(), 600);
-    window.addEventListener('beforeinstallprompt', ()=>{
+    window.addEventListener('beforeinstallprompt', ()=>{\
       clearTimeout(_installWaitTimer);
       openInstallThemeOverlay();
     }, {once: true});
@@ -4924,7 +4941,7 @@ function closeInstallThemePicker(){
 }
 
 function installWithTheme(t, g){
-  // Thema direct zetten (niet via persSetKarakter om cirkel te vermijden)
+  // Thema opslaan
   _persTheme  = t;
   _persGender = g;
   localStorage.setItem('nk_theme',  t);
@@ -4933,17 +4950,27 @@ function installWithTheme(t, g){
   persApplyIcon();
   _updateInstallLabel();
   closeInstallThemePicker();
-  // Install-prompt tonen met het nieuwe manifest
-  setTimeout(() => {
-    if(!_deferredInstall){
-      // Geen prompt: app wellicht al geinstalleerd of iOS — gewoon sluiten
-      return;
-    }
-    _deferredInstall.prompt();
-    _deferredInstall.userChoice.then(choice => {
-      if(choice.outcome === 'accepted') _deferredInstall = null;
-    });
-  }, 80);
+
+  if(!_deferredInstall){
+    // Geen install-prompt beschikbaar (al geinstalleerd of iOS)
+    // Navigeer naar schone app-URL
+    window.location.replace('https://the-red-ninja.github.io/Notenkraker/app.html');
+    return;
+  }
+
+  // Manifest href alvast wisselen (ten behoeve van toekomstige herinstallatie)
+  const key = t + g;
+  const mLink = document.getElementById('link-manifest');
+  if(mLink) mLink.href = 'manifest-' + key + '.json';
+
+  // Direct prompten met de huidige deferred prompt
+  const prompt = _deferredInstall;
+  _deferredInstall = null;
+  prompt.prompt();
+  prompt.userChoice.then(() => {
+    // Na installatie (of weigering): navigeer naar schone app-URL
+    window.location.replace('https://the-red-ninja.github.io/Notenkraker/app.html');
+  });
 }
 
 function shareApp(){
