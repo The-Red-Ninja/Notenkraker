@@ -214,8 +214,17 @@ input[type=range].seek-slider::-webkit-slider-thumb {
 /* Bottom-bar: verberg de playknop van tab0 niet — die hoort statisch zichtbaar te zijn */
 .staff-key-label-top {
   font-size:15px; font-weight:bold; color:#222;
-  text-align:right; display:block; cursor:pointer;
-  padding:0 1px 2px; font-family:Georgia,serif; letter-spacing:.2px;
+  display:inline-flex; align-items:center; justify-content:center;
+  cursor:pointer; font-family:Georgia,serif; letter-spacing:.2px;
+  padding:5px 14px; border-radius:20px;
+  border:1.5px solid #c8bfa8; background:#fff;
+  white-space:nowrap; user-select:none; -webkit-user-select:none;
+  transition:background .1s, border-color .1s;
+  touch-action:manipulation;
+}
+.staff-key-label-top:active,
+.staff-key-label-top.menu-open {
+  background:#f0ebe0; border-color:#888;
 }
 /* Nootpositieslider: nu inline in staff-top-bar, alleen zichtbaar bij open instellingen */
 /* note-pos-row: absoluut in .staff-page, zichtbaar bij settings-open */
@@ -944,10 +953,6 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 
 
 /* ── LANDSCAPE op mobiel (breedte > hoogte, klein scherm) ── */
-/* Landscape-modus: alleen op mobiele telefoons
-   Voorwaarden: landscape + hoogte < 500px + breedte < 900px (geen tablet/desktop)
-   Op Windows/desktop is de viewport altijd breder dan 900px in een PWA-venster
-   Op tablets is de hoogte in landscape doorgaans > 500px */
 @media screen and (orientation: landscape) and (max-height: 500px) and (max-width: 899px) {
   /* Verberg tabbalk, toonsoortnaam en midi-volumeslider */
   #tabs        { display: none !important; }
@@ -974,6 +979,59 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
   .acc-play-btn { width: 46px; height: 46px; }
   .player-play-btn { width: 46px; height: 46px; }
 }
+
+/* ── Toonsoortmenu overlay (op staf-tabs) ── */
+#key-menu-overlay {
+  display: none;
+  position: fixed;
+  z-index: 200;
+  background: #fff;
+  border: 1.5px solid #c8bfa8;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.18);
+  overflow-y: auto;
+  max-height: 70vh;
+  padding: 4px 0;
+  touch-action: none;
+  white-space: nowrap;
+}
+#key-menu-overlay.open { display: block; }
+.key-menu-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 14px;
+  cursor: pointer;
+  gap: 12px;
+  border-bottom: 1px solid #f0ebe0;
+  transition: background .1s;
+}
+.key-menu-row:last-child { border-bottom: none; }
+.key-menu-row.active { background: #f0ebe0; font-weight: bold; }
+.key-menu-row:active { background: #e8e2d6; }
+.key-menu-row.hover  { background: #e8e2d6; outline: 1.5px solid #b8ae9a; outline-offset: -1px; border-radius: 4px; }
+.key-menu-name {
+  font-family: Georgia, serif;
+  font-size: 14px;
+  color: #222;
+  text-align: right;
+  flex: 1;
+}
+.key-menu-acc {
+  font-family: Georgia, serif;
+  font-size: 13px;
+  font-weight: bold;
+  color: #888;
+  text-align: left;
+  min-width: 44px;
+  flex-shrink: 0;
+}
+.key-menu-row.active .key-menu-acc { color: #444; }
+.key-menu-sep {
+  height: 1px;
+  background: #c8bfa8;
+  margin: 2px 0;
+}
 </style>
 </head>
 <body>
@@ -996,7 +1054,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 <div id="top-bar" style="flex-direction:column;padding-bottom:2px;">
   <div style="display:flex;align-items:center;width:100%;gap:0;">
     <div style="width:33.33%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-      <span class="staff-key-label-top" id="key-name-display" style="cursor:pointer;text-align:center;" onclick="showTabAnimated(1, currentTab<1?'right':'left')" title="Toonsoort">C Groot</span>
+      <span class="staff-key-label-top" id="key-name-display" style="cursor:pointer;text-align:center;user-select:none;-webkit-user-select:none;" title="Toonsoort" ontouchstart="keyNameTouchStart(event)" ontouchmove="keyNameTouchMove(event)" ontouchend="keyNameTouchEnd(event)" ontouchcancel="keyNameTouchCancel()" onmousedown="keyNameMouseDown(event)" onmouseup="keyNameMouseUp(event)">C Groot</span>
     </div>
     <div style="flex:1;padding:0 4px;">
       <div class="h-vol-wrap" id="h-vol-wrap-0" style="height:24px;">
@@ -1289,51 +1347,53 @@ const PITCH_MIN=410, PITCH_MAX=446;
 // STATE
 // ════════════════════════════════════════════════════
 let currentTab=0, isMinor=false, keyIdx=0, pitchHz=440;
-
-// ── Sleutel-volgorde voorkeur ──────────────────────────────────
+// Sleutel-volgorde voorkeur
 let _clefSwap = localStorage.getItem('nk_clef_swap') === '1';
-
 function clefForTab(tab){
-  if(tab === 0) return _clefSwap ? 'bass' : 'treble';
-  if(tab === 2) return _clefSwap ? 'treble' : 'bass';
+  if(tab===0) return _clefSwap?'bass':'treble';
+  if(tab===2) return _clefSwap?'treble':'bass';
   return null;
 }
 function tabForClef(clef){
-  if(clef === 'treble') return _clefSwap ? 2 : 0;
-  if(clef === 'bass')   return _clefSwap ? 0 : 2;
+  if(clef==='treble') return _clefSwap?2:0;
+  if(clef==='bass')   return _clefSwap?0:2;
   return 1;
 }
 function applyClefSwap(){
-  const p0 = document.getElementById('page0');
-  const p2 = document.getElementById('page2');
-  if(p0) p0.setAttribute('data-clef', _clefSwap ? 'bass'   : 'treble');
-  if(p2) p2.setAttribute('data-clef', _clefSwap ? 'treble' : 'bass');
-  // Wissel tab-icoontjes
-  const t0 = document.getElementById('tab0');
-  const t2 = document.getElementById('tab2');
-  if(t0 && t2){
-    const ic0 = _clefSwap ? '\uD834\uDD22' : '\uD834\uDD1E'; // 𝄢 : 𝄞
-    const ic2 = _clefSwap ? '\uD834\uDD1E' : '\uD834\uDD22';
-    const sz0 = _clefSwap ? '38' : '28';
-    const sz2 = _clefSwap ? '28' : '38';
-    t0.innerHTML = '<div style="height:72px;overflow:hidden;position:relative;width:28px;"><span style="font-family:Bravura,Georgia,serif;font-size:' + sz0 + 'px;line-height:1;position:absolute;bottom:8px;left:0;color:inherit;">' + ic0 + '</span></div>';
-    t2.innerHTML = '<span style="font-family:Bravura,Georgia,serif;font-size:' + sz2 + 'px;line-height:1;display:block;transform:translateY(2px);color:inherit;">' + ic2 + '</span>';
+  const p0=document.getElementById('page0');
+  const p2=document.getElementById('page2');
+  if(p0) p0.setAttribute('data-clef',_clefSwap?'bass':'treble');
+  if(p2) p2.setAttribute('data-clef',_clefSwap?'treble':'bass');
+  const t0=document.getElementById('tab0');
+  const t2=document.getElementById('tab2');
+  if(t0&&t2){
+    const trebleIC = '𝄞';
+    const bassIC   = '𝄢';
+    // Vioolsleutel: hoge container met overflow:hidden (sleutel steekt omhoog)
+    const trebleHTML = '<div style="height:72px;overflow:hidden;position:relative;width:28px;">'
+      + '<span style="font-family:Bravura,Georgia,serif;font-size:28px;line-height:1;'
+      + 'position:absolute;bottom:8px;left:0;color:inherit;">' + trebleIC + '</span></div>';
+    // Bassleutel: compacte span met kleine translateY
+    const bassHTML = '<span style="font-family:Bravura,Georgia,serif;font-size:38px;'
+      + 'line-height:1;display:block;transform:translateY(2px);color:inherit;">' + bassIC + '</span>';
+    // Tab0 toont treble of bass afhankelijk van swap
+    t0.innerHTML = _clefSwap ? bassHTML   : trebleHTML;
+    t2.innerHTML = _clefSwap ? trebleHTML : bassHTML;
   }
-  // Update toggle staat
-  const tog = document.getElementById('set-clef-swap');
-  if(tog) tog.classList.toggle('on', _clefSwap);
-  // Herteken
-  if(typeof renderStaff === 'function'){
+  const tog=document.getElementById('set-clef-swap');
+  if(tog) tog.classList.toggle('on',_clefSwap);
+  if(typeof renderStaff==='function'){
     renderStaff('treble'); renderStaff('bass');
-    if(typeof setupTouch === 'function'){ setupTouch('treble'); setupTouch('bass'); }
-    if(typeof renderMiniStaves === 'function') renderMiniStaves();
+    if(typeof setupTouch==='function'){setupTouch('treble');setupTouch('bass');}
+    if(typeof renderMiniStaves==='function') renderMiniStaves();
   }
 }
 function toggleClefSwap(){
-  _clefSwap = !_clefSwap;
-  localStorage.setItem('nk_clef_swap', _clefSwap ? '1' : '0');
+  _clefSwap=!_clefSwap;
+  localStorage.setItem('nk_clef_swap',_clefSwap?'1':'0');
   applyClefSwap();
 }
+
 
 // ── Auto-toonsoortdetectie state ──
 // ── Auto-toonsoortdetectie state: standaard UIT bij eerste keer ──
@@ -4887,7 +4947,6 @@ window.addEventListener('DOMContentLoaded',()=>{
   loadI18n().then(applyTranslations);
   // Personaliseer init: knoppen + icoon
   persInit();
-  applyClefSwap();
 
   updateLabels(); renderQuint();
 
@@ -5381,7 +5440,7 @@ function persSetKarakter(t, g){
   // Sluit alle menu's en ga naar tab 0
   closeSettings();
   showTab(0);
-  // Als thema gewijzigd en install-prompt beschikbaar: vraag herinstallatie
+  // Als thema gewijzigd: toon herinstallatie-toast
   if(_themaKey() !== prevKey && _deferredInstall){
     setTimeout(() => showReinstallToast(), 300);
   }
@@ -5549,6 +5608,7 @@ window.addEventListener('popstate', ()=>{
   function blockedForTab(el){
     if(blocked(el)) return true;
     if(canvasBlocked(el)) return true;
+    if(el.closest('#key-menu-overlay')) return true;
     // pitch-section is nu statisch in top-bar, geen blokkade nodig
     return false;
   }
@@ -5790,11 +5850,8 @@ function showTabAnimated(i, dir){
   <div class="settings-toggle-item" id="set-solfege" onclick="toggleSetting('solfege')">
     <div class="settings-switch"></div><span data-i18n="solfege">Solfège</span>
   </div>
-  <!-- Sleutelvolgorde toggle: alleen zichtbaar vanuit toonsoort-tab -->
-  <div class="settings-toggle-item settings-clef-swap" id="set-clef-swap"
-       onclick="toggleClefSwap()" style="display:none;">
-    <div class="settings-switch"></div>
-    <span>Bas eerst</span>
+  <div class="settings-toggle-item settings-clef-swap" id="set-clef-swap" onclick="toggleClefSwap()" style="display:none;">
+    <div class="settings-switch"></div><span>Bas eerst</span>
   </div>
   <div class="settings-meer-row">
     <button onclick="showAppPanelAtSettingsPos()" style="background:none;border:none;width:100%;display:flex;align-items:center;cursor:pointer;padding:0;">
@@ -5885,25 +5942,6 @@ function showTabAnimated(i, dir){
 </div>
 
 
-
-<!-- Herinstalleer-toast: verschijnt na themawisseling -->
-<div id="reinstall-toast" style="
-  display:none; position:fixed; bottom:0; left:0; right:0; z-index:9998;
-  background:#2a2a2a; color:#fff; font-family:Arial,sans-serif;
-  padding:14px 16px; align-items:center; justify-content:space-between; gap:10px;
-  box-shadow:0 -2px 12px rgba(0,0,0,.3);">
-  <span style="font-size:13px; line-height:1.4; flex:1;">Ook de app opnieuw<br>installeren met dit icoon?</span>
-  <div style="display:flex; gap:8px; flex-shrink:0;">
-    <button onclick="closeReinstallToast()" style="
-      padding:8px 14px; border-radius:8px; border:1.5px solid #666;
-      background:transparent; color:#ccc; font-size:13px; cursor:pointer;
-      font-family:Arial,sans-serif;">Nee</button>
-    <button onclick="reinstallWithCurrentTheme()" style="
-      padding:8px 14px; border-radius:8px; border:none;
-      background:#f5f0e8; color:#222; font-size:13px; font-weight:bold;
-      cursor:pointer; font-family:Arial,sans-serif;">Ja</button>
-  </div>
-</div>
 <div id="personaliseer-panel">
   <div id="pers-avatar-grid">
     <button class="pers-avatar-btn active" id="pers-btn-lm" onclick="persSetKarakter('l','m')">
@@ -6106,6 +6144,303 @@ window.addEventListener('resize', () => {
   window._resizeTimer = setTimeout(onOrientationChange, 80);
 });
 
+
+// ════════════════════════════════════════════════════════════════
+// PORTRAIT LOCK: tab1 (toonsoort) vergrendelt portrait op smartphones
+// ════════════════════════════════════════════════════════════════
+function _isSmartphone(){
+  // Smartphones: max 900px breed EN touch-apparaat
+  return window.innerWidth < 900 && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+}
+
+function applyOrientationLock(tabIdx){
+  if(!_isSmartphone()) return;
+  if(!screen.orientation || !screen.orientation.lock) return;
+  if(tabIdx === 1){
+    screen.orientation.lock('portrait').catch(()=>{});
+  } else {
+    screen.orientation.unlock();
+  }
+}
+
+// Orientation lock en menu sluiten na tab-wissel
+// Geen wrapper van showTab — dat veroorzaakt hoisting-recursie.
+// Inject via een apart aanspreekpunt vanuit showTabAnimated en directe aanroepen.
+const _origShowTab = showTab;
+showTab = function(i){
+  _origShowTab(i);
+  applyOrientationLock(i);
+  closeKeyMenu();
+};
+
+// ════════════════════════════════════════════════════════════════
+// TOONSOORTMENU: opent op long press, tap = majeur/mineur wissel
+// ════════════════════════════════════════════════════════════════
+let _keyMenuTimer = null;
+let _keyMenuOpen = false;
+let _keyMenuTouchMoved = false;
+
+// Bewaart de rijen voor touch-selectie
+let _keyMenuRows = [];
+
+function buildKeyMenu(){
+  const overlay = document.getElementById('key-menu-overlay');
+  if(!overlay) return;
+
+  const circle_data = isMinor ? CIRCLE_MINOR : CIRCLE_MAJOR;
+
+  // Vaste volgorde: netto −6 t/m +7 (mollen links, kruizen rechts)
+  // Enharmonische paren: mollenvariant aan de molkant, kruizenvariant aan de kruizenkant
+  const rows = [];
+  for(let net = -6; net <= 7; net++){
+    let found = null;
+    circle_data.forEach((entry, idx) => {
+      const spA = entry.spellingA;
+      const spB = entry.spellingB;
+      if(net < 0){
+        if(spB && spB.flats === -net && spB.sharps === 0)
+          found = { entryIdx: idx, mode: 'B', spelling: spB, entry };
+        else if(spA.flats === -net && spA.sharps === 0)
+          found = { entryIdx: idx, mode: 'A', spelling: spA, entry };
+      } else if(net === 0 && spA.sharps === 0 && spA.flats === 0){
+        found = { entryIdx: idx, mode: 'A', spelling: spA, entry };
+      } else if(net > 0 && spA.sharps === net && spA.flats === 0){
+        found = { entryIdx: idx, mode: 'A', spelling: spA, entry };
+      }
+    });
+    if(found) rows.push(found);
+  }
+  _keyMenuRows = rows;
+
+  // Genereer rijen — geen inline touch handlers; die zitten op overlay-niveau
+  let html_rows = '';
+  rows.forEach((row, i) => {
+    const k = row.spelling;
+    const accCnt = k.sharps || k.flats;
+    const accSym = k.sharps > 0 ? '♯' : k.flats > 0 ? '♭' : '';
+    const accStr = accCnt > 0 ? accCnt + accSym : '—';
+    const isActiveCurrent = (row.entryIdx === keyIdx) &&
+      ((row.mode === 'A' && (enharmMode[row.entry.pos]||'A') === 'A') ||
+       (row.mode === 'B' &&  enharmMode[row.entry.pos]        === 'B'));
+    const cls = 'key-menu-row' + (isActiveCurrent ? ' active' : '');
+    html_rows +=
+      '<div class="' + cls + '" data-rowid="' + i + '">' +
+        '<span class="key-menu-name">' + translateKeyName(k.name) + '</span>' +
+        '<span class="key-menu-acc">'  + accStr + '</span>' +
+      '</div>';
+  });
+  overlay.innerHTML = html_rows;
+
+  // ── Touch: highlight bij bewegen, selecteer bij loslaten ──
+  function _kmRowAtY(y){
+    const els = overlay.querySelectorAll('.key-menu-row');
+    for(const el of els){
+      const r = el.getBoundingClientRect();
+      if(y >= r.top && y <= r.bottom) return el;
+    }
+    return null;
+  }
+  function _kmApply(rowEl){
+    if(!rowEl) return;
+    const row = _keyMenuRows[parseInt(rowEl.dataset.rowid)];
+    if(row){ enharmMode[row.entry.pos]=row.mode; selectKey(row.entryIdx); }
+  }
+  if(overlay._kmTS) overlay.removeEventListener('touchstart', overlay._kmTS, {capture:true});
+  if(overlay._kmTM) overlay.removeEventListener('touchmove',  overlay._kmTM,  {capture:true});
+  if(overlay._kmTE) overlay.removeEventListener('touchend',   overlay._kmTE,   {capture:true});
+  if(overlay._kmCL) overlay.removeEventListener('click',      overlay._kmCL);
+  overlay._kmTS = function(e){
+    e.preventDefault(); e.stopPropagation();
+    overlay.querySelectorAll('.key-menu-row').forEach(r=>r.classList.remove('hover'));
+    const row=_kmRowAtY(e.touches[0].clientY); if(row) row.classList.add('hover');
+  };
+  overlay._kmTM = function(e){
+    e.preventDefault(); e.stopPropagation();
+    overlay.querySelectorAll('.key-menu-row').forEach(r=>r.classList.remove('hover'));
+    const row=_kmRowAtY(e.touches[0].clientY); if(row) row.classList.add('hover');
+  };
+  overlay._kmTE = function(e){
+    e.preventDefault(); e.stopPropagation();
+    _kmApply(overlay.querySelector('.key-menu-row.hover'));
+    closeKeyMenu();
+  };
+  overlay._kmCL = function(e){
+    const rowEl=e.target.closest('.key-menu-row');
+    if(rowEl){ _kmApply(rowEl); closeKeyMenu(); }
+  };
+  overlay.addEventListener('touchstart', overlay._kmTS, {passive:false, capture:true});
+  overlay.addEventListener('touchmove',  overlay._kmTM,  {passive:false, capture:true});
+  overlay.addEventListener('touchend',   overlay._kmTE,   {passive:false, capture:true});
+  overlay.addEventListener('click',      overlay._kmCL);
+}
+
+function openKeyMenu(){
+  _keyMenuOpen = true;
+  buildKeyMenu();
+  const overlay = document.getElementById('key-menu-overlay');
+  if(!overlay) return;
+
+  const label = document.getElementById('key-name-display');
+  if(label){
+    label.classList.add('menu-open');
+    const r = label.getBoundingClientRect();
+
+    // Breedte: max-content zodat elke regel op 1 regel past
+    overlay.style.width    = 'max-content';
+    overlay.style.minWidth = r.width + 'px';
+    overlay.style.left     = r.left + 'px';
+    overlay.style.right    = 'auto';
+
+    // Meet hoogte onzichtbaar
+    overlay.style.visibility = 'hidden';
+    overlay.classList.add('open');
+    const menuH = overlay.offsetHeight;
+    const menuW = overlay.offsetWidth;
+    overlay.classList.remove('open');
+    overlay.style.visibility = '';
+
+    // Niet buiten rechterrand
+    if(r.left + menuW > window.innerWidth - 4){
+      overlay.style.left  = 'auto';
+      overlay.style.right = '4px';
+    }
+
+    // Bovenop de knop: onderkant menu sluit aan op bovenkant knop
+    const top = r.top - menuH;
+    overlay.style.top = (top < 4 ? r.bottom + 4 : top) + 'px';
+  }
+  overlay.classList.add('open');
+}
+
+function closeKeyMenu(){
+  _keyMenuOpen = false;
+  const overlay = document.getElementById('key-menu-overlay');
+  if(overlay) overlay.classList.remove('open');
+  const label = document.getElementById('key-name-display');
+  if(label) label.classList.remove('menu-open');
+  clearTimeout(_keyMenuTimer);
+  _keyMenuTimer = null;
+}
+
+function selectKeyFromMenu(idx, mode, e){
+  if(e) e.preventDefault();
+  // Stel enharmonische modus in
+  const entry = circle()[idx];
+  if(entry && mode === 'B' && entry.spellingB){
+    enharmMode[entry.pos] = 'B';
+  } else if(entry){
+    enharmMode[entry.pos] = 'A';
+  }
+  selectKey(idx);
+  closeKeyMenu();
+}
+
+// ── Touch handlers voor toonsoortnaam ──────────────────────────
+// ── Hulpfuncties voor menu-interactie vanuit key-name touch ──
+function _kmMenuRowAtY(clientY){
+  const ov = document.getElementById('key-menu-overlay');
+  if(!ov) return null;
+  const els = ov.querySelectorAll('.key-menu-row');
+  for(const el of els){
+    const r = el.getBoundingClientRect();
+    if(clientY >= r.top && clientY <= r.bottom) return el;
+  }
+  return null;
+}
+function _kmMenuHighlight(clientY){
+  const ov = document.getElementById('key-menu-overlay');
+  if(!ov) return;
+  ov.querySelectorAll('.key-menu-row').forEach(r=>r.classList.remove('hover'));
+  const row = _kmMenuRowAtY(clientY);
+  if(row) row.classList.add('hover');
+  return row;
+}
+function _kmMenuApplyHighlighted(){
+  const ov = document.getElementById('key-menu-overlay');
+  if(!ov) return;
+  const hi = ov.querySelector('.key-menu-row.hover');
+  if(hi){
+    const row = _keyMenuRows[parseInt(hi.dataset.rowid)];
+    if(row){ enharmMode[row.entry.pos]=row.mode; selectKey(row.entryIdx); }
+  }
+}
+
+function keyNameTouchStart(e){
+  e.preventDefault();
+  _keyMenuTouchMoved = false;
+  // Long press → menu openen
+  _keyMenuTimer = setTimeout(() => {
+    openKeyMenu();
+    _keyMenuTimer = null;
+    // Highlight de rij onder de huidige vingerpositie
+    if(e.touches.length > 0) _kmMenuHighlight(e.touches[0].clientY);
+  }, 400);
+}
+
+function keyNameTouchMove(e){
+  e.preventDefault();
+  if(_keyMenuOpen){
+    // Menu open: highlight rij onder vinger
+    if(e.touches.length > 0) _kmMenuHighlight(e.touches[0].clientY);
+  } else {
+    _keyMenuTouchMoved = true;
+  }
+}
+
+function keyNameTouchEnd(e){
+  e.preventDefault();
+  if(_keyMenuOpen){
+    // Selecteer gemarkeerde rij en sluit menu
+    _kmMenuApplyHighlighted();
+    closeKeyMenu();
+    return;
+  }
+  if(_keyMenuTouchMoved){ clearTimeout(_keyMenuTimer); return; }
+  if(_keyMenuTimer !== null){
+    // Korte tap: toggle majeur/mineur
+    clearTimeout(_keyMenuTimer);
+    _keyMenuTimer = null;
+    setMode(!isMinor);
+  }
+}
+
+function keyNameTouchCancel(){
+  clearTimeout(_keyMenuTimer);
+  _keyMenuTimer = null;
+  if(_keyMenuOpen) closeKeyMenu();
+}
+
+// Muis-equivalenten (desktop/Windows)
+let _keyMouseDown = false;
+function keyNameMouseDown(e){
+  _keyMouseDown = true;
+  _keyMenuTimer = setTimeout(() => {
+    openKeyMenu();
+    _keyMenuTimer = null;
+  }, 400);
+}
+function keyNameMouseUp(e){
+  if(_keyMenuOpen){ closeKeyMenu(); return; }
+  if(_keyMenuTimer !== null){
+    clearTimeout(_keyMenuTimer);
+    _keyMenuTimer = null;
+    setMode(!isMinor);
+  }
+  _keyMouseDown = false;
+}
+
+// Sluit menu bij tik buiten
+document.addEventListener('touchstart', e => {
+  if(_keyMenuOpen && !e.target.closest('#key-menu-overlay') && !e.target.closest('#key-name-display')){
+    closeKeyMenu();
+  }
+}, {passive: true});
+document.addEventListener('mousedown', e => {
+  if(_keyMenuOpen && !e.target.closest('#key-menu-overlay') && !e.target.closest('#key-name-display')){
+    closeKeyMenu();
+  }
+});
+
 </script>
 
 <!-- Taalkiezer -->
@@ -6177,5 +6512,8 @@ window.addEventListener('resize', () => {
     <span id="nk-share-icon" class="nk-share-icon-el"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></span>
   </div>
 </div>
+
+<!-- Toonsoortmenu: opent op press van toonsoortnaam in staf-tabs -->
+<div id="key-menu-overlay"></div>
 </body>
 </html>
