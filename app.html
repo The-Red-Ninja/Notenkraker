@@ -2033,12 +2033,11 @@ function renderStaff(clef){
   const ls = Math.round(26 + (_trap-4)*26/7); // schaalbaar: trap 1=15, trap 4=26, trap 11=52, trap 15=67
   const nLines=5;
   const staffLeft=6, staffRight=W-6;
-  // Canvas hoogte: gebruik de werkelijke CSS-hoogte van de wrap zodat de canvas-pixels
-  // 1:1 overeenkomen met de CSS-pixels — voorkomt uitrekken op Windows/desktop.
+  // Canvas hoogte = beschikbare hoogte van .staff-zone (parent van wrap)
+  // Canvas = volledige beschikbare schermhoogte zodat de balk altijd gecentreerd is
   const appH = getAppHeight ? getAppHeight() : (window.visualViewport ? window.visualViewport.height : window.innerHeight);
-  const wrapH = wrap.clientHeight || 0;
   const minH = Math.round(ls * 14); // genoeg voor vioolsleutel bij max schaal
-  const H = Math.max(wrapH > 0 ? wrapH : appH, minH, 300);
+  const H = Math.max(appH, minH, 300);
   cv.height = H;
 
   // Notenbalk: verticaal midden van het TOTALE scherm, in canvas-coördinaten
@@ -5852,12 +5851,12 @@ async function adminUpdateApp(){
   }
   adminSetStatus('⏳ Bezig met ophalen van Drive…', '#555');
 
-  // Stap 1: Haal nieuwe index.html op van Google Drive (directe download)
+  // Stap 1: Haal nieuwe app.html op van Google Drive (directe download)
   const DRIVE_ID   = '1FWM-vlgdYJiLXpNJOoN0uiGWpNnAI-S0';
   const DRIVE_URL  = `https://drive.google.com/uc?export=download&id=${DRIVE_ID}`;
   const GH_OWNER   = 'the-red-ninja';
   const GH_REPO    = 'Notenkraker';
-  const GH_PATH    = 'index.html';
+  const GH_PATH    = 'app.html';
   const GH_BRANCH  = 'main';
 
   let newContent;

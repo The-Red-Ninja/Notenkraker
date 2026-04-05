@@ -251,10 +251,10 @@ body.lang-en .nl { display: none !important; }
   <p class="hero-sub en">Hear how every note sounds in every key. Perfect for choir practice, interval training and developing perfect pitch — no instrument needed.</p>
 
   <div class="hero-cta">
-    <a href="https://the-red-ninja.github.io/Notenkraker/index.html" class="btn-dark">
+    <button onclick="triggerInstall()" class="btn-dark" id="install-btn-hero">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="12" y1="16" x2="12" y2="8"/><polyline points="8 12 12 8 16 12"/></svg>
       <span class="nl">Installeer gratis</span><span class="en">Install free</span>
-    </a>
+    </button>
     <a href="#hoe-het-werkt" class="btn-ghost nl">Hoe werkt het?</a>
     <a href="#hoe-het-werkt" class="btn-ghost en">How does it work?</a>
   </div>
@@ -532,9 +532,12 @@ body.lang-en .nl { display: none !important; }
     <p class="install-sub reveal nl">Installeer Notenkraker op je telefoon of tablet. Geen app store nodig.</p>
     <p class="install-sub reveal en">Install Notenkraker on your phone or tablet. No app store needed.</p>
     <div class="reveal">
-      <a href="https://the-red-ninja.github.io/Notenkraker/index.html" class="btn-dark">
+      <button onclick="triggerInstall()" class="btn-dark" id="install-btn-cta">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="12" y1="16" x2="12" y2="8"/><polyline points="8 12 12 8 16 12"/></svg>
-        <span class="nl">Open de app</span><span class="en">Open the app</span>
+        <span class="nl">Installeer gratis</span><span class="en">Install free</span>
+      </button>
+      <a href="https://the-red-ninja.github.io/Notenkraker/app.html" class="btn-ghost" id="open-app-btn" style="margin-top:10px;">
+        <span class="nl">Of open direct in browser</span><span class="en">Or open in browser</span>
       </a>
     </div>
     <div class="platform-badges reveal">
@@ -549,7 +552,7 @@ body.lang-en .nl { display: none !important; }
 
 <!-- ══ FOOTER ══ -->
 <footer>
-  <p>© 2026 Notenkraker &nbsp;·&nbsp; <a href="https://the-red-ninja.github.io/Notenkraker/index.html"><span class="nl">Open de app</span><span class="en">Open app</span></a> &nbsp;·&nbsp; <a href="mailto:useful.nuts.apps@gmail.com">Contact</a></p>
+  <p>© 2026 Notenkraker &nbsp;·&nbsp; <a href="https://the-red-ninja.github.io/Notenkraker/app.html"><span class="nl">Open de app</span><span class="en">Open app</span></a> &nbsp;·&nbsp; <a href="mailto:useful.nuts.apps@gmail.com">Contact</a></p>
 </footer>
 
 <script>
@@ -573,6 +576,39 @@ const obs = new IntersectionObserver(entries => {
   );
 }, {threshold:.1});
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+
+<script>
+// ── PWA Install prompt ──────────────────────────────
+let _installPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installPrompt = e;
+  // Toon installeerknop als de prompt beschikbaar is
+  ['install-btn-hero','install-btn-cta'].forEach(id => {
+    const btn = document.getElementById(id);
+    if(btn) btn.style.display = 'inline-flex';
+  });
+});
+
+window.addEventListener('appinstalled', () => {
+  _installPrompt = null;
+});
+
+function triggerInstall(){
+  if(_installPrompt){
+    // Navigeer eerst naar app.html zodat de juiste manifest actief is
+    _installPrompt.prompt();
+    _installPrompt.userChoice.then(choice => {
+      if(choice.outcome === 'accepted') _installPrompt = null;
+    });
+  } else {
+    // Geen install-prompt beschikbaar (al geinstalleerd, iOS, of desktop zonder prompt)
+    // Stuur naar de app zodat de browser daar de installatie kan aanbieden
+    window.location.href = 'https://the-red-ninja.github.io/Notenkraker/app.html';
+  }
+}
 </script>
 </body>
 </html>
