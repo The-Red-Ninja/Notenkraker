@@ -580,34 +580,10 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
 <script>
 // ── PWA Install prompt ──────────────────────────────
-let _installPrompt = null;
-
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  _installPrompt = e;
-  // Toon installeerknop als de prompt beschikbaar is
-  ['install-btn-hero','install-btn-cta'].forEach(id => {
-    const btn = document.getElementById(id);
-    if(btn) btn.style.display = 'inline-flex';
-  });
-});
-
-window.addEventListener('appinstalled', () => {
-  _installPrompt = null;
-});
-
+// Installeerknop → stuur naar app.html met #install signaal
+// De app heeft zelf de install-flow: thema kiezen → prompt
 function triggerInstall(){
-  if(_installPrompt){
-    // Navigeer eerst naar app.html zodat de juiste manifest actief is
-    _installPrompt.prompt();
-    _installPrompt.userChoice.then(choice => {
-      if(choice.outcome === 'accepted') _installPrompt = null;
-    });
-  } else {
-    // Geen install-prompt beschikbaar (al geinstalleerd, iOS, of desktop zonder prompt)
-    // Stuur naar de app zodat de browser daar de installatie kan aanbieden
-    window.location.href = 'https://the-red-ninja.github.io/Notenkraker/app.html';
-  }
+  window.location.href = 'https://the-red-ninja.github.io/Notenkraker/app.html#install';
 }
 </script>
 </body>

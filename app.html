@@ -4877,7 +4877,22 @@ window.addEventListener('appinstalled', () => {
 });
 
 // Controleer bij elke pageshow (ook na herstart na verwijdering)
-window.addEventListener('pageshow', () => { _checkInstalled(); });
+window.addEventListener('pageshow', () => {
+  _checkInstalled();
+  // Vanuit landingspagina: #install → open thema-keuzescherm direct
+  if(window.location.hash === '#install'){
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+    // Wacht tot install-prompt beschikbaar is (max 3s)
+    const tryOpen = (attempts) => {
+      if(_deferredInstall){
+        installApp();
+      } else if(attempts > 0){
+        setTimeout(() => tryOpen(attempts - 1), 300);
+      }
+    };
+    setTimeout(() => tryOpen(10), 200);
+  }
+});
 
 function installApp(){
   if(!_deferredInstall) return;
