@@ -4924,12 +4924,21 @@ function closeInstallThemePicker(){
 }
 
 function installWithTheme(t, g){
-  // Stel thema in (manifest wisselt mee via setThemeIcons)
-  persSetKarakter(t, g);
+  // Thema direct zetten (niet via persSetKarakter om cirkel te vermijden)
+  _persTheme  = t;
+  _persGender = g;
+  localStorage.setItem('nk_theme',  t);
+  localStorage.setItem('nk_gender', g);
+  _persUpdateGrid();
+  persApplyIcon();
+  _updateInstallLabel();
   closeInstallThemePicker();
-  // Kleine vertraging zodat browser de nieuwe manifest-link heeft opgepikt
+  // Install-prompt tonen met het nieuwe manifest
   setTimeout(() => {
-    if(!_deferredInstall) return;
+    if(!_deferredInstall){
+      // Geen prompt: app wellicht al geinstalleerd of iOS — gewoon sluiten
+      return;
+    }
     _deferredInstall.prompt();
     _deferredInstall.userChoice.then(choice => {
       if(choice.outcome === 'accepted') _deferredInstall = null;
@@ -5249,6 +5258,7 @@ function _persUpdateGrid(){
 
 // Gecombineerde setter: één klik op avatar stelt gender én thema in
 function persSetKarakter(t, g){
+  const prevKey = _themaKey();
   _persTheme  = t;
   _persGender = g;
   localStorage.setItem('nk_theme',  t);
@@ -5259,8 +5269,16 @@ function persSetKarakter(t, g){
   // Sluit alle menu's en ga naar tab 0
   closeSettings();
   showTab(0);
-  // Herinstallatie: toon thema-keuzescherm
-  openInstallThemeOverlay();
+  // Als thema gewijzigd en install-prompt beschikbaar: stil promten
+  if(_themaKey() !== prevKey && _deferredInstall){
+    setTimeout(() => {
+      if(!_deferredInstall) return;
+      _deferredInstall.prompt();
+      _deferredInstall.userChoice.then(choice => {
+        if(choice.outcome === 'accepted') _deferredInstall = null;
+      });
+    }, 80);
+  }
 }
 
 
