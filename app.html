@@ -4800,7 +4800,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     // URL direct opschonen zodat verversen niet opnieuw triggert
     history.replaceState(null, '', window.location.pathname);
     let _installWaitTimer = setTimeout(()=> openInstallThemeOverlay(), 600);
-    window.addEventListener('beforeinstallprompt', ()=>{\
+    window.addEventListener('beforeinstallprompt', ()=>{
       clearTimeout(_installWaitTimer);
       openInstallThemeOverlay();
     }, {once: true});
