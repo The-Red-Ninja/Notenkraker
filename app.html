@@ -897,6 +897,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 /* Settings-panel: verberg notenbalk-items als geopend vanuit tab0 */
 #settings-panel[data-ctx="tab0"] .settings-staff-only { display:none; }
 #settings-panel[data-ctx="tab0"] .settings-toggle-row { display:none; }
+#settings-panel[data-ctx="tab0"] .settings-clef-swap { display:flex !important; }
 /* Meer-knop: alleen op tab0 */
 #settings-panel[data-ctx="staff"] .settings-meer-row { display:none; }
 
@@ -943,7 +944,11 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 
 
 /* ── LANDSCAPE op mobiel (breedte > hoogte, klein scherm) ── */
-@media screen and (orientation: landscape) and (max-height: 500px) {
+/* Landscape-modus: alleen op mobiele telefoons
+   Voorwaarden: landscape + hoogte < 500px + breedte < 900px (geen tablet/desktop)
+   Op Windows/desktop is de viewport altijd breder dan 900px in een PWA-venster
+   Op tablets is de hoogte in landscape doorgaans > 500px */
+@media screen and (orientation: landscape) and (max-height: 500px) and (max-width: 899px) {
   /* Verberg tabbalk, toonsoortnaam en midi-volumeslider */
   #tabs        { display: none !important; }
   #top-bar     { display: none !important; }
@@ -997,7 +1002,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
       <div class="h-vol-wrap" id="h-vol-wrap-0" style="height:24px;">
         <div class="h-vol-bg"></div>
         <input type="range" class="h-vol-thumb" id="pvol-h0"
-          min="20" max="100" step="1" value="20"
+          min="0" max="75" step="1" value="20"
           oninput="setNoteVol(this.value,'h0')"
           onchange="setNoteVol(this.value,'h0')">
       </div>
@@ -1008,7 +1013,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 <!-- PAGE 0: Vioolsleutel -->
 <div class="page staff-page active" id="page0" data-clef="treble">
   <div style="display:none">
-    <input type="range" id="pvol-note-1" min="20" max="100" step="1" value="20">
+    <input type="range" id="pvol-note-1" min="0" max="75" step="1" value="20">
   </div>
   <!-- MIDDEN: notenbalk zone (vult ruimte tussen top en bedieningsblok) -->
   <div class="staff-zone" id="staff-zone-treble">
@@ -1106,7 +1111,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 <!-- PAGE 2: Bassleutel -->
 <div class="page staff-page" id="page2" data-clef="bass">
   <div style="display:none">
-    <input type="range" id="pvol-note-2" min="20" max="100" step="1" value="20">
+    <input type="range" id="pvol-note-2" min="0" max="75" step="1" value="20">
   </div>
   <!-- MIDDEN: notenbalk zone (vult ruimte tussen top en bedieningsblok) -->
   <div class="staff-zone" id="staff-zone-bass">
@@ -1284,6 +1289,51 @@ const PITCH_MIN=410, PITCH_MAX=446;
 // STATE
 // ════════════════════════════════════════════════════
 let currentTab=0, isMinor=false, keyIdx=0, pitchHz=440;
+
+// ── Sleutel-volgorde voorkeur ──────────────────────────────────
+let _clefSwap = localStorage.getItem('nk_clef_swap') === '1';
+
+function clefForTab(tab){
+  if(tab === 0) return _clefSwap ? 'bass' : 'treble';
+  if(tab === 2) return _clefSwap ? 'treble' : 'bass';
+  return null;
+}
+function tabForClef(clef){
+  if(clef === 'treble') return _clefSwap ? 2 : 0;
+  if(clef === 'bass')   return _clefSwap ? 0 : 2;
+  return 1;
+}
+function applyClefSwap(){
+  const p0 = document.getElementById('page0');
+  const p2 = document.getElementById('page2');
+  if(p0) p0.setAttribute('data-clef', _clefSwap ? 'bass'   : 'treble');
+  if(p2) p2.setAttribute('data-clef', _clefSwap ? 'treble' : 'bass');
+  // Wissel tab-icoontjes
+  const t0 = document.getElementById('tab0');
+  const t2 = document.getElementById('tab2');
+  if(t0 && t2){
+    const ic0 = _clefSwap ? '\uD834\uDD22' : '\uD834\uDD1E'; // 𝄢 : 𝄞
+    const ic2 = _clefSwap ? '\uD834\uDD1E' : '\uD834\uDD22';
+    const sz0 = _clefSwap ? '38' : '28';
+    const sz2 = _clefSwap ? '28' : '38';
+    t0.innerHTML = '<div style="height:72px;overflow:hidden;position:relative;width:28px;"><span style="font-family:Bravura,Georgia,serif;font-size:' + sz0 + 'px;line-height:1;position:absolute;bottom:8px;left:0;color:inherit;">' + ic0 + '</span></div>';
+    t2.innerHTML = '<span style="font-family:Bravura,Georgia,serif;font-size:' + sz2 + 'px;line-height:1;display:block;transform:translateY(2px);color:inherit;">' + ic2 + '</span>';
+  }
+  // Update toggle staat
+  const tog = document.getElementById('set-clef-swap');
+  if(tog) tog.classList.toggle('on', _clefSwap);
+  // Herteken
+  if(typeof renderStaff === 'function'){
+    renderStaff('treble'); renderStaff('bass');
+    if(typeof setupTouch === 'function'){ setupTouch('treble'); setupTouch('bass'); }
+    if(typeof renderMiniStaves === 'function') renderMiniStaves();
+  }
+}
+function toggleClefSwap(){
+  _clefSwap = !_clefSwap;
+  localStorage.setItem('nk_clef_swap', _clefSwap ? '1' : '0');
+  applyClefSwap();
+}
 
 // ── Auto-toonsoortdetectie state ──
 // ── Auto-toonsoortdetectie state: standaard UIT bij eerste keer ──
@@ -4017,7 +4067,7 @@ function syncPlayerUI(){
   // Sync vol sliders op _noteVol (0.2-1.0 → 20-100)
   ['pvol-h0','pvol-note-1','pvol-note-2'].forEach(id=>{
     const vl = document.getElementById(id);
-    if(vl) vl.value = Math.round(window._noteVol*100);
+    if(vl) vl.value = Math.min(75, Math.round(window._noteVol*100));
   });
   // Zoom-col hoogte afstemmen na layout
   requestAnimationFrame(()=>{ alignZoomCol('1'); alignZoomCol('2'); });
@@ -4025,7 +4075,7 @@ function syncPlayerUI(){
 
 // Noot-volumeslider (tab 1, topbar tabs 2&3): regelt _noteVol
 function setNoteVol(val, slot){
-  const pct = Math.max(20, Math.min(100, parseFloat(val)));
+  const pct = Math.max(0, Math.min(75, parseFloat(val)));
   window._noteVol = pct / 100;
   // Zorg dat audioCtx en masterGain bestaan
   getACtx();
@@ -4036,7 +4086,7 @@ function setNoteVol(val, slot){
   }
   // Sync alle drie noot-vol sliders
   ['pvol-h0','pvol-note-1','pvol-note-2'].forEach(id=>{
-    const s=document.getElementById(id); if(s) s.value=pct;
+    const s=document.getElementById(id); if(s) s.value=Math.min(75,pct);
   });
 }
 
@@ -4837,6 +4887,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   loadI18n().then(applyTranslations);
   // Personaliseer init: knoppen + icoon
   persInit();
+  applyClefSwap();
 
   updateLabels(); renderQuint();
 
@@ -5330,16 +5381,29 @@ function persSetKarakter(t, g){
   // Sluit alle menu's en ga naar tab 0
   closeSettings();
   showTab(0);
-  // Als thema gewijzigd en install-prompt beschikbaar: stil promten
+  // Als thema gewijzigd en install-prompt beschikbaar: vraag herinstallatie
   if(_themaKey() !== prevKey && _deferredInstall){
-    setTimeout(() => {
-      if(!_deferredInstall) return;
-      _deferredInstall.prompt();
-      _deferredInstall.userChoice.then(choice => {
-        if(choice.outcome === 'accepted') _deferredInstall = null;
-      });
-    }, 80);
+    setTimeout(() => showReinstallToast(), 300);
   }
+}
+
+function showReinstallToast(){
+  const toast = document.getElementById('reinstall-toast');
+  if(toast) toast.style.display = 'flex';
+}
+function closeReinstallToast(){
+  const toast = document.getElementById('reinstall-toast');
+  if(toast) toast.style.display = 'none';
+}
+function reinstallWithCurrentTheme(){
+  closeReinstallToast();
+  if(!_deferredInstall) return;
+  const prompt = _deferredInstall;
+  _deferredInstall = null;
+  prompt.prompt();
+  prompt.userChoice.then(() => {
+    window.location.replace('https://the-red-ninja.github.io/Notenkraker/app.html');
+  });
 }
 
 
@@ -5726,6 +5790,12 @@ function showTabAnimated(i, dir){
   <div class="settings-toggle-item" id="set-solfege" onclick="toggleSetting('solfege')">
     <div class="settings-switch"></div><span data-i18n="solfege">Solfège</span>
   </div>
+  <!-- Sleutelvolgorde toggle: alleen zichtbaar vanuit toonsoort-tab -->
+  <div class="settings-toggle-item settings-clef-swap" id="set-clef-swap"
+       onclick="toggleClefSwap()" style="display:none;">
+    <div class="settings-switch"></div>
+    <span>Bas eerst</span>
+  </div>
   <div class="settings-meer-row">
     <button onclick="showAppPanelAtSettingsPos()" style="background:none;border:none;width:100%;display:flex;align-items:center;cursor:pointer;padding:0;">
       <div style="width:36px;height:22px;flex-shrink:0;"></div>
@@ -5815,6 +5885,25 @@ function showTabAnimated(i, dir){
 </div>
 
 
+
+<!-- Herinstalleer-toast: verschijnt na themawisseling -->
+<div id="reinstall-toast" style="
+  display:none; position:fixed; bottom:0; left:0; right:0; z-index:9998;
+  background:#2a2a2a; color:#fff; font-family:Arial,sans-serif;
+  padding:14px 16px; align-items:center; justify-content:space-between; gap:10px;
+  box-shadow:0 -2px 12px rgba(0,0,0,.3);">
+  <span style="font-size:13px; line-height:1.4; flex:1;">Ook de app opnieuw<br>installeren met dit icoon?</span>
+  <div style="display:flex; gap:8px; flex-shrink:0;">
+    <button onclick="closeReinstallToast()" style="
+      padding:8px 14px; border-radius:8px; border:1.5px solid #666;
+      background:transparent; color:#ccc; font-size:13px; cursor:pointer;
+      font-family:Arial,sans-serif;">Nee</button>
+    <button onclick="reinstallWithCurrentTheme()" style="
+      padding:8px 14px; border-radius:8px; border:none;
+      background:#f5f0e8; color:#222; font-size:13px; font-weight:bold;
+      cursor:pointer; font-family:Arial,sans-serif;">Ja</button>
+  </div>
+</div>
 <div id="personaliseer-panel">
   <div id="pers-avatar-grid">
     <button class="pers-avatar-btn active" id="pers-btn-lm" onclick="persSetKarakter('l','m')">
