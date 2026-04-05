@@ -6,7 +6,7 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#f0ebe0",
-  "orientation": "portrait",
+  "orientation": "any",
   "lang": "nl",
   "icons": [
     {

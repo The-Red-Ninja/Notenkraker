@@ -941,6 +941,34 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 #sounds-familiar-btn.visible { display:block; }
 #sounds-familiar-btn:active { background:#e8e0d4; }
 
+
+/* ── LANDSCAPE op mobiel (breedte > hoogte, klein scherm) ── */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  /* Verberg tabbalk, toonsoortnaam en midi-volumeslider */
+  #tabs        { display: none !important; }
+  #top-bar     { display: none !important; }
+
+  /* App vult nu het hele scherm */
+  #app { height: 100dvh; }
+
+  /* Pages: geen top-padding reserveren voor tabbalk */
+  .page { padding-top: 2px; }
+
+  /* Pitch-section: compacter */
+  .pitch-section { margin-top: 0; }
+
+  /* Player mini-rij iets compacter */
+  #pmini-wrap-0 { margin-top: 2px; }
+
+  /* Notenbalk-zone iets meer ruimte */
+  .staff-zone { min-height: 0; }
+
+  /* Control-block acc-knoppen: iets kleiner in landscape */
+  .acc-btn { width: 46px; height: 46px; font-size: 24px; }
+  .shift-btn { width: 46px; height: 46px; }
+  .acc-play-btn { width: 46px; height: 46px; }
+  .player-play-btn { width: 46px; height: 46px; }
+}
 </style>
 </head>
 <body>
@@ -5965,6 +5993,30 @@ async function adminUpdateApp(){
 function adminShowStats(){
   window.open('https://analytics.google.com/analytics/web/#/p530373658/reports/reportinghub', '_blank');
 }
+
+// ── Oriëntatie-wijziging: herbereken layout ──────────────────────
+function onOrientationChange(){
+  // Kleine vertraging: browser heeft tijd nodig om viewport aan te passen
+  setTimeout(() => {
+    updateStaffZone();
+    resizeQuintCanvas();
+    if(clefForTab(currentTab)) renderStaff(clefForTab(currentTab));
+    renderMiniStaves();
+    buildPitch();
+  }, 150);
+}
+
+if(screen.orientation){
+  screen.orientation.addEventListener('change', onOrientationChange);
+} else {
+  window.addEventListener('orientationchange', onOrientationChange);
+}
+window.addEventListener('resize', () => {
+  // Debounce: voorkom te veel herberekeningen
+  clearTimeout(window._resizeTimer);
+  window._resizeTimer = setTimeout(onOrientationChange, 80);
+});
+
 </script>
 
 <!-- Taalkiezer -->
