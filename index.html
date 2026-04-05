@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
+<script>
+// Direct naar app als gebruiker eerder "gebruik zonder installatie" heeft gekozen
+// of als de app al geïnstalleerd is (standalone modus)
+if(localStorage.getItem('nk_skip_landing') === '1' ||
+   window.matchMedia('(display-mode: standalone)').matches ||
+   window.navigator.standalone === true){
+  window.location.replace('https://the-red-ninja.github.io/Notenkraker/app.html');
+}
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="apple-touch-icon" href="icons/icon-lm-180.png">
@@ -255,10 +264,10 @@ body.lang-en .nl { display: none !important; }
   <p class="hero-sub en">Hear how every note sounds in every key. Perfect for choir practice, interval training and developing perfect pitch — no instrument needed.</p>
 
   <div class="hero-cta">
-    <button onclick="triggerInstall()" class="btn-dark" id="install-btn-hero">
+    <a href="https://the-red-ninja.github.io/Notenkraker/app.html?install=1" class="btn-dark">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="12" y1="16" x2="12" y2="8"/><polyline points="8 12 12 8 16 12"/></svg>
       <span class="nl">Installeer gratis</span><span class="en">Install free</span>
-    </button>
+    </a>
     <a href="#hoe-het-werkt" class="btn-ghost nl">Hoe werkt het?</a>
     <a href="#hoe-het-werkt" class="btn-ghost en">How does it work?</a>
   </div>
@@ -536,10 +545,10 @@ body.lang-en .nl { display: none !important; }
     <p class="install-sub reveal nl">Installeer Notenkraker op je telefoon of tablet. Geen app store nodig.</p>
     <p class="install-sub reveal en">Install Notenkraker on your phone or tablet. No app store needed.</p>
     <div class="reveal">
-      <button onclick="triggerInstall()" class="btn-dark" id="install-btn-cta">
+      <a href="https://the-red-ninja.github.io/Notenkraker/app.html?install=1" class="btn-dark">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="12" y1="16" x2="12" y2="8"/><polyline points="8 12 12 8 16 12"/></svg>
         <span class="nl">Installeer gratis</span><span class="en">Install free</span>
-      </button>
+      </a>
       <a href="https://the-red-ninja.github.io/Notenkraker/app.html" class="btn-ghost" id="open-app-btn" style="margin-top:10px;">
         <span class="nl">Of open direct in browser</span><span class="en">Or open in browser</span>
       </a>
@@ -559,7 +568,7 @@ body.lang-en .nl { display: none !important; }
   <p>© 2026 Notenkraker &nbsp;·&nbsp; <a href="https://the-red-ninja.github.io/Notenkraker/app.html"><span class="nl">Open de app</span><span class="en">Open app</span></a> &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection#4a3f392f2c3f2664243f3e39642b3a3a390a2d272b232664292527">Contact</a></p>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 function setLang(l){
   document.body.className = 'lang-' + l;
   document.documentElement.lang = l;
@@ -582,32 +591,6 @@ const obs = new IntersectionObserver(entries => {
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 </script>
 
-<script>
-// ── PWA Install prompt ──────────────────────────────
-let _installPrompt = null;
 
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  _installPrompt = e;
-});
-
-window.addEventListener('appinstalled', () => {
-  _installPrompt = null;
-});
-
-function triggerInstall(){
-  if(_installPrompt){
-    // Prompt beschikbaar: direct installeren via de landingspagina
-    _installPrompt.prompt();
-    _installPrompt.userChoice.then(choice => {
-      if(choice.outcome === 'accepted') _installPrompt = null;
-    });
-  } else {
-    // Geen prompt (iOS, al geinstalleerd, of desktop zonder PWA-support)
-    // → stuur naar app met ?install=1 zodat het thema-keuzescherm opent
-    window.location.href = 'https://the-red-ninja.github.io/Notenkraker/app.html?install=1';
-  }
-}
-</script>
 </body>
 </html>

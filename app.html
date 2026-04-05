@@ -4940,6 +4940,12 @@ function closeInstallThemePicker(){
   if(overlay) overlay.style.display = 'none';
 }
 
+function skipInstall(){
+  // Onthoud keuze: landingspagina redirect voortaan direct naar app
+  localStorage.setItem('nk_skip_landing', '1');
+  closeInstallThemePicker();
+}
+
 function installWithTheme(t, g){
   // Thema opslaan
   _persTheme  = t;
@@ -5768,7 +5774,7 @@ function showTabAnimated(i, dir){
       </button>
     </div>
     <div id="overlay-no-install" style="display:none; margin-bottom:10px;">
-      <button onclick="closeInstallThemePicker()" style="
+      <button onclick="skipInstall()" style="
         width:100%; padding:10px; border:1.5px solid #c8bfa8; border-radius:8px;
         background:#f5f0e8; color:#444; font-size:13px; cursor:pointer;
         font-family:Georgia,serif;">Gebruik zonder installatie</button>
