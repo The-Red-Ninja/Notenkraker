@@ -559,7 +559,7 @@ body.lang-en .nl { display: none !important; }
   <p>© 2026 Notenkraker &nbsp;·&nbsp; <a href="https://the-red-ninja.github.io/Notenkraker/app.html"><span class="nl">Open de app</span><span class="en">Open app</span></a> &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection#4a3f392f2c3f2664243f3e39642b3a3a390a2d272b232664292527">Contact</a></p>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 function setLang(l){
   document.body.className = 'lang-' + l;
   document.documentElement.lang = l;
@@ -584,5 +584,30 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
 <script>
 // ── PWA Install prompt ──────────────────────────────
-// Installeerknop → stuur naar app.html met #install signaal
-// De app heeft zelf de install-flow: thema kieze
+let _installPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installPrompt = e;
+});
+
+window.addEventListener('appinstalled', () => {
+  _installPrompt = null;
+});
+
+function triggerInstall(){
+  if(_installPrompt){
+    // Prompt beschikbaar: direct installeren via de landingspagina
+    _installPrompt.prompt();
+    _installPrompt.userChoice.then(choice => {
+      if(choice.outcome === 'accepted') _installPrompt = null;
+    });
+  } else {
+    // Geen prompt (iOS, al geinstalleerd, of desktop zonder PWA-support)
+    // → stuur naar app met ?install=1 zodat het thema-keuzescherm opent
+    window.location.href = 'https://the-red-ninja.github.io/Notenkraker/app.html?install=1';
+  }
+}
+</script>
+</body>
+</html>
