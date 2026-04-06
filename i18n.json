@@ -4,7 +4,7 @@
     "major": "Majeur",
     "minor": "Mineur",
     "chord": "Akkoord",
-    "openMp3": "Open mp3-bestand…",
+    "openMp3": "Open muziek",
     "keyMajor": "Groot",
     "keyMinor": "Klein",
     "zoom": "Zoom",
@@ -63,14 +63,15 @@
     "analysisDetected": "🎼 {key} gedetecteerd",
     "analysisTuning": "🎵 Stemming: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} toonsoortwijzigingen",
-    "reloadMp3": "Laad nieuwe mp3"
+    "adjustments": "Aanpassingen",
+    "bassFirst": "Bas eerst"
   },
   "en": {
     "tab1": "Key",
     "major": "Major",
     "minor": "Minor",
     "chord": "Chord",
-    "openMp3": "Open mp3 file…",
+    "openMp3": "Open music",
     "keyMajor": "Major",
     "keyMinor": "Minor",
     "zoom": "Zoom",
@@ -129,14 +130,15 @@
     "analysisDetected": "🎼 {key} detected",
     "analysisTuning": "🎵 Tuning: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} key changes",
-    "reloadMp3": "Load new mp3"
+    "adjustments": "Adjustments",
+    "bassFirst": "Bass first"
   },
   "de": {
     "tab1": "Tonart",
     "major": "Dur",
     "minor": "Moll",
     "chord": "Akkord",
-    "openMp3": "MP3-Datei öffnen…",
+    "openMp3": "Musik öffnen",
     "keyMajor": "Dur",
     "keyMinor": "Moll",
     "zoom": "Zoom",
@@ -195,14 +197,15 @@
     "analysisDetected": "🎼 {key} erkannt",
     "analysisTuning": "🎵 Stimmung: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} Tonartenwechsel",
-    "reloadMp3": "Neue MP3 laden"
+    "adjustments": "Anpassungen",
+    "bassFirst": "Bass zuerst"
   },
   "fr": {
     "tab1": "Tonalité",
     "major": "Majeur",
     "minor": "Mineur",
     "chord": "Accord",
-    "openMp3": "Ouvrir un fichier mp3…",
+    "openMp3": "Ouvrir la musique",
     "keyMajor": "Majeur",
     "keyMinor": "Mineur",
     "zoom": "Zoom",
@@ -261,14 +264,15 @@
     "analysisDetected": "🎼 {key} détecté",
     "analysisTuning": "🎵 Accord : {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} changements de tonalité",
-    "reloadMp3": "Charger un nouveau mp3"
+    "adjustments": "Réglages",
+    "bassFirst": "Basse en premier"
   },
   "es": {
     "tab1": "Tonalidad",
     "major": "Mayor",
     "minor": "Menor",
     "chord": "Acorde",
-    "openMp3": "Abrir archivo mp3…",
+    "openMp3": "Abrir música",
     "keyMajor": "Mayor",
     "keyMinor": "Menor",
     "zoom": "Zoom",
@@ -327,14 +331,15 @@
     "analysisDetected": "🎼 {key} detectado",
     "analysisTuning": "🎵 Afinación: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} cambios de tonalidad",
-    "reloadMp3": "Cargar nuevo mp3"
+    "adjustments": "Ajustes",
+    "bassFirst": "Bajo primero"
   },
   "it": {
     "tab1": "Tonalità",
     "major": "Maggiore",
     "minor": "Minore",
     "chord": "Accordo",
-    "openMp3": "Apri file mp3…",
+    "openMp3": "Apri musica",
     "keyMajor": "Maggiore",
     "keyMinor": "Minore",
     "zoom": "Zoom",
@@ -393,14 +398,15 @@
     "analysisDetected": "🎼 {key} rilevato",
     "analysisTuning": "🎵 Accordatura: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} cambi di tonalità",
-    "reloadMp3": "Carica nuovo mp3"
+    "adjustments": "Impostazioni",
+    "bassFirst": "Basso prima"
   },
   "pt": {
     "tab1": "Tonalidade",
     "major": "Maior",
     "minor": "Menor",
     "chord": "Acorde",
-    "openMp3": "Abrir ficheiro mp3…",
+    "openMp3": "Abrir música",
     "keyMajor": "Maior",
     "keyMinor": "Menor",
     "zoom": "Zoom",
@@ -459,14 +465,15 @@
     "analysisDetected": "🎼 {key} detetado",
     "analysisTuning": "🎵 Afinação: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} mudanças de tonalidade",
-    "reloadMp3": "Carregar novo mp3"
+    "adjustments": "Ajustes",
+    "bassFirst": "Baixo primeiro"
   },
   "ru": {
     "tab1": "Тональность",
     "major": "Мажор",
     "minor": "Минор",
     "chord": "Аккорд",
-    "openMp3": "Открыть mp3-файл…",
+    "openMp3": "Открыть музыку",
     "keyMajor": "Мажор",
     "keyMinor": "Минор",
     "zoom": "Масштаб",
@@ -525,14 +532,15 @@
     "analysisDetected": "🎼 {key} определена",
     "analysisTuning": "🎵 Строй: {hz} Гц ({lbl})",
     "analysisChanges": "+ {n} смен тональности",
-    "reloadMp3": "Загрузить новый mp3"
+    "adjustments": "Настройки",
+    "bassFirst": "Бас первым"
   },
   "hi": {
     "tab1": "स्वरमान",
     "major": "मेजर",
     "minor": "माइनर",
     "chord": "कॉर्ड",
-    "openMp3": "mp3 फ़ाइल खोलें…",
+    "openMp3": "संगीत खोलें",
     "keyMajor": "मेजर",
     "keyMinor": "माइनर",
     "zoom": "ज़ूम",
@@ -591,14 +599,15 @@
     "analysisDetected": "🎼 {key} पहचाना गया",
     "analysisTuning": "🎵 स्वरमेल: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} स्वरमान परिवर्तन",
-    "reloadMp3": "नया mp3 लोड करें"
+    "adjustments": "समायोजन",
+    "bassFirst": "बास पहले"
   },
   "pl": {
     "tab1": "Tonacja",
     "major": "Dur",
     "minor": "Moll",
     "chord": "Akord",
-    "openMp3": "Otwórz plik mp3…",
+    "openMp3": "Otwórz muzykę",
     "keyMajor": "Dur",
     "keyMinor": "Moll",
     "zoom": "Zoom",
@@ -657,14 +666,15 @@
     "analysisDetected": "🎼 {key} wykryto",
     "analysisTuning": "🎵 Strój: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} zmiany tonacji",
-    "reloadMp3": "Wczytaj nowe mp3"
+    "adjustments": "Ustawienia",
+    "bassFirst": "Bas najpierw"
   },
   "cs": {
     "tab1": "Tónina",
     "major": "Dur",
     "minor": "Moll",
     "chord": "Akord",
-    "openMp3": "Otevřít mp3 soubor…",
+    "openMp3": "Otevřít hudbu",
     "keyMajor": "Dur",
     "keyMinor": "Moll",
     "zoom": "Zoom",
@@ -723,14 +733,15 @@
     "analysisDetected": "🎼 {key} rozpoznána",
     "analysisTuning": "🎵 Ladění: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} změny tóniny",
-    "reloadMp3": "Načíst nové mp3"
+    "adjustments": "Nastavení",
+    "bassFirst": "Baskytara první"
   },
   "sv": {
     "tab1": "Tonart",
     "major": "Dur",
     "minor": "Moll",
     "chord": "Ackord",
-    "openMp3": "Öppna mp3-fil…",
+    "openMp3": "Öppna musik",
     "keyMajor": "Dur",
     "keyMinor": "Moll",
     "zoom": "Zoom",
@@ -789,14 +800,15 @@
     "analysisDetected": "🎼 {key} identifierad",
     "analysisTuning": "🎵 Stämning: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} tonartsskiften",
-    "reloadMp3": "Ladda ny mp3"
+    "adjustments": "Inställningar",
+    "bassFirst": "Bas först"
   },
   "zh": {
     "tab1": "调性",
     "major": "大调",
     "minor": "小调",
     "chord": "和弦",
-    "openMp3": "打开mp3文件…",
+    "openMp3": "打开音乐",
     "keyMajor": "大调",
     "keyMinor": "小调",
     "zoom": "缩放",
@@ -855,6 +867,7 @@
     "analysisDetected": "🎼 已识别 {key}",
     "analysisTuning": "🎵 音准：{hz} Hz（{lbl}）",
     "analysisChanges": "+ {n} 个调性变化",
-    "reloadMp3": "加载新MP3"
+    "adjustments": "设置",
+    "bassFirst": "低音优先"
   }
 }
