@@ -633,16 +633,6 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
 }
 #app-panel.open { display:block; }
 /* Personaliseer submenu — dynamische breedte */
-#personaliseer-panel {
-  display:none; position:fixed; z-index:151;
-  background:#fff; border:1.5px solid #c8bfa8;
-  border-radius:10px;
-  box-shadow:0 2px 14px rgba(0,0,0,0.13); padding:8px;
-  width:clamp(180px, 44vw, 260px);
-  max-width:calc(100vw - 16px);
-}
-#personaliseer-panel.open { display:block; }
-
 /* Avatar-grid: 2×2 */
 #pers-avatar-grid {
   display:grid; grid-template-columns:1fr 1fr; gap:6px;
@@ -661,8 +651,8 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
   background:#f0ebe0;
 }
 .pers-avatar-btn img {
-  width:calc(clamp(180px, 44vw, 260px) / 2 - 22px);
-  height:calc(clamp(180px, 44vw, 260px) / 2 - 22px);
+  width:44px;
+  height:44px;
   object-fit:contain; display:block; border-radius:6px;
 }
 .pers-avatar-lbl {
@@ -919,6 +909,10 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 /* Meer-knop: alleen op tab0 (aanpassingen-row blijft zichtbaar in staff-context) */
 #settings-panel[data-ctx="staff"] .settings-meer-only  { display:none; }
 #settings-panel[data-ctx="staff"] .settings-clef-swap  { display:flex !important; }
+/* Tab0-only items: verborgen in staff-context */
+#settings-panel[data-ctx="staff"] .settings-tab0-only  { display:none; }
+.settings-tab0-only { display:none; }
+#settings-panel[data-ctx="tab0"] .settings-tab0-only   { display:block; }
 /* Standaard verborgen totdat ctx gezet is */
 .settings-clef-swap { display:none; }
 
@@ -2772,7 +2766,7 @@ function closeSettings(){
   document.getElementById('settings-panel').classList.remove('open');
   document.getElementById('app-panel').classList.remove('open');
   document.getElementById('lang-picker').classList.remove('open');
-  document.getElementById('personaliseer-panel').classList.remove('open');
+  // personaliseer-panel verwijderd
   closeAanpassingenPanel();
   document.querySelectorAll('.page.staff-page').forEach(p=>{
     p.classList.remove('settings-open');
@@ -2841,33 +2835,18 @@ function toggleAanpassingenMenu(e){
   panel.style.bottom = 'auto';
 }
 
-function showAppPanelAtSettingsPos(){
-  const panel  = document.getElementById('settings-panel');
-  const apanel = document.getElementById('app-panel');
-  const pr = panel.getBoundingClientRect();
-  // Zelfde breedte en rechterkant als settings-panel
-  apanel.style.width  = Math.round(pr.width) + 'px';
-  apanel.style.right  = (window.innerWidth - pr.right) + 'px';
-  apanel.style.left   = 'auto';
-  apanel.style.bottom = panel.style.bottom;
-  apanel.style.top    = 'auto';
-  panel.classList.remove('open');
-  document.getElementById('lang-picker').classList.remove('open');
-  document.getElementById('personaliseer-panel').classList.remove('open');
-  apanel.classList.add('open');
-}
 document.addEventListener('click', e=>{
   const panel   = document.getElementById('settings-panel');
   const apanel  = document.getElementById('app-panel');
   const lpicker = document.getElementById('lang-picker');
-  const ppanel  = document.getElementById('personaliseer-panel');
+  
   const aanpPanel = document.getElementById('aanpassingen-panel');
   const anyOpen = (panel  && panel.classList.contains('open')) ||
                   (apanel && apanel.classList.contains('open')) ||
                   (aanpPanel && aanpPanel.style.display !== 'none');
   const clickedOutside = anyOpen &&
     !panel.contains(e.target)  && !apanel.contains(e.target) &&
-    !(ppanel    && ppanel.contains(e.target)) &&
+    
     !(aanpPanel && aanpPanel.contains(e.target)) &&
     !lpicker.contains(e.target) && !e.target.closest('.settings-btn');
   if(clickedOutside){
@@ -5035,15 +5014,19 @@ let _deferredInstall = null;
 
 // Toon of verberg de installatierij op basis van installatiestatus
 function _updateInstallLabel(){
-  const lbl = document.getElementById('install-label');
-  if(!lbl) return;
+  const lbl  = document.getElementById('install-label');
+  const lbl2 = document.getElementById('install-label-settings');
   const naam = (_persGender === 'v') ? T('avatarFemale') : T('avatarMale');
-  lbl.innerHTML = T('install') + '<br>' + naam;
+  const txt  = T('install') + ' ' + naam;
+  if(lbl)  lbl.innerHTML  = T('install') + '<br>' + naam;
+  if(lbl2) lbl2.textContent = txt;
 }
 
 function _updateInstallRow(visible){
-  const row = document.getElementById('install-row');
-  if(row) row.style.display = visible ? 'flex' : 'none';
+  const row  = document.getElementById('install-row');
+  const row2 = document.getElementById('install-row-settings');
+  if(row)  row.style.display  = visible ? 'flex'  : 'none';
+  if(row2) row2.style.display = visible ? 'block' : 'none';
   if(visible) _updateInstallLabel();
 }
 
@@ -5178,61 +5161,10 @@ function shareApp(){
   }
   closeSettings();
 }
-
-// Gedeelde positionering voor subpanelen (personaliseer, taal):
-// Positioneer subpaneel: op touch naast moedermenu, op Windows rechts ernaast
-function _positionSubPanel(el){
-  const apanel  = document.getElementById('app-panel');
-  const apr     = apanel.getBoundingClientRect();
-
-  // Minimale breedte = breedste van app-panel en de andere subpanelen
-  const siblings = ['personaliseer-panel','lang-picker']
-    .map(id => document.getElementById(id))
-    .filter(Boolean);
-  const wasHidden = siblings.filter(s => s !== el && !s.classList.contains('open'));
-  wasHidden.forEach(s => { s.style.visibility='hidden'; s.style.display='block'; });
-  const maxSibW = Math.max(...siblings.map(s => s.offsetWidth), apanel.offsetWidth);
-  wasHidden.forEach(s => { s.style.visibility=''; s.style.display=''; });
-
-  const botVal = apanel.style.bottom || (window.innerHeight - apr.bottom) + 'px';
-
-  if(document.body.classList.contains('is-windows')){
-    // Windows: subpaneel rechts naast app-panel, vertikaal uitgelijnd
-    el.style.visibility = 'hidden';
-    el.style.display    = 'block';
-    const elW = el.offsetWidth || maxSibW;
-    el.style.visibility = '';
-    el.style.display    = '';
-
-    const leftOfSub = apr.right + 4;
-    const clampedLeft = Math.min(leftOfSub, window.innerWidth - elW - 4);
-    el.style.left   = clampedLeft + 'px';
-    el.style.right  = 'auto';
-    el.style.bottom = botVal;
-    el.style.top    = 'auto';
-  } else {
-    // Touch/mobiel: subpaneel op zelfde positie als app-panel
-    el.style.minWidth = maxSibW + 'px';
-    el.style.left     = apr.left + 'px';
-    el.style.right    = 'auto';
-    el.style.bottom   = botVal;
-    el.style.top      = 'auto';
-  }
-}
-
-function togglePersonaliseerMenu(e){
-  e.stopPropagation();
-  const sub = document.getElementById('personaliseer-panel');
-  document.getElementById('lang-picker').classList.remove('open');
-  if(sub.classList.contains('open')){ sub.classList.remove('open'); return; }
-  sub.classList.add('open');
-  _positionSubPanel(sub);
-}
-
 function toggleLangPicker(e){
   e.stopPropagation();
   const picker = document.getElementById('lang-picker');
-  document.getElementById('personaliseer-panel').classList.remove('open');
+  // personaliseer-panel verwijderd
   if(picker.classList.contains('open')){ picker.classList.remove('open'); return; }
   picker.classList.add('open');
   _positionSubPanel(picker);
@@ -5245,7 +5177,7 @@ function toggleLangPicker(e){
     if(!row) return;
     let _leaveTimer = null;
     const panel = document.getElementById(
-      rowId === 'personaliseer-row' ? 'personaliseer-panel' : 'lang-picker'
+      'lang-picker'
     );
     function cancelLeave(){ clearTimeout(_leaveTimer); }
     function scheduleClose(){
@@ -5256,8 +5188,8 @@ function toggleLangPicker(e){
     row.addEventListener('mouseenter', ()=>{
       if(!document.body.classList.contains('is-windows')) return;
       cancelLeave();
-      const apanel = document.getElementById('app-panel');
-      if(!apanel || !apanel.classList.contains('open')) return;
+      const spanel = document.getElementById('settings-panel');
+      if(!spanel || !spanel.classList.contains('open')) return;
       openFn({ stopPropagation:()=>{} });
     });
     row.addEventListener('mouseleave', ()=>{
@@ -5270,14 +5202,13 @@ function toggleLangPicker(e){
     }
   }
   document.addEventListener('DOMContentLoaded', ()=>{
-    onHoverOpen('personaliseer-row', togglePersonaliseerMenu);
-    onHoverOpen('lang-row',          toggleLangPicker);
+    onHoverOpen('lang-row', toggleLangPicker);
   });
 })();
 
 function openContact(){
   window.location.href = 'mailto:useful.nuts.apps@gmail.com';
-  document.getElementById('personaliseer-panel').classList.remove('open');
+  // personaliseer-panel verwijderd
   closeSettings();
 }
 function openFeedback(){
@@ -5308,17 +5239,22 @@ function flagImg(code, size){
 }
 
 function initFlags(){
-  // Imgs zijn al inline in de HTML — alleen current-flag bijwerken naar actieve taal
-  const cf = document.getElementById('current-flag');
-  if(cf) cf.innerHTML = flagImg(_currentLang || 'nl', 17);
+  const cf  = document.getElementById('current-flag');
+  const cf2 = document.getElementById('current-flag-settings');
+  const img = flagImg(_currentLang || 'nl', 17);
+  if(cf)  cf.innerHTML  = img;
+  if(cf2) cf2.innerHTML = img;
 }
 
 function selectLang(code){
   _currentLang = code;
   _i18nLang    = code;
   const l = LANGS[code];
-  const cf = document.getElementById('current-flag');
-  if(cf) cf.innerHTML = flagImg(code, 17);
+  const img = flagImg(code, 17);
+  const cf  = document.getElementById('current-flag');
+  const cf2 = document.getElementById('current-flag-settings');
+  if(cf)  cf.innerHTML  = img;
+  if(cf2) cf2.innerHTML = img;
   const cl = document.getElementById('current-lang-label');
   if(cl) cl.textContent = l.label;
   document.querySelectorAll('.lang-option').forEach(el =>
@@ -5479,22 +5415,12 @@ function persSetKarakter(t, g){
   _persUpdateGrid();
   persApplyIcon();
   _updateInstallLabel();
-  // Sluit alle menu's en ga naar tab 0
+  // Sluit alle menu's
   closeSettings();
-  showTab(0);
-  // Als thema gewijzigd: toon herinstallatie-toast
-  if(_themaKey() !== prevKey && _deferredInstall){
-    setTimeout(() => showReinstallToast(), 300);
+  // Als thema gewijzigd: open install-overlay zodat gebruiker opnieuw kan installeren
+  if(_themaKey() !== prevKey){
+    setTimeout(() => openInstallThemeOverlay(), 200);
   }
-}
-
-function showReinstallToast(){
-  const toast = document.getElementById('reinstall-toast');
-  if(toast) toast.style.display = 'flex';
-}
-function closeReinstallToast(){
-  const toast = document.getElementById('reinstall-toast');
-  if(toast) toast.style.display = 'none';
 }
 
 function persInit(){
@@ -5872,12 +5798,76 @@ function showTabAnimated(i, dir){
   <div class="settings-toggle-item settings-clef-swap" id="set-clef-swap" onclick="toggleClefSwap()">
     <div class="settings-switch"></div><span data-i18n="bassFirst">Bas eerst</span>
   </div>
-  <div class="settings-meer-row settings-meer-only">
-    <button onclick="showAppPanelAtSettingsPos()" style="background:none;border:none;width:100%;display:flex;align-items:center;cursor:pointer;padding:0;">
-      <div style="width:36px;height:22px;flex-shrink:0;"></div>
-      <span style="flex:1;padding-left:9px;font-size:12.5px;font-family:Arial,sans-serif;color:#888;text-align:left;" data-i18n="more">meer</span>
-      <span style="font-size:10px;color:#bbb;flex-shrink:0;">▶</span>
-    </button>
+  <!-- Tab0: inline items (vervangt meer-menu) -->
+  <div class="settings-tab0-only" style="margin-top:4px;">
+    <hr class="settings-autokey-divider" style="display:block !important;">
+    <div class="settings-meer-row">
+      <button onclick="shareApp();closeSettings();" style="background:none;border:none;width:100%;display:flex;align-items:center;cursor:pointer;padding:0;">
+        <span class="app-panel-icon" style="width:36px;text-align:center;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></span>
+        <span style="flex:1;padding-left:9px;font-size:12.5px;font-family:Arial,sans-serif;color:#444;text-align:left;" data-i18n="share">Delen</span>
+      </button>
+    </div>
+    <!-- Personaliseer: avatar-grid inline -->
+    <div style="padding:6px 4px 2px;">
+      <span style="font-size:11px;font-family:Arial,sans-serif;color:#999;padding-left:4px;" data-i18n="personalize">Personaliseer</span>
+      <div id="pers-avatar-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px 0 2px;">
+        <button class="pers-avatar-btn active" id="pers-btn-lm" onclick="persSetKarakter('l','m')">
+          <img src="icons/icon-lm-96.png" alt="Blanke man">
+          <span class="pers-avatar-lbl">Notenkraker</span>
+        </button>
+        <button class="pers-avatar-btn" id="pers-btn-dm" onclick="persSetKarakter('d','m')">
+          <img src="icons/icon-dm-96.png" alt="Donkere man">
+          <span class="pers-avatar-lbl">Notenkraker</span>
+        </button>
+        <button class="pers-avatar-btn" id="pers-btn-lv" onclick="persSetKarakter('l','v')">
+          <img src="icons/icon-lv-96.png" alt="Blanke vrouw">
+          <span class="pers-avatar-lbl">Notenkraakster</span>
+        </button>
+        <button class="pers-avatar-btn" id="pers-btn-dv" onclick="persSetKarakter('d','v')">
+          <img src="icons/icon-dv-96.png" alt="Donkere vrouw">
+          <span class="pers-avatar-lbl">Notenkraakster</span>
+        </button>
+      </div>
+    </div>
+    <div class="settings-meer-row">
+      <button onclick="openContact();closeSettings();" style="background:none;border:none;width:100%;display:flex;align-items:center;cursor:pointer;padding:0;">
+        <span class="app-panel-icon" style="width:36px;text-align:center;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="20" height="16" rx="2" fill="#222"/><path d="M2 7 L12 13 L22 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <span style="flex:1;padding-left:9px;font-size:12.5px;font-family:Arial,sans-serif;color:#444;text-align:left;" data-i18n="featrequest">Schrijf ons</span>
+      </button>
+    </div>
+    <div class="admin-row">
+      <div class="settings-meer-row">
+        <button onclick="adminUpdateApp();" style="background:none;border:none;width:100%;display:flex;align-items:center;cursor:pointer;padding:0;">
+          <span style="width:36px;text-align:center;flex-shrink:0;">🔄</span>
+          <span style="flex:1;padding-left:9px;font-size:12.5px;font-family:Arial,sans-serif;color:#444;text-align:left;" data-i18n="updateApp">Update de app</span>
+        </button>
+      </div>
+      <div id="admin-update-status" style="padding:2px 4px 2px 45px;font-size:11px;color:#888;">Gereed.</div>
+      <div id="admin-token-wrap" style="padding:2px 4px 4px 45px;">
+        <input id="admin-token-input" type="password" placeholder="GitHub token" autocomplete="off"
+          onchange="adminSaveToken(this.value)" value="" style="width:100%;font-size:12px;padding:4px;border:1px solid #c8bfa8;border-radius:6px;">
+      </div>
+      <div class="settings-meer-row">
+        <button onclick="adminShowStats();" style="background:none;border:none;width:100%;display:flex;align-items:center;cursor:pointer;padding:0;">
+          <span style="width:36px;text-align:center;flex-shrink:0;">📊</span>
+          <span style="flex:1;padding-left:9px;font-size:12.5px;font-family:Arial,sans-serif;color:#444;text-align:left;line-height:1.3;">Gebruikers­statistieken</span>
+        </button>
+      </div>
+    </div>
+    <div class="settings-meer-row">
+      <button onclick="toggleLangPicker(event);" style="background:none;border:none;width:100%;display:flex;align-items:center;cursor:pointer;padding:0;">
+        <div style="width:36px;height:22px;flex-shrink:0;"></div>
+        <span style="flex:1;padding-left:9px;font-size:12.5px;font-family:Arial,sans-serif;color:#444;text-align:left;" data-i18n="language">Taal</span>
+        <span id="current-flag-settings" style="line-height:1;flex-shrink:0;margin-right:4px;"></span>
+        <span style="font-size:10px;color:#bbb;flex-shrink:0;">▶</span>
+      </button>
+    </div>
+    <div class="settings-meer-row" id="install-row-settings" style="display:none;">
+      <button onclick="installApp();closeSettings();" style="background:none;border:none;width:100%;display:flex;align-items:center;cursor:pointer;padding:0;">
+        <div style="width:36px;height:22px;flex-shrink:0;"></div>
+        <span id="install-label-settings" style="flex:1;padding-left:9px;font-size:12.5px;font-family:Arial,sans-serif;color:#444;text-align:left;line-height:1.3;">Installeer de Notenkraker</span>
+      </button>
+    </div>
   </div>
   <hr class="settings-autokey-divider">
   <div class="settings-toggle-item" id="set-autokey" onclick="toggleSetting('autokey')">
@@ -5980,46 +5970,6 @@ function showTabAnimated(i, dir){
       width:100%; padding:10px; border:1.5px solid #ccc; border-radius:8px;
       background:transparent; color:#888; font-size:13px; cursor:pointer;
       font-family:Georgia,serif;">Annuleren</button>
-  </div>
-</div>
-
-<div id="personaliseer-panel">
-  <div id="pers-avatar-grid">
-    <button class="pers-avatar-btn active" id="pers-btn-lm" onclick="persSetKarakter('l','m')">
-      <img src="icons/icon-lm-96.png" alt="Blanke man">
-      <span class="pers-avatar-lbl">Notenkraker</span>
-    </button>
-    <button class="pers-avatar-btn" id="pers-btn-dm" onclick="persSetKarakter('d','m')">
-      <img src="icons/icon-dm-96.png" alt="Donkere man">
-      <span class="pers-avatar-lbl">Notenkraker</span>
-    </button>
-    <button class="pers-avatar-btn" id="pers-btn-lv" onclick="persSetKarakter('l','v')">
-      <img src="icons/icon-lv-96.png" alt="Blanke vrouw">
-      <span class="pers-avatar-lbl">Notenkraakster</span>
-    </button>
-    <button class="pers-avatar-btn" id="pers-btn-dv" onclick="persSetKarakter('d','v')">
-      <img src="icons/icon-dv-96.png" alt="Donkere vrouw">
-      <span class="pers-avatar-lbl">Notenkraakster</span>
-    </button>
-  </div>
-  <hr class="app-panel-divider">
-  <div class="app-panel-row" onclick="openContact()">
-    <span class="app-panel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="20" height="16" rx="2" fill="#222"/><path d="M2 7 L12 13 L22 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
-    <span class="app-panel-label" data-i18n="featrequest">Featrequest</span>
-  </div>
-  <hr class="app-panel-divider admin-row">
-  <div class="app-panel-row admin-row" onclick="adminUpdateApp()">
-    <span class="app-panel-icon">🔄</span>
-    <span class="app-panel-label">Update de app</span>
-  </div>
-  <div id="admin-update-status">Gereed.</div>
-  <div id="admin-token-wrap">
-    <input id="admin-token-input" type="password" placeholder="GitHub token" autocomplete="off"
-      onchange="adminSaveToken(this.value)" value="">
-  </div>
-  <div class="app-panel-row admin-row" onclick="adminShowStats()">
-    <span class="app-panel-icon">📊</span>
-    <span class="app-panel-label" style="line-height:1.3">Gebruikers-<br>statistieken</span>
   </div>
 </div>
 
