@@ -106,14 +106,12 @@ button { touch-action:manipulation; }
 .mode-btn.active { background:#2a2a2a; color:#fff; border-color:#2a2a2a; box-shadow:0 1px 4px rgba(0,0,0,0.18); }
 .key-name-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; gap:10px; }
 .key-name-big { font-size:15px; font-weight:bold; color:#222; font-family:Georgia,serif; letter-spacing:.2px; text-align:center; cursor:pointer; }
-.chord-btn-tab0 { display:none; /* vervangen door kwintencirkel */ } .chord-btn-tab0-DISABLED { flex-shrink:0; padding:9px 16px; background:#fff; border:1.5px solid #aaa; border-radius:20px; color:#444; font-size:12px; font-family:Georgia,serif; cursor:pointer; white-space:nowrap; touch-action:none; user-select:none; -webkit-user-select:none; letter-spacing:0.4px; transition:background .2s,border-color .2s,color .2s,box-shadow .2s; }
-.chord-btn-tab0.held { background:#f5f0e8; color:#444; border-color:#888; border-width:2px; box-shadow:0 0 0 3px rgba(160,140,110,0.35), inset 0 1px 3px rgba(0,0,0,0.08); }
+.chord-btn-tab0 { display:none; /* vervangen door kwintencirkel */ }
 .main-row { display:flex; gap:10px; align-items:flex-start; }
 .left-col { display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
 
 .mini-staves-col { display:flex; flex-direction:column; gap:0; }
 #mini-system-canvas { width:100%; display:block; background:#fff; }
-#camera-feed { display:none; width:100%; border-radius:6px; margin-top:6px; }
 
 /* Right-col inside main-row: staves + akkoord, fills quint height */
 .right-col { flex:1; display:flex; flex-direction:column; gap:3px; min-width:0; height:225px; }
@@ -135,9 +133,7 @@ hr.div { border:none; border-top:1px solid #ddd; margin:5px 0; }
 
 /* MP3 PLAYER */
 .player-wrap { margin:0 2px 0; }
-.player-outer { display:flex; gap:6px; align-items:flex-start; }
-.player-zoom-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex-shrink:0; padding-top:2px; }
-.player-zoom-label { font-size:9px; color:#aaa; writing-mode:vertical-rl; transform:rotate(180deg); letter-spacing:1px; }
+
 .player-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:5px; }
 .player-speed-row { display:flex; align-items:center; gap:8px; }
 .player-speed-label { font-size:12px; color:#666; white-space:nowrap; }
@@ -150,7 +146,7 @@ input[type=range].speed-slider::-webkit-slider-thumb {
   -webkit-appearance:none; width:22px; height:22px; background:#333;
   border-radius:50%; border:2px solid #fff; box-shadow:0 1px 4px #0003;
 }
-.player-file-row { display:flex; align-items:center; gap:8px; }
+
 .player-file-btn {
   flex:1; padding:9px 10px; background:#f5f0e8; border:1.5px solid #c8bfa8;
   border-radius:10px; color:#444; font-size:13px; font-family:Georgia,serif;
@@ -191,7 +187,7 @@ input[type=range].speed-slider::-webkit-slider-thumb {
   position:absolute; top:0; left:0; width:2px; height:100%;
   background:#333; pointer-events:none; transform:translateX(0);
 }
-.player-time-row { display:flex; justify-content:space-between; font-size:11px; color:#888; padding:0 1px; }
+
 input[type=range].seek-slider {
   -webkit-appearance:none; width:100%; height:4px; background:#c8bfa8;
   border-radius:3px; outline:none; cursor:pointer; margin:0;
@@ -402,7 +398,6 @@ input[type=range].note-pos-slider-thumb::-webkit-slider-thumb {
 .zoom-slider-wrap {
   position:relative; width:22px; flex:1; flex-shrink:0;
 }
-.player-zoom-col { display:flex; flex-direction:column; align-items:center; flex-shrink:0; }
 
 /* Vol-slider rechts in acc-row: hoogte = acc-btn hoogte */
 .acc-vol-col {
@@ -968,7 +963,6 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 #sounds-familiar-btn.visible { display:block; }
 #sounds-familiar-btn:active { background:#e8e0d4; }
 
-
 /* ── LANDSCAPE op mobiel (breedte > hoogte, klein scherm) ── */
 @media screen and (orientation: landscape) and (max-height: 500px) and (max-width: 899px) {
   /* Verberg tabbalk, toonsoortnaam en midi-volumeslider */
@@ -1171,8 +1165,6 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
       </div>
       <!-- Notenbalkjes onder de akkoordknop -->
       <div id="p0-staves" style="flex:1;min-height:0;">
-        <canvas id="mini-treble" style="display:none;"></canvas>
-        <canvas id="mini-bass" style="display:none;"></canvas>
         <canvas id="mini-system-canvas" style="cursor:pointer;width:100%;display:block;" onclick="miniSystemClick(event)"></canvas>
       </div>
     </div>
@@ -1239,7 +1231,6 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
     </div>
   </div>
 </div>
-
 
 </div>
 <script>
@@ -1371,11 +1362,6 @@ function clefForTab(tab){
   if(tab===2) return _clefSwap?'treble':'bass';
   return null;
 }
-function tabForClef(clef){
-  if(clef==='treble') return _clefSwap?2:0;
-  if(clef==='bass')   return _clefSwap?0:2;
-  return 1;
-}
 function applyClefSwap(){
   const p0=document.getElementById('page0');
   const p2=document.getElementById('page2');
@@ -1408,6 +1394,11 @@ function applyClefSwap(){
     const trebleCtrl = document.getElementById('ctrl-treble');
     const bassCtrl   = document.getElementById('ctrl-bass');
     if(trebleZone && bassZone && trebleCtrl && bassCtrl){
+      // Verberg beide pages tijdens DOM-mutaties om flash te voorkomen
+      const p0vis = page0.style.visibility;
+      const p2vis = page2.style.visibility;
+      page0.style.visibility = 'hidden';
+      page2.style.visibility = 'hidden';
       if(_clefSwap){
         // bass op page0, treble op page2
         if(trebleZone.parentElement !== page2) page2.insertBefore(trebleZone, page2.firstChild);
@@ -1421,6 +1412,11 @@ function applyClefSwap(){
         if(trebleCtrl.parentElement !== page0) page0.appendChild(trebleCtrl);
         if(bassCtrl.parentElement   !== page2) page2.appendChild(bassCtrl);
       }
+      // Herstel visibility na layout (next frame)
+      requestAnimationFrame(()=>{
+        page0.style.visibility = p0vis;
+        page2.style.visibility = p2vis;
+      });
     }
   }
   if(typeof renderStaff==='function'){
@@ -1434,7 +1430,6 @@ function toggleClefSwap(){
   localStorage.setItem('nk_clef_swap',_clefSwap?'1':'0');
   applyClefSwap();
 }
-
 
 // ── Auto-toonsoortdetectie state ──
 // ── Auto-toonsoortdetectie state: standaard UIT bij eerste keer ──
@@ -1456,7 +1451,8 @@ function _updateSoundsFamiliarBtn(){
   btn.classList.toggle('visible', show);
 }
 
-function showLastToast(){
+function showLastToast(e){
+  if(e) e.stopPropagation();
   if(!_lastToastLines) return;
   const el = document.getElementById('analysis-toast');
   if(el && el.classList.contains('show')){
@@ -1589,16 +1585,6 @@ function updateLabels(){
   const k=cKey();
   const dn=translateKeyName(k.name);
   document.getElementById('key-name-display').textContent=dn;
-  // Top-bar labels op tabs 2 & 3
-  const tl=document.getElementById('staff-key-label-top-treble');
-  const bl=document.getElementById('staff-key-label-top-bass');
-  if(tl) tl.textContent=dn;
-  if(bl) bl.textContent=dn;
-  // Achterwaartse compatibiliteit
-  const sl1=document.getElementById('staff-label-treble');
-  const sl2=document.getElementById('staff-label-bass');
-  if(sl1) sl1.textContent=dn;
-  if(sl2) sl2.textContent=dn;
   // Aantal mollen/kruizen onder kwintencirkel
   const accEl = document.getElementById('quint-acc-label');
   if(accEl){
@@ -1868,8 +1854,6 @@ document.getElementById('quint-canvas').addEventListener('touchend', e=>{
 // ════════════════════════════════════════════════════
 function renderMiniStaves(){ drawMiniSystem(); alignMiniStavesWithQuint(); }
 
-function drawMini(cv, clef){ /* stub */ }
-
 function drawBrace(ctx, x, yTop, yBot, ls){
   // Standaard muziek-accolade:
   // Dunne middenlijn + twee naar-buiten-buigende curven + bol uiteinden
@@ -1950,7 +1934,6 @@ function drawMiniSystem(){
   if(!cv) return;
   const p=document.getElementById('p0-right-col');
   const W=Math.max(p?p.clientWidth:120, 80);
-  cv.width=W;
 
   // ls wordt bepaald op basis van het MAXIMALE aantal accidentalen (7) + één nootbreedte als marge.
   // Dit zorgt voor een stabiele, vaste grootte ongeacht de huidige toonsoort.
@@ -1969,7 +1952,9 @@ function drawMiniSystem(){
 
   const staffH=4*ls, gap=3*ls, topPad=Math.round(ls*3.5), botPad=Math.round(ls*0.5);
   const H=topPad+staffH+gap+staffH+botPad;
-  cv.height=H;
+  // Alleen resetten als afmetingen echt veranderen (anders wordt canvas onnodig leeggemaakt)
+  if(cv.width  !== W) cv.width  = W;
+  if(cv.height !== H) cv.height = H;
   const ctx=cv.getContext('2d');
   ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
   const tTop=topPad, tBot=tTop+4*ls, bTop=tBot+gap, bBot=bTop+4*ls;
@@ -2217,18 +2202,18 @@ function renderStaff(clef){
   const wrap=document.getElementById(clef==='treble'?'treble-wrap':'bass-wrap');
   const page = cv.closest('.page') || pageForClef(clef);
   const W = wrap.clientWidth || (page ? page.clientWidth : 0) || window.innerWidth || 360;
-  cv.width=W;
 
   const _trap = window._staffTrap || 11;
   const ls = Math.round(26 + (_trap-4)*26/7); // schaalbaar: trap 1=15, trap 4=26, trap 11=52, trap 15=67
   const nLines=5;
   const staffLeft=6, staffRight=W-6;
-  // Canvas hoogte = beschikbare hoogte van .staff-zone (parent van wrap)
-  // Canvas = volledige beschikbare schermhoogte zodat de balk altijd gecentreerd is
   const appH = getAppHeight ? getAppHeight() : (window.visualViewport ? window.visualViewport.height : window.innerHeight);
-  const minH = Math.round(ls * 14); // genoeg voor vioolsleutel bij max schaal
+  const minH = Math.round(ls * 14);
   const H = Math.max(appH, minH, 300);
-  cv.height = H;
+
+  // Alleen resetten als afmetingen echt veranderen — anders wist canvas.width=W de inhoud voor niets
+  if(cv.width !== W)  cv.width  = W;
+  if(cv.height !== H) cv.height = H;
 
   // Notenbalk: verticaal midden van het TOTALE scherm, in canvas-coördinaten
   // Canvas begint op tabH px onder het scherm-top (staff-page start na tabbalk)
@@ -2329,9 +2314,6 @@ function renderStaff(clef){
   }
   ctx.textBaseline = 'alphabetic';
   cv._afterAcc = accStart + numAcc*accSpacing + 8;
-  // Sync slider padding na elke render (ls kan veranderd zijn)
-  if(typeof updateNotePosSliderPadding === 'function') updateNotePosSliderPadding(clef);
-
 
   // ── Touch noten (multitouch: max 3) ──
   const st=SS[clef];
@@ -2576,9 +2558,6 @@ function drawLedgers(ctx,step,nx,nr,ls,nLines,botLine){
   }
 }
 
-function renderTrebleStaff(){renderStaff('treble');}
-function renderBassStaff(){renderStaff('bass');}
-
 // ════════════════════════════════════════════════════
 // KEY-AWARE MIDI
 // ════════════════════════════════════════════════════
@@ -2651,7 +2630,6 @@ function onNamePosInput(val, clef){
   else renderStaff('bass');
   saveStaffSettings();
 }
-function notePosRelease(clef){}
 
 function showSettingsPreview(){
   // Toon hulpnoot C3/C5 op beide staves
@@ -2728,29 +2706,6 @@ function syncToggleBtns(){
 }
 
 let _settingsAnchor = null;
-// Bereken de bottom-waarde: bovenkant van de "open mp3-balk" van de actieve tab
-function getBottomForPanels(){
-  // Zoek het zichtbare player-open of pmini-wrap element
-  const activeTab = currentTab;
-  let ref = null;
-  if(activeTab === 1){
-    ref = document.getElementById('pmini-wrap-0');
-  } else {
-    const mountIdx = activeTab === 0 ? '1' : '2';
-    ref = document.getElementById('player-open-' + mountIdx);
-    if(!ref || ref.style.display === 'none'){
-      ref = document.getElementById('player-mount-' + mountIdx);
-    }
-  }
-  if(ref){
-    const r = ref.getBoundingClientRect();
-    return Math.round(window.innerHeight - r.top);
-  }
-  // Fallback: bovenkant acc-row
-  const accRow = document.querySelector('.page.active .acc-row');
-  if(accRow) return Math.round(window.innerHeight - accRow.getBoundingClientRect().top);
-  return 80;
-}
 
 function toggleSettings(btn){
   const panel  = document.getElementById('settings-panel');
@@ -2884,21 +2839,6 @@ function toggleAanpassingenMenu(e){
   panel.style.right  = 'auto';
   panel.style.top    = top + 'px';
   panel.style.bottom = 'auto';
-}
-
-function openScaleSliderFromMenu(){
-  closeAanpassingenPanel();
-  closeSettings();
-  const clef = clefForTab ? clefForTab(currentTab) : (currentTab===0?'treble':'bass');
-  if(clef) setTimeout(()=>activateScaleSlider(clef), 50);
-}
-
-function openNotePosSliderFromMenu(){
-  // Houd settings-open-staff actief voor note-pos-row zichtbaarheid
-  document.getElementById('settings-panel').classList.remove('open');
-  closeAanpassingenPanel();
-  const clef = clefForTab ? clefForTab(currentTab) : (currentTab===0?'treble':'bass');
-  if(clef) activateNotePosSlider(clef);
 }
 
 function showAppPanelAtSettingsPos(){
@@ -3348,7 +3288,12 @@ function buildPitch(){
       <div class="pitch-ticks">${PITCH_STOPS.map(p=>`<span>${p.hz}</span>`).join('')}</div>
     </div>`;
   ['0'].forEach(s=>{
-    document.getElementById('pitch-section-'+s).innerHTML=t.replaceAll('S',s);
+    const sec = document.getElementById('pitch-section-'+s);
+    if(!sec) return;
+    // Alleen rebuilden als de slider nog niet bestaat (voorkomt onnodige reflow)
+    if(!document.getElementById('ps-'+s)){
+      sec.innerHTML=t.replaceAll('S',s);
+    }
   });
   updPitch(pitchHz,null);
 }
@@ -3385,8 +3330,6 @@ function updPitch(v,active){
   });
 }
 
-
-
 // ════════════════════════════════════════════════════
 // MP3 PLAYER — shared audio state, rendered into both staff pages
 // ════════════════════════════════════════════════════
@@ -3415,7 +3358,7 @@ function buildPlayerMini(mountId){
     <div id="pmini-wrap-${idx}" style="margin-top:4px;position:relative;margin-left:calc(-1*var(--safe));margin-right:calc(-1*var(--safe));width:calc(100% + 2*var(--safe));">
       <!-- Sounds Familiar knop: absoluut, eigen hoogte boven container -->
       <div style="position:relative;height:0;">
-        <button id="sounds-familiar-btn" onclick="showLastToast()">🔍 <span data-i18n="soundsFamiliar">Sounds Familiar</span></button>
+        <button id="sounds-familiar-btn" onclick="showLastToast(event)">🔍 <span data-i18n="soundsFamiliar">Sounds Familiar</span></button>
       </div>
       <!-- Hz-slider: volle breedte -->
       <div style="padding:0 0 4px;">
@@ -3819,22 +3762,6 @@ function _detectKeyTransitions(decoded){
   return transitions;
 }
 
-function _detectKeySegments(decoded, segSecs){
-  const sr=decoded.sampleRate, raw=decoded.getChannelData(0), refA4=pitchHz;
-  const blockSize=4096, totalSec=decoded.duration, numSegs=Math.max(1,Math.floor(totalSec/segSecs));
-  const results=[];
-  for(let s=0;s<numSegs;s++){
-    const startS=Math.floor(s*segSecs*sr), endS=Math.min(decoded.length,Math.floor((s+1)*segSecs*sr));
-    const chroma=new Float32Array(12);
-    for(let off=startS;off+blockSize<=endS;off+=blockSize){
-      const bc=_chromaBlock(raw,off,blockSize,sr,refA4);
-      for(let p=0;p<12;p++) chroma[p]+=bc[p];
-    }
-    results.push({timeSec:s*segSecs, key:_bestKey(chroma)});
-  }
-  return results;
-}
-
 function _fmtTime(sec){ const m=Math.floor(sec/60),s=Math.floor(sec%60); return m+':'+String(s).padStart(2,'0'); }
 
 let _analysisToastTimer = null;
@@ -4139,24 +4066,6 @@ function setupVolSliderListeners(){
   }
 }
 
-function positionTab0VolSlider(){
-  const timeRow  = document.getElementById('ptime-row-0');
-  const volWrap  = document.getElementById('pvol-wrap-0');
-  const miniWrap = document.getElementById('pmini-wrap-0');
-  if(!pitchEl || !timeRow || !volWrap || !miniWrap) return;
-  const baseRect  = miniWrap.getBoundingClientRect();
-  const pitchRect = pitchEl.getBoundingClientRect();
-  const timeRect  = timeRow.getBoundingClientRect();
-  const top    = pitchRect.top  - baseRect.top;
-  const bottom = timeRect.bottom - baseRect.top;
-  const h = Math.max(20, bottom - top);
-  volWrap.style.height = h + 'px';
-  volWrap.style.marginTop = top + 'px';
-  // Remove the stretch from parent
-  const col = document.getElementById('pvol-col-0');
-  if(col){ col.style.top = '0'; col.style.bottom = 'auto'; }
-}
-
 function volTouchStart(tabIdx){
   const rootPc = cKey().root % 12;
   // Tab1=viool: oct5 (MIDI 72+), Tab2=bas: oct3 (MIDI 48+)
@@ -4189,49 +4098,6 @@ function volTouchEnd(){
     renderStaff(clef);
   });
   renderMiniStaves();
-}
-
-function setVol(val, slot, showLabel){
-  const prev = window._noteVol || 1.0;
-  window._noteVol = parseFloat(val) / 100;
-  const ratio = prev > 0 ? window._noteVol / prev : window._noteVol;
-
-  // Live: schaal gain van alle klinkende oscillator-noten
-  if(audioCtx && audioCtx.state !== 'closed'){
-    const scaleNode = n => {
-      if(!n || !n.gain) return;
-      const g = n.gain.gain;
-      const cur = g.value;
-      g.cancelScheduledValues(audioCtx.currentTime);
-      g.setValueAtTime(Math.max(0, Math.min(1.5, cur * ratio)), audioCtx.currentTime);
-    };
-    chordNodes.forEach(scaleNode);
-    _volTouchNodes.forEach(scaleNode);
-    ['treble','bass'].forEach(cl => { if(SS[cl].node) scaleNode(SS[cl].node); });
-  }
-
-  ['0','1','2','acc-1','acc-2'].forEach(i=>{
-    const sl = document.getElementById('pvol-'+i);
-    if(sl && i !== slot) sl.value = val;
-    const lbl = document.getElementById('pvollabel-'+i);
-    if(lbl){
-      if(showLabel){
-        const pct = (200 - parseFloat(val)) / 150;
-        lbl.style.top    = Math.round(pct * 120) + 'px';
-        lbl.style.display = 'block';
-        lbl.textContent   = Math.round(parseFloat(val)) + '%';
-      } else {
-        lbl.style.display = 'none';
-      }
-    }
-  });
-}
-
-function hideVolLabel(slot){
-  ['0','1','2'].forEach(i=>{
-    const lbl = document.getElementById('pvollabel-'+i);
-    if(lbl) lbl.style.display = 'none';
-  });
 }
 
 function syncPlayerUI(){
@@ -4285,6 +4151,8 @@ function setMp3Vol(val, slot){
 
 function syncMp3State(){
   const hasFile = !!(playerState.audio && playerState.fileName);
+  const reloadRow = document.getElementById('reload-mp3-row');
+  if(reloadRow) reloadRow.style.display = hasFile ? '' : 'none';
   ['1','2'].forEach(i=>{
     const openRow = document.getElementById('player-open-'+i);
     const content = document.getElementById('player-content-'+i);
@@ -4620,33 +4488,30 @@ function waveSeekMouse(event, idx){
 // ZOOM COL AFSTEMMEN OP BOVENKANT SEEK SLIDER
 // ════════════════════════════════════════════════════
 function alignZoomCol(idx){
-  // Zoom-elementen krijgen:
-  //   bovenkant = bovenkant wavevormbalk (nu bovenste element na swap)
-  //   onderkant = onderkant mp3-volumeslider (of waveform als geen mp3-vol)
-  const flex      = document.getElementById('player-flex-'+idx);
-  const waveWrap  = document.getElementById('pwrap-'+idx);
-  const zoomWrap  = document.getElementById('zoom-wrap-'+idx);
-  if(!flex || !waveWrap || !zoomWrap) return;
+  const flex     = document.getElementById('player-flex-'+idx);
+  const zoomWrap = document.getElementById('zoom-wrap-'+idx);
+  const seekRow  = document.getElementById('player-content-seek-'+idx);
+  const speedRow = document.querySelector('#player-content-'+idx+' .player-speed-row');
+  if(!flex || !zoomWrap || !seekRow || !speedRow) return;
 
-  const flexTop   = flex.getBoundingClientRect().top;
-  const waveTop   = waveWrap.getBoundingClientRect().top;
+  const flexTop  = flex.getBoundingClientRect().top;
+  const seekTop  = seekRow.getBoundingClientRect().top;
 
-  // Onderkant: mp3-volumeslider indien zichtbaar, anders onderkant waveform
-  const mp3vol    = document.getElementById('mp3-vol-abs-'+idx);
+  // Onderkant: mp3-volumeslider indien zichtbaar, anders onderkant speed-row
+  const mp3vol = document.getElementById('mp3-vol-abs-'+idx);
   let bot;
   if(mp3vol && !mp3vol.classList.contains('hidden')){
     bot = mp3vol.getBoundingClientRect().bottom;
   } else {
-    const speedRow = document.querySelector('#player-content-'+idx+' .player-speed-row');
-    bot = speedRow ? speedRow.getBoundingClientRect().bottom : waveWrap.getBoundingClientRect().bottom;
+    bot = speedRow.getBoundingClientRect().bottom;
   }
 
-  const marginTop = Math.max(0, Math.round(waveTop - flexTop));
-  const height    = Math.max(10, Math.round(bot - waveTop));
+  const marginTop = Math.max(0, Math.round(seekTop - flexTop));
+  const height    = Math.max(10, Math.round(bot - seekTop));
 
-  zoomWrap.style.marginTop  = marginTop + 'px';
-  zoomWrap.style.height     = height + 'px';
-  zoomWrap.style.flex       = 'none';
+  zoomWrap.style.marginTop     = marginTop + 'px';
+  zoomWrap.style.height        = height + 'px';
+  zoomWrap.style.flex          = 'none';
   zoomWrap.style.paddingBottom = '0';
 }
 // Lijn de <hr> in het instellingenpaneel uit met de bovenkant van de mp3-selectiebalk
@@ -4848,24 +4713,23 @@ function positionEnharmRow(){
 }
 
 function alignMiniStavesWithQuint(){
-  const cv        = document.getElementById('quint-canvas');
+  const quintCv   = document.getElementById('quint-canvas');
   const stavesDiv = document.getElementById('p0-staves');
   const miniCv    = document.getElementById('mini-system-canvas');
-  if(!cv || !stavesDiv) return;
+  if(!quintCv || !stavesDiv || !miniCv) return;
 
-  // Onderkant kwintencirkel in viewport-coördinaten
-  const quintBot = cv.getBoundingClientRect().bottom;
+  // Gebruik canvas-hoogtes direct — geen getBoundingClientRect (vermijdt viewport-fluctuaties)
+  const quintH  = quintCv.offsetHeight || quintCv.height || 0;
+  const canvasH = miniCv.offsetHeight  || miniCv.height  || 0;
 
-  // Bovenkant van p0-staves in viewport-coördinaten
-  const stavesTop = stavesDiv.getBoundingClientRect().top;
-
-  // Hoogte van het mini-canvas (CSS hoogte)
-  const canvasH = miniCv ? miniCv.offsetHeight || miniCv.height || 100 : 100;
-
-  // marginTop zodat onderkant canvas = quintBot
-  // onderkant canvas = stavesTop + marginTop + canvasH = quintBot
-  // → marginTop = quintBot - stavesTop - canvasH
-  const marginTop = Math.max(0, Math.round(quintBot - stavesTop - canvasH));
+  // Doel: onderkant mini-canvas uitlijnen met onderkant kwintencirkel
+  // p0-staves bovenkant ≈ onderkant akkoordknop, die direct onder kwintencirkel staat.
+  // marginTop = (ruimte in p0-staves) - canvasH
+  // Ruimte ≈ quintH - hoogte van akkoordknop-rij
+  const chordRow = document.getElementById('klinkende-noten');
+  const chordH   = chordRow ? (chordRow.offsetHeight || 0) : 0;
+  const available = Math.max(0, quintH - chordH);
+  const marginTop = Math.max(0, Math.round(available - canvasH));
   stavesDiv.style.marginTop = marginTop + 'px';
 }
 function updateScaleSliderHeight(){
@@ -4956,6 +4820,40 @@ const _I18N_NL_FALLBACK = {
     'Kleine septiem','Grote septiem','Octaaf'],
   adjustments:'Aanpassingen',
   bassFirst:'Bas eerst',
+  reloadMp3:'Laad nieuwe mp3',
+  // Volledig set — synchron met i18n.json
+  avatarFemale:'Notenkraakster',
+  cancel:'Annuleren',
+  chord:'Akkoord',
+  flats:'mollen',
+  installChoose:'Kies welk icoon je op je scherm wil zien',
+  intervalAbove:'Interval boven',
+  intervalBelow:'Interval onder',
+  keyMajor:'Groot',
+  keyMinor:'Klein',
+  major:'Majeur',
+  minor:'Mineur',
+  more:'meer',
+  noteBelow:'Nootnaam onder',
+  personalize:'Personaliseer',
+  pitchKlassiek:'Klassiek',
+  pitchStandaard:'Standaard',
+  ready:'Gereed.',
+  recZoom:'opnamezoom',
+  reinstallMsg:'Ook de app opnieuw installeren met dit icoon?',
+  reinstallNo:'Nee',
+  reinstallYes:'Ja',
+  settingsTitle:'Instellingen',
+  share:'Delen',
+  shareSlogan:'Zing het voort!',
+  solfege:'Solfège',
+  tempo:'Tempo',
+  updateApp:'Update de app',
+  featrequestShort:'Schrijf ons',
+  analysisWaiting:'⏳ Auto herkenning…',
+  analysisDetected:'🎼 {key} gedetecteerd',
+  analysisTuning:'🎵 Stemming: {hz} Hz ({lbl})',
+  analysisChanges:'+ {n} toonsoortwijzigingen',
 };
 
 function T(k){
@@ -5057,6 +4955,7 @@ function applyTranslations(){
   const m = document.getElementById('t-mp3-label');
   if(m) m.textContent = T('openMp3');
   document.querySelectorAll('.t-mp3-label-staff').forEach(el => el.textContent = T('openMp3'));
+  document.querySelectorAll('.t-reload-mp3').forEach(el => el.textContent = T('reloadMp3'));
   document.querySelectorAll('.player-speed-label').forEach(el => el.textContent = T('tempo'));
   document.querySelectorAll('[data-t="zoom"]').forEach(el => el.textContent = T('zoom'));
   document.querySelectorAll('[data-t="reczoom"]').forEach(el => el.textContent = T('recZoom'));
@@ -5125,7 +5024,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     renderStaff('bass');   setupTouch('bass');
     drawWaveforms();
   }, 100);
-  setTimeout(()=>{ renderMiniStaves(); alignMiniStavesWithQuint(); }, 50);
+  setTimeout(()=>{ renderMiniStaves(); }, 50);
 
 });
 
@@ -5338,7 +5237,6 @@ function toggleLangPicker(e){
   picker.classList.add('open');
   _positionSubPanel(picker);
 }
-
 
 // Windows hover-to-open voor submenurijen
 (function initHoverSubmenus(){
@@ -5598,28 +5496,11 @@ function closeReinstallToast(){
   const toast = document.getElementById('reinstall-toast');
   if(toast) toast.style.display = 'none';
 }
-function reinstallWithCurrentTheme(){
-  closeReinstallToast();
-  if(!_deferredInstall) return;
-  const prompt = _deferredInstall;
-  _deferredInstall = null;
-  prompt.prompt();
-  prompt.userChoice.then(() => {
-    window.location.replace('https://the-red-ninja.github.io/Notenkraker/app.html');
-  });
-}
-
-
-
-// Behoud backwards-compatibiliteit (gebruikt elders in de code)
-function persSetGender(g){ persSetKarakter(_persTheme,  g); }
-function persSetTheme(t){  persSetKarakter(t, _persGender); }
 
 function persInit(){
   _persUpdateGrid();
   persApplyIcon();
 }
-
 
 // ════════════════════════════════════════════════════
 function openNkOverlay(){
@@ -5974,6 +5855,12 @@ function showTabAnimated(i, dir){
 
 <!-- Instellingenvenster -->
 <div id="settings-panel">
+  <div id="reload-mp3-row" style="display:none;margin-bottom:4px;">
+    <button onclick="openMp3();closeSettings();" style="background:none;border:none;width:100%;display:flex;align-items:center;cursor:pointer;padding:0;">
+      <div style="width:36px;height:22px;flex-shrink:0;"></div>
+      <span class="t-reload-mp3" style="flex:1;padding-left:9px;font-size:12.5px;font-family:Arial,sans-serif;color:#444;text-align:left;">Laad nieuwe mp3</span>
+    </button>
+  </div>
   <!-- Aanpassingen: alleen in staff-context -->
   <div class="settings-staff-only settings-meer-row" id="aanpassingen-row">
     <button onclick="toggleAanpassingenMenu(event)" style="background:none;border:none;width:100%;display:flex;align-items:center;cursor:pointer;padding:0;">
@@ -6095,7 +5982,6 @@ function showTabAnimated(i, dir){
       font-family:Georgia,serif;">Annuleren</button>
   </div>
 </div>
-
 
 <div id="personaliseer-panel">
   <div id="pers-avatar-grid">
@@ -6299,7 +6185,6 @@ window.addEventListener('resize', () => {
   window._resizeTimer = setTimeout(onOrientationChange, 80);
 });
 
-
 // ════════════════════════════════════════════════════════════════
 // PORTRAIT LOCK: tab1 (toonsoort) vergrendelt portrait op smartphones
 // ════════════════════════════════════════════════════════════════
@@ -6477,19 +6362,6 @@ function closeKeyMenu(){
   _keyMenuTimer = null;
 }
 
-function selectKeyFromMenu(idx, mode, e){
-  if(e) e.preventDefault();
-  // Stel enharmonische modus in
-  const entry = circle()[idx];
-  if(entry && mode === 'B' && entry.spellingB){
-    enharmMode[entry.pos] = 'B';
-  } else if(entry){
-    enharmMode[entry.pos] = 'A';
-  }
-  selectKey(idx);
-  closeKeyMenu();
-}
-
 // ── Touch handlers voor toonsoortnaam ──────────────────────────
 // ── Hulpfuncties voor menu-interactie vanuit key-name touch ──
 function _kmMenuRowAtY(clientY){
@@ -6597,7 +6469,6 @@ document.addEventListener('mousedown', e => {
     closeKeyMenu();
   }
 });
-
 
 // Sluit aanpassingen-panel bij klik buiten
 document.addEventListener('click', e => {

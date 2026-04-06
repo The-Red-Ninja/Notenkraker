@@ -62,7 +62,8 @@
     "analysisWaiting": "⏳ Auto herkenning…",
     "analysisDetected": "🎼 {key} gedetecteerd",
     "analysisTuning": "🎵 Stemming: {hz} Hz ({lbl})",
-    "analysisChanges": "+ {n} toonsoortwijzigingen"
+    "analysisChanges": "+ {n} toonsoortwijzigingen",
+    "reloadMp3": "Laad nieuwe mp3"
   },
   "en": {
     "tab1": "Key",
@@ -127,7 +128,8 @@
     "analysisWaiting": "⏳ Detecting key…",
     "analysisDetected": "🎼 {key} detected",
     "analysisTuning": "🎵 Tuning: {hz} Hz ({lbl})",
-    "analysisChanges": "+ {n} key changes"
+    "analysisChanges": "+ {n} key changes",
+    "reloadMp3": "Load new mp3"
   },
   "de": {
     "tab1": "Tonart",
@@ -192,7 +194,8 @@
     "analysisWaiting": "⏳ Tonarterkennung…",
     "analysisDetected": "🎼 {key} erkannt",
     "analysisTuning": "🎵 Stimmung: {hz} Hz ({lbl})",
-    "analysisChanges": "+ {n} Tonartenwechsel"
+    "analysisChanges": "+ {n} Tonartenwechsel",
+    "reloadMp3": "Neue MP3 laden"
   },
   "fr": {
     "tab1": "Tonalité",
@@ -257,7 +260,8 @@
     "analysisWaiting": "⏳ Détection en cours…",
     "analysisDetected": "🎼 {key} détecté",
     "analysisTuning": "🎵 Accord : {hz} Hz ({lbl})",
-    "analysisChanges": "+ {n} changements de tonalité"
+    "analysisChanges": "+ {n} changements de tonalité",
+    "reloadMp3": "Charger un nouveau mp3"
   },
   "es": {
     "tab1": "Tonalidad",
@@ -322,7 +326,8 @@
     "analysisWaiting": "⏳ Detectando tonalidad…",
     "analysisDetected": "🎼 {key} detectado",
     "analysisTuning": "🎵 Afinación: {hz} Hz ({lbl})",
-    "analysisChanges": "+ {n} cambios de tonalidad"
+    "analysisChanges": "+ {n} cambios de tonalidad",
+    "reloadMp3": "Cargar nuevo mp3"
   },
   "it": {
     "tab1": "Tonalità",
@@ -387,7 +392,8 @@
     "analysisWaiting": "⏳ Rilevamento tonalità…",
     "analysisDetected": "🎼 {key} rilevato",
     "analysisTuning": "🎵 Accordatura: {hz} Hz ({lbl})",
-    "analysisChanges": "+ {n} cambi di tonalità"
+    "analysisChanges": "+ {n} cambi di tonalità",
+    "reloadMp3": "Carica nuovo mp3"
   },
   "pt": {
     "tab1": "Tonalidade",
@@ -452,7 +458,8 @@
     "analysisWaiting": "⏳ A detetar tonalidade…",
     "analysisDetected": "🎼 {key} detetado",
     "analysisTuning": "🎵 Afinação: {hz} Hz ({lbl})",
-    "analysisChanges": "+ {n} mudanças de tonalidade"
+    "analysisChanges": "+ {n} mudanças de tonalidade",
+    "reloadMp3": "Carregar novo mp3"
   },
   "ru": {
     "tab1": "Тональность",
@@ -517,7 +524,8 @@
     "analysisWaiting": "⏳ Определение тональности…",
     "analysisDetected": "🎼 {key} определена",
     "analysisTuning": "🎵 Строй: {hz} Гц ({lbl})",
-    "analysisChanges": "+ {n} смен тональности"
+    "analysisChanges": "+ {n} смен тональности",
+    "reloadMp3": "Загрузить новый mp3"
   },
   "hi": {
     "tab1": "स्वरमान",
@@ -582,7 +590,8 @@
     "analysisWaiting": "⏳ स्वरमान पहचान हो रही है…",
     "analysisDetected": "🎼 {key} पहचाना गया",
     "analysisTuning": "🎵 स्वरमेल: {hz} Hz ({lbl})",
-    "analysisChanges": "+ {n} स्वरमान परिवर्तन"
+    "analysisChanges": "+ {n} स्वरमान परिवर्तन",
+    "reloadMp3": "नया mp3 लोड करें"
   },
   "pl": {
     "tab1": "Tonacja",
@@ -647,7 +656,8 @@
     "analysisWaiting": "⏳ Wykrywanie tonacji…",
     "analysisDetected": "🎼 {key} wykryto",
     "analysisTuning": "🎵 Strój: {hz} Hz ({lbl})",
-    "analysisChanges": "+ {n} zmiany tonacji"
+    "analysisChanges": "+ {n} zmiany tonacji",
+    "reloadMp3": "Wczytaj nowe mp3"
   },
   "cs": {
     "tab1": "Tónina",
@@ -712,7 +722,8 @@
     "analysisWaiting": "⏳ Rozpoznávání tóniny…",
     "analysisDetected": "🎼 {key} rozpoznána",
     "analysisTuning": "🎵 Ladění: {hz} Hz ({lbl})",
-    "analysisChanges": "+ {n} změny tóniny"
+    "analysisChanges": "+ {n} změny tóniny",
+    "reloadMp3": "Načíst nové mp3"
   },
   "sv": {
     "tab1": "Tonart",
@@ -777,7 +788,8 @@
     "analysisWaiting": "⏳ Identifierar tonart…",
     "analysisDetected": "🎼 {key} identifierad",
     "analysisTuning": "🎵 Stämning: {hz} Hz ({lbl})",
-    "analysisChanges": "+ {n} tonartsskiften"
+    "analysisChanges": "+ {n} tonartsskiften",
+    "reloadMp3": "Ladda ny mp3"
   },
   "zh": {
     "tab1": "调性",
@@ -842,6 +854,7 @@
     "analysisWaiting": "⏳ 正在识别调性…",
     "analysisDetected": "🎼 已识别 {key}",
     "analysisTuning": "🎵 音准：{hz} Hz（{lbl}）",
-    "analysisChanges": "+ {n} 个调性变化"
+    "analysisChanges": "+ {n} 个调性变化",
+    "reloadMp3": "加载新MP3"
   }
 }
