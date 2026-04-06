@@ -4767,7 +4767,7 @@ function updateNotePosSliderPadding(clef){
 // I18N — meertalige interface
 // ════════════════════════════════════════════════════
 let _i18nData = null;   // geladen JSON: { nl:{...}, en:{...}, ... }
-let _i18nLang = 'nl';   // actieve taal
+let _i18nLang = 'nl';   // actieve taal — wordt overschreven na _detectLang()
 
 // NL-fallback zodat app werkt vóór JSON geladen is
 const _I18N_NL_FALLBACK = {
@@ -4782,49 +4782,28 @@ const _I18N_NL_FALLBACK = {
   language:'Taal', shareSlogan:'Zing het voort!', settingsTitle:'Instellingen',
   soundsFamiliar:'Sounds Familiar', more:'meer',
   avatarMale:'Notenkraker', avatarFemale:'Notenkraakster',
-  installAs:'Installeer als…', installChoose:'Kies welk icoon je op je scherm wil zien',
-  install:'Installeer', cancel:'Annuleren',
+  install:'Installeer', installAs:'Installeer als…',
+  installChoose:'Kies welk icoon je op je scherm wil zien',
+  installChooseTheme:'Kies een thema',
+  skipInstall:'Gebruik zonder installatie',
+  skipInstall:'Gebruik zonder installatie',
+  cancel:'Annuleren',
+  shareText:'Kies een toonsoort en hoor direct de juiste noot.',
   featrequest:'5 woorden over\nhoe je deze app\ngraag gebruikt',
+  featrequestShort:'Schrijf ons',
   pitchBarok:'Barok', pitchKlassiek:'Klassiek', pitchStandaard:'Standaard',
   pitchModern:'Modern Orkest',
-  intervalNames:['Unisono','Kleine secunde','Grote secunde','Kleine terts','Grote terts',
-    'Reine kwart','Tritonus','Reine kwint','Kleine sext','Grote sext',
-    'Kleine septiem','Grote septiem','Octaaf'],
-  adjustments:'Aanpassingen',
-  bassFirst:'Bas eerst',
-  reloadMp3:'Laad nieuwe mp3',
-  // Volledig set — synchron met i18n.json
-  avatarFemale:'Notenkraakster',
-  cancel:'Annuleren',
-  chord:'Akkoord',
-  flats:'mollen',
-  installChoose:'Kies welk icoon je op je scherm wil zien',
-  intervalAbove:'Interval boven',
-  intervalBelow:'Interval onder',
-  keyMajor:'Groot',
-  keyMinor:'Klein',
-  major:'Majeur',
-  minor:'Mineur',
-  more:'meer',
-  noteBelow:'Nootnaam onder',
-  personalize:'Personaliseer',
-  pitchKlassiek:'Klassiek',
-  pitchStandaard:'Standaard',
-  ready:'Gereed.',
-  recZoom:'opnamezoom',
+  adjustments:'Aanpassingen', bassFirst:'Bas eerst',
+  reloadMp3:'Laad nieuwe mp3', ready:'Gereed.',
   reinstallMsg:'Ook de app opnieuw installeren met dit icoon?',
-  reinstallNo:'Nee',
-  reinstallYes:'Ja',
-  settingsTitle:'Instellingen',
-  share:'Delen',
-  shareSlogan:'Zing het voort!',
-  solfege:'Solfège',
-  tempo:'Tempo',
-  featrequestShort:'Schrijf ons',
+  reinstallNo:'Nee', reinstallYes:'Ja',
   analysisWaiting:'⏳ Auto herkenning…',
   analysisDetected:'🎼 {key} gedetecteerd',
   analysisTuning:'🎵 Stemming: {hz} Hz ({lbl})',
   analysisChanges:'+ {n} toonsoortwijzigingen',
+  intervalNames:['Unisono','Kleine secunde','Grote secunde','Kleine terts','Grote terts',
+    'Reine kwart','Tritonus','Reine kwint','Kleine sext','Grote sext',
+    'Kleine septiem','Grote septiem','Octaaf'],
 };
 
 function T(k){
@@ -5080,15 +5059,17 @@ function openInstallThemeOverlay(){
     if(btn) btn.classList.toggle('active', k === curKey);
   });
 
-  // Titel aanpassen
+  // Titel aanpassen via T()
   const title = overlay.querySelector('#overlay-title');
-  if(title) title.textContent = isInstalled ? 'Kies een thema' : 'Installeer als…';
+  if(title) title.textContent = isInstalled ? T('installChooseTheme') : T('installAs');
 
   // "Gebruik zonder installatie" knop: alleen tonen als niet geinstalleerd
   const noInstBtn = document.getElementById('overlay-no-install');
   if(noInstBtn) noInstBtn.style.display = (!isInstalled) ? 'block' : 'none';
 
   overlay.style.display = 'flex';
+  // Vertaal alle data-i18n elementen in de overlay
+  applyTranslations();
 }
 
 function closeInstallThemePicker(){
@@ -5138,10 +5119,10 @@ function installWithTheme(t, g){
 function shareApp(){
   const base = window.location.href.split('?')[0];
   const shareUrl = base + '?install=1';
-  const naam = (_persGender === 'v') ? 'Notenkraakster' : 'Notenkraker';
+  const naam = (_persGender === 'v') ? T('avatarFemale') : T('avatarMale');
   const data = {
     title: naam,
-    text: 'Kies een toonsoort en laat direct vanaf een notenbalk de juiste noot klinken.',
+    text: T('shareText') || naam,
     url: shareUrl
   };
   if(navigator.share){
@@ -5265,8 +5246,6 @@ function openFeedback(){
 }
 
 // Taal: vlaggen + namen
-// Twemoji SVG-vlaggen voor Windows-compatibiliteit
-// Vlag-emoji → Twemoji codepoint: regional indicator A=1f1e6, B=1f1e7, ... Z=1f1ff
 const LANGS = {
   nl:{ flag:'🇳🇱', twemoji:'1f1f3-1f1f1', label:'Nederlands' },
   en:{ flag:'🇬🇧', twemoji:'1f1ec-1f1e7', label:'English' },
@@ -5277,7 +5256,53 @@ const LANGS = {
   pt:{ flag:'🇵🇹', twemoji:'1f1f5-1f1f9', label:'Português' },
   zh:{ flag:'🇨🇳', twemoji:'1f1e8-1f1f3', label:'中文' },
 };
-let _currentLang = 'nl';
+
+// Verwante talen: OS-talen die niet in LANGS staan → meest verwante beschikbare taal
+const _LANG_FALLBACK = {
+  af:'nl', // Afrikaans → Nederlands
+  be:'ru', // Belarussisch → Russisch
+  bg:'ru', // Bulgaars → Russisch
+  ca:'es', // Catalaans → Spaans
+  da:'nl', // Deens → Nederlands
+  el:'it', // Grieks → Italiaans
+  fi:'sv', // Fins (sv staat in ru/pl buiten LANGS; sv niet in LANGS — valt door naar en)
+  gl:'pt', // Galicisch → Portugees
+  hr:'de', // Kroatisch → Duits
+  hu:'de', // Hongaars → Duits
+  id:'en', // Indonesisch → Engels
+  ja:'zh', // Japans → Chinees
+  ko:'zh', // Koreaans → Chinees
+  ms:'en', // Maleis → Engels
+  nb:'de', // Noors → Duits
+  nn:'de',
+  no:'de',
+  ro:'it', // Roemeens → Italiaans
+  sk:'cs', // Slowaaks → Tsjechisch (cs zit in i18n maar niet in LANGS — valt door naar de)
+  sl:'de', // Sloveens → Duits
+  sr:'ru', // Servisch → Russisch
+  sv:'de', // Zweeds → Duits (sv niet in LANGS)
+  tr:'de', // Turks → Duits
+  uk:'ru', // Oekraïens → Russisch
+};
+
+// Bepaal startlang: 1) opgeslagen voorkeur, 2) OS-taal, 3) verwante taal, 4) nl
+function _detectLang(){
+  const saved = localStorage.getItem('nk_lang');
+  if(saved && LANGS[saved]) return saved;
+
+  const navLangs = navigator.languages && navigator.languages.length
+    ? navigator.languages : [navigator.language || 'nl'];
+
+  for(const nav of navLangs){
+    const code = nav.toLowerCase().split('-')[0];
+    if(LANGS[code]) return code;
+    if(_LANG_FALLBACK[code] && LANGS[_LANG_FALLBACK[code]]) return _LANG_FALLBACK[code];
+  }
+  return 'nl';
+}
+
+let _currentLang = _detectLang();
+_i18nLang = _currentLang; // sync zodat T() meteen de juiste taal gebruikt
 
 function flagImg(code, size){
   const lang = LANGS[code];
@@ -5297,6 +5322,7 @@ function initFlags(){
 function selectLang(code){
   _currentLang = code;
   _i18nLang    = code;
+  localStorage.setItem('nk_lang', code); // onthoud voorkeur
   const l = LANGS[code];
   const img = flagImg(code, 17);
   const cf  = document.getElementById('current-flag');
@@ -5950,7 +5976,7 @@ function showTabAnimated(i, dir){
     background:#fff; border-radius:16px; padding:20px 18px 16px;
     max-width:300px; width:88%; box-shadow:0 8px 32px rgba(0,0,0,0.25);
     font-family:Georgia,serif; text-align:center;">
-    <div id="overlay-title" style="font-size:15px; font-weight:bold; color:#2a2a2a; margin-bottom:14px;">Kies een thema</div>
+    <div id="overlay-title" style="font-size:15px; font-weight:bold; color:#2a2a2a; margin-bottom:14px;" data-i18n="installChooseTheme">Kies een thema</div>
     <div id="install-theme-grid" style="
       display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
       <!-- volgorde: dv, lv, dm, lm -->
@@ -5971,12 +5997,12 @@ function showTabAnimated(i, dir){
       <button onclick="skipInstall()" style="
         width:100%; padding:10px; border:1.5px solid #c8bfa8; border-radius:8px;
         background:#f5f0e8; color:#444; font-size:13px; cursor:pointer;
-        font-family:Georgia,serif;">Gebruik zonder installatie</button>
+        font-family:Georgia,serif;" data-i18n="skipInstall">Gebruik zonder installatie</button>
     </div>
     <button onclick="closeInstallThemePicker()" style="
       width:100%; padding:10px; border:1.5px solid #ccc; border-radius:8px;
       background:transparent; color:#888; font-size:13px; cursor:pointer;
-      font-family:Georgia,serif;">Annuleren</button>
+      font-family:Georgia,serif;" data-i18n="cancel">Annuleren</button>
   </div>
 </div>
 
@@ -5984,19 +6010,15 @@ function showTabAnimated(i, dir){
   <div id="pers-avatar-grid">
     <button class="pers-avatar-btn active" id="pers-btn-lm" onclick="persSetKarakter('l','m')">
       <img src="icons/icon-lm-96.png" alt="Blanke man">
-      <span class="pers-avatar-lbl">Notenkraker</span>
     </button>
     <button class="pers-avatar-btn" id="pers-btn-dm" onclick="persSetKarakter('d','m')">
       <img src="icons/icon-dm-96.png" alt="Donkere man">
-      <span class="pers-avatar-lbl">Notenkraker</span>
     </button>
     <button class="pers-avatar-btn" id="pers-btn-lv" onclick="persSetKarakter('l','v')">
       <img src="icons/icon-lv-96.png" alt="Blanke vrouw">
-      <span class="pers-avatar-lbl">Notenkraakster</span>
     </button>
     <button class="pers-avatar-btn" id="pers-btn-dv" onclick="persSetKarakter('d','v')">
       <img src="icons/icon-dv-96.png" alt="Donkere vrouw">
-      <span class="pers-avatar-lbl">Notenkraakster</span>
     </button>
   </div>
   <hr class="app-panel-divider">
@@ -6470,13 +6492,13 @@ document.addEventListener('click', e => {
 <!-- Notenkraker splash-overlay -->
 <div id="nk-overlay" onclick="nkOverlayBgClick(event)">
   <div id="nk-share-row-top" onclick="nkShare(event)">
-    <span>Zing het voort!</span>
+    <span data-i18n="shareSlogan">Zing het voort!</span>
     <span class="nk-share-icon-el"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></span>
   </div>
   <img id="nk-overlay-img" src="https://raw.githubusercontent.com/The-Red-Ninja/Notenkraker/main/add/kooropstelling.png" alt="Notenkraker koor"
        onclick="closeNkOverlay()" style="cursor:pointer;">
   <div id="nk-share-row" onclick="nkShare(event)">
-    <span>Zing het voort!</span>
+    <span data-i18n="shareSlogan">Zing het voort!</span>
     <span id="nk-share-icon" class="nk-share-icon-el"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></span>
   </div>
 </div>

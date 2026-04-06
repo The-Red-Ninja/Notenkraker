@@ -64,7 +64,10 @@
     "analysisTuning": "🎵 Stemming: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} toonsoortwijzigingen",
     "adjustments": "Aanpassingen",
-    "bassFirst": "Bas eerst"
+    "bassFirst": "Bas eerst",
+    "shareText": "Kies een toonsoort en hoor direct de juiste noot.",
+    "installChooseTheme": "Kies een thema",
+    "skipInstall": "Gebruik zonder installatie"
   },
   "en": {
     "tab1": "Key",
@@ -90,7 +93,7 @@
     "share": "Share",
     "personalize": "Personalize",
     "language": "Language",
-    "shareSlogan": "Share the music!",
+    "shareSlogan": "Sing it on!",
     "settingsTitle": "Settings",
     "soundsFamiliar": "Sounds Familiar",
     "intervalNames": [
@@ -131,7 +134,10 @@
     "analysisTuning": "🎵 Tuning: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} key changes",
     "adjustments": "Adjustments",
-    "bassFirst": "Bass first"
+    "bassFirst": "Bass first",
+    "shareText": "Choose a key and instantly hear the right note.",
+    "installChooseTheme": "Choose a theme",
+    "skipInstall": "Use without installing"
   },
   "de": {
     "tab1": "Tonart",
@@ -157,7 +163,7 @@
     "share": "Teilen",
     "personalize": "Personalisieren",
     "language": "Sprache",
-    "shareSlogan": "Musik teilen!",
+    "shareSlogan": "Gib es weiter!",
     "settingsTitle": "Einstellungen",
     "soundsFamiliar": "Klingt vertraut",
     "intervalNames": [
@@ -198,7 +204,10 @@
     "analysisTuning": "🎵 Stimmung: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} Tonartenwechsel",
     "adjustments": "Anpassungen",
-    "bassFirst": "Bass zuerst"
+    "bassFirst": "Bass zuerst",
+    "shareText": "Wähle eine Tonart und höre sofort die richtige Note.",
+    "installChooseTheme": "Thema wählen",
+    "skipInstall": "Ohne Installation verwenden"
   },
   "fr": {
     "tab1": "Tonalité",
@@ -224,7 +233,7 @@
     "share": "Partager",
     "personalize": "Personnaliser",
     "language": "Langue",
-    "shareSlogan": "Partagez la musique !",
+    "shareSlogan": "Chantez-le !",
     "settingsTitle": "Paramètres",
     "soundsFamiliar": "Ça me dit quelque chose",
     "intervalNames": [
@@ -265,7 +274,10 @@
     "analysisTuning": "🎵 Accord : {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} changements de tonalité",
     "adjustments": "Réglages",
-    "bassFirst": "Basse en premier"
+    "bassFirst": "Basse en premier",
+    "shareText": "Choisissez une tonalité et entendez immédiatement la bonne note.",
+    "installChooseTheme": "Choisir un thème",
+    "skipInstall": "Utiliser sans installer"
   },
   "es": {
     "tab1": "Tonalidad",
@@ -291,7 +303,7 @@
     "share": "Compartir",
     "personalize": "Personalizar",
     "language": "Idioma",
-    "shareSlogan": "¡Comparte la música!",
+    "shareSlogan": "¡Compártelo!",
     "settingsTitle": "Configuración",
     "soundsFamiliar": "Me suena",
     "intervalNames": [
@@ -332,7 +344,10 @@
     "analysisTuning": "🎵 Afinación: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} cambios de tonalidad",
     "adjustments": "Ajustes",
-    "bassFirst": "Bajo primero"
+    "bassFirst": "Bajo primero",
+    "shareText": "Elige una tonalidad y escucha la nota correcta al instante.",
+    "installChooseTheme": "Elegir tema",
+    "skipInstall": "Usar sin instalar"
   },
   "it": {
     "tab1": "Tonalità",
@@ -358,7 +373,7 @@
     "share": "Condividi",
     "personalize": "Personalizza",
     "language": "Lingua",
-    "shareSlogan": "Diffondi la musica!",
+    "shareSlogan": "Cantalo avanti!",
     "settingsTitle": "Impostazioni",
     "soundsFamiliar": "Mi suona familiare",
     "intervalNames": [
@@ -399,7 +414,10 @@
     "analysisTuning": "🎵 Accordatura: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} cambi di tonalità",
     "adjustments": "Impostazioni",
-    "bassFirst": "Basso prima"
+    "bassFirst": "Basso prima",
+    "shareText": "Scegli una tonalità e ascolta subito la nota giusta.",
+    "installChooseTheme": "Scegli un tema",
+    "skipInstall": "Usa senza installare"
   },
   "pt": {
     "tab1": "Tonalidade",
@@ -425,7 +443,7 @@
     "share": "Partilhar",
     "personalize": "Personalizar",
     "language": "Idioma",
-    "shareSlogan": "Partilhe a música!",
+    "shareSlogan": "Cante adiante!",
     "settingsTitle": "Definições",
     "soundsFamiliar": "Soa familiar",
     "intervalNames": [
@@ -466,7 +484,10 @@
     "analysisTuning": "🎵 Afinação: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} mudanças de tonalidade",
     "adjustments": "Ajustes",
-    "bassFirst": "Baixo primeiro"
+    "bassFirst": "Baixo primeiro",
+    "shareText": "Escolha uma tonalidade e ouça a nota certa imediatamente.",
+    "installChooseTheme": "Escolher tema",
+    "skipInstall": "Usar sem instalar"
   },
   "ru": {
     "tab1": "Тональность",
@@ -492,7 +513,7 @@
     "share": "Поделиться",
     "personalize": "Персонализация",
     "language": "Язык",
-    "shareSlogan": "Делись музыкой!",
+    "shareSlogan": "Пой дальше!",
     "settingsTitle": "Настройки",
     "soundsFamiliar": "Звучит знакомо",
     "intervalNames": [
@@ -533,7 +554,10 @@
     "analysisTuning": "🎵 Строй: {hz} Гц ({lbl})",
     "analysisChanges": "+ {n} смен тональности",
     "adjustments": "Настройки",
-    "bassFirst": "Бас первым"
+    "bassFirst": "Бас первым",
+    "shareText": "Выберите тональность и сразу услышьте нужную ноту.",
+    "installChooseTheme": "Выбрать тему",
+    "skipInstall": "Использовать без установки"
   },
   "hi": {
     "tab1": "स्वरमान",
@@ -559,7 +583,7 @@
     "share": "शेयर करें",
     "personalize": "वैयक्तिकरण",
     "language": "भाषा",
-    "shareSlogan": "संगीत फैलाएं!",
+    "shareSlogan": "आगे गाओ!",
     "settingsTitle": "सेटिंग्स",
     "soundsFamiliar": "जाना-पहचाना लगता है",
     "intervalNames": [
@@ -600,7 +624,10 @@
     "analysisTuning": "🎵 स्वरमेल: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} स्वरमान परिवर्तन",
     "adjustments": "समायोजन",
-    "bassFirst": "बास पहले"
+    "bassFirst": "बास पहले",
+    "shareText": "एक राग चुनें और तुरंत सही नोट सुनें।",
+    "installChooseTheme": "थीम चुनें",
+    "skipInstall": "बिना इंस्टॉल किए उपयोग करें"
   },
   "pl": {
     "tab1": "Tonacja",
@@ -626,7 +653,7 @@
     "share": "Udostępnij",
     "personalize": "Personalizuj",
     "language": "Język",
-    "shareSlogan": "Dziel się muzyką!",
+    "shareSlogan": "Śpiewaj dalej!",
     "settingsTitle": "Ustawienia",
     "soundsFamiliar": "Brzmi znajomo",
     "intervalNames": [
@@ -667,7 +694,10 @@
     "analysisTuning": "🎵 Strój: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} zmiany tonacji",
     "adjustments": "Ustawienia",
-    "bassFirst": "Bas najpierw"
+    "bassFirst": "Bas najpierw",
+    "shareText": "Wybierz tonację i natychmiast usłysz właściwą nutę.",
+    "installChooseTheme": "Wybierz motyw",
+    "skipInstall": "Używaj bez instalowania"
   },
   "cs": {
     "tab1": "Tónina",
@@ -693,7 +723,7 @@
     "share": "Sdílet",
     "personalize": "Přizpůsobit",
     "language": "Jazyk",
-    "shareSlogan": "Šiřte hudbu!",
+    "shareSlogan": "Zpívej dál!",
     "settingsTitle": "Nastavení",
     "soundsFamiliar": "Zní povědomě",
     "intervalNames": [
@@ -734,7 +764,10 @@
     "analysisTuning": "🎵 Ladění: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} změny tóniny",
     "adjustments": "Nastavení",
-    "bassFirst": "Baskytara první"
+    "bassFirst": "Baskytara první",
+    "shareText": "Vyberte tóninu a okamžitě uslyšte správnou notu.",
+    "installChooseTheme": "Vybrat motiv",
+    "skipInstall": "Použít bez instalace"
   },
   "sv": {
     "tab1": "Tonart",
@@ -760,7 +793,7 @@
     "share": "Dela",
     "personalize": "Anpassa",
     "language": "Språk",
-    "shareSlogan": "Sprid musiken!",
+    "shareSlogan": "Sjung det vidare!",
     "settingsTitle": "Inställningar",
     "soundsFamiliar": "Låter bekant",
     "intervalNames": [
@@ -801,7 +834,10 @@
     "analysisTuning": "🎵 Stämning: {hz} Hz ({lbl})",
     "analysisChanges": "+ {n} tonartsskiften",
     "adjustments": "Inställningar",
-    "bassFirst": "Bas först"
+    "bassFirst": "Bas först",
+    "shareText": "Välj en tonart och hör genast rätt ton.",
+    "installChooseTheme": "Välj ett tema",
+    "skipInstall": "Använd utan att installera"
   },
   "zh": {
     "tab1": "调性",
@@ -827,7 +863,7 @@
     "share": "分享",
     "personalize": "个性化",
     "language": "语言",
-    "shareSlogan": "传播音乐！",
+    "shareSlogan": "传唱下去！",
     "settingsTitle": "设置",
     "soundsFamiliar": "听起来熟悉",
     "intervalNames": [
@@ -868,6 +904,9 @@
     "analysisTuning": "🎵 音准：{hz} Hz（{lbl}）",
     "analysisChanges": "+ {n} 个调性变化",
     "adjustments": "设置",
-    "bassFirst": "低音优先"
+    "bassFirst": "低音优先",
+    "shareText": "选择调性，立即听到正确的音符。",
+    "installChooseTheme": "选择主题",
+    "skipInstall": "不安装直接使用"
   }
 }
