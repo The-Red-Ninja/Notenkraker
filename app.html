@@ -2327,24 +2327,33 @@ function renderStaff(clef){
     const nxMin = staffLeft + 2 * halfNoteW;
     const nxMax = W - halfNoteW - 4;
     const nxSingle = Math.round(nxMin + (nxMax - nxMin) * posPct / 100);
-    const LS_NOTE_MAX = 22; // max lettergrootte = ls bij trap 3 (1 standje > kleinste weergave)
-    const lsNote = Math.min(ls, LS_NOTE_MAX); // schaalt mee maar niet groter dan cap
+    const LS_NOTE_MAX = 27; // cap verhoogd zodat grotere tekst nog past
+    const lsNote = Math.min(ls, LS_NOTE_MAX);
     const nrNote = ls * 0.52;
     const noteColor = '#111';
     const noteName   = getSoundingNoteName(note, clef);
     const noteOctave = getSoundingOctave(note, clef);
-    const nameFont = `${Math.round(lsNote*1.1)}px Arial,Helvetica,sans-serif`; // schaalt met lsNote
+    const nameFont = `${Math.round(lsNote*1.1) + 5}px Arial,Helvetica,sans-serif`; // +5pt
     const accFont  = `bold ${ls*1.4}px Georgia,serif`;
     const fixedNameY   = sY(11);
     const fixedBelowY  = sY(-2);
+
+    // Helper: geeft het acc voor een step (pinned-noot eigen acc, anders st.acc)
+    function accForStep(step){
+      if(pinnedNotes[clef] && pinnedNotes[clef].has(step)){
+        return pinnedNotes[clef].get(step).acc || null;
+      }
+      return st.acc || null;
+    }
 
     function drawOneNote(n2, nx){
       const ny2 = sY(n2.step);
       drawLedgers(ctx, n2.step, nx, nrNote, ls, nLines, botLine);
       ctx.strokeStyle=noteColor; ctx.fillStyle=noteColor;
-      // Accidentaal (alleen voor eerste/hoofdnoot)
-      if(n2===note && st.acc){
-        const ag=st.acc==='sharp'?'\u266F':st.acc==='flat'?'\u266D':'\u266E';
+      // Accidentaal: per noot eigen acc
+      const thisAcc = accForStep(n2.step);
+      if(thisAcc){
+        const ag=thisAcc==='sharp'?'\u266F':thisAcc==='flat'?'\u266D':'\u266E';
         ctx.font=accFont; ctx.textBaseline='middle';
         ctx.fillText(ag, nx-nrNote*3.5, ny2); ctx.textBaseline='alphabetic';
       }
@@ -2387,21 +2396,22 @@ function renderStaff(clef){
       ctx.textAlign = nameAlign;
       const lineH=Math.round(lsNote*1.4);
       activeNotes.forEach((n2,i)=>{
-        const lbl=(showOct?getSoundingNoteName(n2,clef)+getSoundingOctave(n2,clef):getSoundingNoteName(n2,clef));
+        const thisAcc = accForStep(n2.step);
+        const lbl=(showOct
+          ? getSoundingNoteName(n2,clef,thisAcc)+getSoundingOctave(n2,clef,thisAcc)
+          : getSoundingNoteName(n2,clef,thisAcc));
         if(showAbove) ctx.fillText(lbl, nameX, fixedNameY - i*lineH);
         if(showBelow) ctx.fillText(lbl, nameX, fixedBelowY+Math.round(lsNote*0.3)+i*lineH);
       });
       ctx.textAlign='left';
     }
 
-    // Intervallen: stand 1 = boven notenbalk, stand 2 = onder notenbalk
+    // Interval: zelfde positie als de nootnamen
     const intMode = window._showInterval || 0;
     if(intMode > 0 && activeNotes.length >= 2){
-      const intAbove = (intMode === 1);
-      const intBelow = (intMode === 2);
 
       const sortedByMidi = activeNotes.slice().sort((a,b)=>
-        soundingMidi(a,clef) - soundingMidi(b,clef)
+        soundingMidi(a,clef,accForStep(a.step)) - soundingMidi(b,clef,accForStep(b.step))
       );
 
       const _INTERVAL_NAMES = T('intervalNames');
@@ -2410,8 +2420,7 @@ function renderStaff(clef){
         return (_INTERVAL_NAMES && _INTERVAL_NAMES[s]) || String(s);
       }
 
-      const intFont = `${Math.round(lsNote*0.88)}px Arial,Helvetica,sans-serif`;
-      ctx.font = intFont; ctx.fillStyle = '#555';
+      const intFont = `${Math.round(lsNote*0.88) + 5}px Arial,Helvetica,sans-serif`;
 
       // Breedte van nootnamen meten
       ctx.font = nameFont;
@@ -2426,15 +2435,11 @@ function renderStaff(clef){
       ctx.font = intFont;
 
       const intGap = nrNote * 0.8;
-
-      // Kies de kant met de meeste beschikbare ruimte t.o.v. nameX
       const spaceRight = W - nameX - maxNameW;
       const spaceLeft  = nameX - maxNameW;
       const intGoRight = spaceRight >= spaceLeft;
 
-      // Breedte van langste intervalnaam meten voor clamp
       let maxIntLabelW = 0;
-      ctx.font = intFont;
       for(let i = 0; i < sortedByMidi.length - 1; i++){
         const s = Math.abs(soundingMidi(sortedByMidi[i+1],clef) - soundingMidi(sortedByMidi[i],clef));
         const w2 = ctx.measureText(intervalName(s)).width;
@@ -2445,46 +2450,43 @@ function renderStaff(clef){
       if(intGoRight){
         intX      = nameX + maxNameW + intGap;
         intXAlign = 'left';
-        // Clamp: niet buiten rechterrand
         if(intX + maxIntLabelW > W - 2) intX = W - maxIntLabelW - 2;
       } else {
         intX      = nameX - maxNameW - intGap;
         intXAlign = 'right';
-        // Clamp: niet buiten linkerrand
         if(intX - maxIntLabelW < 2) intX = maxIntLabelW + 2;
       }
       const lineH = Math.round(lsNote * 1.4);
 
-      function nameY(iSorted){
-        const iActive = activeNotes.length - 1 - iSorted;
-        if(intAbove){
-          return fixedNameY - iActive * lineH;
-        } else {
-          return fixedBelowY + Math.round(lsNote*0.3) + iActive * lineH;
-        }
+      // Y-positie volgt nootnamen: boven als showAbove, onder als alleen showBelow
+      function nameYforNote(n2){
+        const i = activeNotes.indexOf(n2);
+        if(showAbove) return fixedNameY - i * lineH;
+        return fixedBelowY + Math.round(lsNote*0.3) + i * lineH;
       }
 
+      ctx.fillStyle = '#555';
       for(let i = 0; i < sortedByMidi.length - 1; i++){
-        const mLow  = soundingMidi(sortedByMidi[i],   clef);
-        const mHigh = soundingMidi(sortedByMidi[i+1], clef);
+        const mLow  = soundingMidi(sortedByMidi[i],   clef, accForStep(sortedByMidi[i].step));
+        const mHigh = soundingMidi(sortedByMidi[i+1], clef, accForStep(sortedByMidi[i+1].step));
         const semi  = Math.abs(mHigh - mLow);
         const label = intervalName(semi);
-        const yA = nameY(i);
-        const yB = nameY(i+1);
+        const yA = nameYforNote(sortedByMidi[i]);
+        const yB = nameYforNote(sortedByMidi[i+1]);
         const intY = (yA + yB) / 2;
         ctx.textAlign = intXAlign;
         ctx.fillText(label, intX, intY);
       }
 
       if(sortedByMidi.length === 3){
-        const mBot = soundingMidi(sortedByMidi[0], clef);
-        const mTop = soundingMidi(sortedByMidi[sortedByMidi.length-1], clef);
+        const mBot = soundingMidi(sortedByMidi[0], clef, accForStep(sortedByMidi[0].step));
+        const mTop = soundingMidi(sortedByMidi[sortedByMidi.length-1], clef, accForStep(sortedByMidi[sortedByMidi.length-1].step));
         const totalSemi = Math.abs(mTop - mBot);
         const totalLabel = intervalName(totalSemi);
 
         let maxIntW = 0;
         for(let i = 0; i < sortedByMidi.length - 1; i++){
-          const s = Math.abs(soundingMidi(sortedByMidi[i+1],clef) - soundingMidi(sortedByMidi[i],clef));
+          const s = Math.abs(soundingMidi(sortedByMidi[i+1],clef,accForStep(sortedByMidi[i+1].step)) - soundingMidi(sortedByMidi[i],clef,accForStep(sortedByMidi[i].step)));
           const w2 = ctx.measureText(intervalName(s)).width;
           if(w2 > maxIntW) maxIntW = w2;
         }
@@ -2498,8 +2500,8 @@ function renderStaff(clef){
           if(totalX - totalLabelW < 2) totalX = totalLabelW + 2;
         }
 
-        const yBot = nameY(0);
-        const yTop = nameY(sortedByMidi.length - 1);
+        const yBot = nameYforNote(sortedByMidi[0]);
+        const yTop = nameYforNote(sortedByMidi[sortedByMidi.length - 1]);
         ctx.fillStyle = '#888';
         ctx.textAlign = intXAlign;
         ctx.fillText(totalLabel, totalX, (yBot + yTop) / 2);
@@ -2560,11 +2562,12 @@ function buildKeyOffsets(){
   return map;
 }
 
-function soundingMidi(note,clef){
+function soundingMidi(note, clef, overrideAcc){
   const off=buildKeyOffsets();
   const keyOff=off[note.letter]??0;
   let midi=note.naturalMidi+keyOff;
-  const acc=SS[clef].acc;
+  // overrideAcc wint van SS[clef].acc; undefined = gebruik SS[clef].acc
+  const acc = overrideAcc !== undefined ? overrideAcc : SS[clef].acc;
   if(acc==='natural'){ midi=note.naturalMidi; }
   else if(acc==='sharp'){ midi = keyOff===+1 ? note.naturalMidi+keyOff : note.naturalMidi+1; }
   else if(acc==='flat'){  midi = keyOff===-1 ? note.naturalMidi+keyOff : note.naturalMidi-1; }
@@ -2577,8 +2580,8 @@ const NOTE_NAMES_FLAT =['C','Des','D','Es', 'E','F','Ges','G','As', 'A','Bes','B
 const SOLFEGE_SHARP=['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
 const SOLFEGE_FLAT =['Do','Ré♭','Re','Mi♭','Mi','Fa','Sol♭','Sol','La♭','La','Si♭','Si'];
 
-function getSoundingNoteName(note,clef){
-  const midi=soundingMidi(note,clef);
+function getSoundingNoteName(note, clef, overrideAcc){
+  const midi=soundingMidi(note, clef, overrideAcc);
   const pc=((midi%12)+12)%12;
   const k=cKey();
   if(window._showSolfege){
@@ -2586,9 +2589,9 @@ function getSoundingNoteName(note,clef){
   }
   return k.flats>0?NOTE_NAMES_FLAT[pc]:NOTE_NAMES_SHARP[pc];
 }
-function getSoundingOctave(note,clef){
-  const midi=soundingMidi(note,clef);
-  return Math.floor(midi/12)-1; // MIDI 60=C4, 43=G2 etc.
+function getSoundingOctave(note, clef, overrideAcc){
+  const midi=soundingMidi(note, clef, overrideAcc);
+  return Math.floor(midi/12)-1;
 }
 
 // ════════════════════════════════════════════════════
@@ -2661,7 +2664,7 @@ function toggleSetting(type){
   if(type==='above')    window._showNameAbove = !window._showNameAbove;
   if(type==='below')    window._showNameBelow = !window._showNameBelow;
   if(type==='solfege'){  window._showSolfege   = !window._showSolfege; renderQuint(); }
-  if(type==='interval') window._showInterval  = (window._showInterval + 1) % 3;
+  if(type==='interval') window._showInterval = window._showInterval ? 0 : 1;
   if(type==='autokey'){
     window._autoKeyDetect = !window._autoKeyDetect;
     try{ localStorage.setItem('nk_autokey', window._autoKeyDetect?'1':'0'); }catch(e){}
@@ -2685,12 +2688,9 @@ function syncToggleBtns(){
   if(ss) ss.classList.toggle('on', window._showSolfege);
   if(sk) sk.classList.toggle('on', !!window._autoKeyDetect);
   if(si){
-    const iv = window._showInterval || 0;
-    si.classList.toggle('on', iv > 0);
+    si.classList.toggle('on', !!(window._showInterval));
     const intLabel = si.querySelector('.interval-label');
-    if(intLabel){
-      intLabel.textContent = iv === 0 ? 'Interval' : iv === 1 ? 'Interval boven' : 'Interval onder';
-    }
+    if(intLabel) intLabel.textContent = T('interval') || 'Interval';
   }
 }
 
@@ -3076,22 +3076,35 @@ function setupTouch(clef){
       closeSettings(); return;
     }
     if(isShiftActive(clef)){
-      // Shift-modus: touch togglet noot als vastgezet
+      // Shift-modus: touch pint/vervangt/verwijdert noot individueel
       for(const t of e.changedTouches){
         const note=noteAt(t.clientX,t.clientY); if(!note) continue;
+        const curAcc = st.acc || null;
         if(pinnedNotes[clef].has(note.step)){
           const v=pinnedNotes[clef].get(note.step);
-          stopN(v.node);
-          pinnedNotes[clef].delete(note.step);
-          // st.step wissen zodat noot niet via cursor actief blijft
-          if(st.step===note.step) st.step=null;
+          if(!curAcc){
+            // 2a: geen accidentaal → noot loslaten
+            stopN(v.node);
+            pinnedNotes[clef].delete(note.step);
+            if(st.step===note.step) st.step=null;
+          } else if(curAcc !== v.acc){
+            // 2b: ander accidentaal → vervang
+            stopN(v.node);
+            const node=playN(soundingMidi(note,clef,curAcc), 0.50);
+            pinnedNotes[clef].set(note.step, {node, acc:curAcc});
+            st.step=note.step;
+          }
+          // zelfde acc + al gepind → niets doen
         } else {
-          const node=playN(soundingMidi(note,clef), 0.50);
-          pinnedNotes[clef].set(note.step, {node});
+          // Nieuwe noot pinnen met huidig accidentaal
+          const node=playN(soundingMidi(note,clef,curAcc), 0.50);
+          pinnedNotes[clef].set(note.step, {node, acc:curAcc});
           st.step=note.step;
         }
         st.accFired=true;
       }
+      // Acc eenmalig gebruikt: direct terugzetten naar uit
+      if(st.acc){ st.acc=null; st.accFired=false; updateAccBtns(clef); }
       renderStaff(clef);
       return;
     }
@@ -3104,7 +3117,10 @@ function setupTouch(clef){
       st.touches[t.identifier]={step:note.step, node};
     }
     const first=Object.values(st.touches)[0];
-    st.step=first?first.step:null; st.accFired=true;
+    st.step=first?first.step:null;
+    st.accFired=true;
+    // Acc eenmalig gebruikt: direct terugzetten naar uit
+    if(st.acc){ st.acc=null; st.accFired=false; updateAccBtns(clef); }
     renderStaff(clef);
     // Single touch: registreer bij swipe-engine (prepareert pages direct)
     if(e.touches.length === 1){
@@ -3178,22 +3194,36 @@ function setupTouch(clef){
     md=true;
     const note=noteAt(e.clientX,e.clientY); if(!note) return;
     if(isShiftActive(clef)){
-      // Shift-modus: noot vastzetten of losmaken (toggle)
+      const curAcc = st.acc || null;
       if(pinnedNotes[clef].has(note.step)){
         const v=pinnedNotes[clef].get(note.step);
-        stopN(v.node);
-        pinnedNotes[clef].delete(note.step);
-        if(st.step===note.step) st.step=null;
+        if(!curAcc){
+          // 2a: geen accidentaal → noot loslaten
+          stopN(v.node);
+          pinnedNotes[clef].delete(note.step);
+          if(st.step===note.step) st.step=null;
+        } else if(curAcc !== v.acc){
+          // 2b: ander accidentaal → vervang
+          stopN(v.node);
+          const node=playN(soundingMidi(note,clef,curAcc), 0.50);
+          pinnedNotes[clef].set(note.step, {node, acc:curAcc});
+          st.step=note.step;
+        }
       } else {
-        const node=playN(soundingMidi(note,clef), 0.50);
-        pinnedNotes[clef].set(note.step, {node});
+        const node=playN(soundingMidi(note,clef,curAcc), 0.50);
+        pinnedNotes[clef].set(note.step, {node, acc:curAcc});
         st.step=note.step;
       }
       st.accFired=true;
+      // Acc eenmalig gebruikt: direct terugzetten naar uit
+      if(st.acc){ st.acc=null; st.accFired=false; updateAccBtns(clef); }
       renderStaff(clef);
     } else {
       stopN(st.node); st.node=playN(soundingMidi(note,clef));
-      st.step=note.step; st.accFired=true; renderStaff(clef);
+      st.step=note.step; st.accFired=true;
+      // Acc eenmalig gebruikt: direct terugzetten naar uit
+      if(st.acc){ st.acc=null; st.accFired=false; updateAccBtns(clef); }
+      renderStaff(clef);
     }
   };
   cv.onmousemove=e=>{
@@ -4767,7 +4797,7 @@ function updateNotePosSliderPadding(clef){
 // I18N — meertalige interface
 // ════════════════════════════════════════════════════
 let _i18nData = null;   // geladen JSON: { nl:{...}, en:{...}, ... }
-let _i18nLang = 'nl';   // actieve taal — wordt overschreven na _detectLang()
+let _i18nLang = 'nl';   // actieve taal
 
 // NL-fallback zodat app werkt vóór JSON geladen is
 const _I18N_NL_FALLBACK = {
@@ -4782,28 +4812,49 @@ const _I18N_NL_FALLBACK = {
   language:'Taal', shareSlogan:'Zing het voort!', settingsTitle:'Instellingen',
   soundsFamiliar:'Sounds Familiar', more:'meer',
   avatarMale:'Notenkraker', avatarFemale:'Notenkraakster',
-  install:'Installeer', installAs:'Installeer als…',
-  installChoose:'Kies welk icoon je op je scherm wil zien',
-  installChooseTheme:'Kies een thema',
-  skipInstall:'Gebruik zonder installatie',
-  skipInstall:'Gebruik zonder installatie',
-  cancel:'Annuleren',
-  shareText:'Kies een toonsoort en hoor direct de juiste noot.',
+  installAs:'Installeer als…', installChoose:'Kies welk icoon je op je scherm wil zien',
+  install:'Installeer', cancel:'Annuleren',
   featrequest:'5 woorden over\nhoe je deze app\ngraag gebruikt',
-  featrequestShort:'Schrijf ons',
   pitchBarok:'Barok', pitchKlassiek:'Klassiek', pitchStandaard:'Standaard',
   pitchModern:'Modern Orkest',
-  adjustments:'Aanpassingen', bassFirst:'Bas eerst',
-  reloadMp3:'Laad nieuwe mp3', ready:'Gereed.',
+  intervalNames:['Unisono','Kleine secunde','Grote secunde','Kleine terts','Grote terts',
+    'Reine kwart','Tritonus','Reine kwint','Kleine sext','Grote sext',
+    'Kleine septiem','Grote septiem','Octaaf'],
+  adjustments:'Aanpassingen',
+  bassFirst:'Bas eerst',
+  reloadMp3:'Laad nieuwe mp3',
+  // Volledig set — synchron met i18n.json
+  avatarFemale:'Notenkraakster',
+  cancel:'Annuleren',
+  chord:'Akkoord',
+  flats:'mollen',
+  installChoose:'Kies welk icoon je op je scherm wil zien',
+  intervalAbove:'Interval boven',
+  intervalBelow:'Interval onder',
+  keyMajor:'Groot',
+  keyMinor:'Klein',
+  major:'Majeur',
+  minor:'Mineur',
+  more:'meer',
+  noteBelow:'Nootnaam onder',
+  personalize:'Personaliseer',
+  pitchKlassiek:'Klassiek',
+  pitchStandaard:'Standaard',
+  ready:'Gereed.',
+  recZoom:'opnamezoom',
   reinstallMsg:'Ook de app opnieuw installeren met dit icoon?',
-  reinstallNo:'Nee', reinstallYes:'Ja',
+  reinstallNo:'Nee',
+  reinstallYes:'Ja',
+  settingsTitle:'Instellingen',
+  share:'Delen',
+  shareSlogan:'Zing het voort!',
+  solfege:'Solfège',
+  tempo:'Tempo',
+  featrequestShort:'Schrijf ons',
   analysisWaiting:'⏳ Auto herkenning…',
   analysisDetected:'🎼 {key} gedetecteerd',
   analysisTuning:'🎵 Stemming: {hz} Hz ({lbl})',
   analysisChanges:'+ {n} toonsoortwijzigingen',
-  intervalNames:['Unisono','Kleine secunde','Grote secunde','Kleine terts','Grote terts',
-    'Reine kwart','Tritonus','Reine kwint','Kleine sext','Grote sext',
-    'Kleine septiem','Grote septiem','Octaaf'],
 };
 
 function T(k){
@@ -4909,10 +4960,9 @@ function applyTranslations(){
   document.querySelectorAll('.player-speed-label').forEach(el => el.textContent = T('tempo'));
   document.querySelectorAll('[data-t="zoom"]').forEach(el => el.textContent = T('zoom'));
   document.querySelectorAll('[data-t="reczoom"]').forEach(el => el.textContent = T('recZoom'));
-  // 3. Interval-label (cyclische waarde)
-  const iv = window._showInterval || 0;
+  // 3. Interval-label (aan/uit toggle)
   document.querySelectorAll('.interval-label').forEach(el => {
-    el.textContent = iv === 0 ? T('interval') : iv === 1 ? T('intervalAbove') : T('intervalBelow');
+    el.textContent = T('interval');
   });
   // 4. Toonsoort naam + enharm knoppen hertalen + kwintencirkel hertekenen
   if(typeof updateLabels === 'function') updateLabels();
@@ -5059,17 +5109,15 @@ function openInstallThemeOverlay(){
     if(btn) btn.classList.toggle('active', k === curKey);
   });
 
-  // Titel aanpassen via T()
+  // Titel aanpassen
   const title = overlay.querySelector('#overlay-title');
-  if(title) title.textContent = isInstalled ? T('installChooseTheme') : T('installAs');
+  if(title) title.textContent = isInstalled ? 'Kies een thema' : 'Installeer als…';
 
   // "Gebruik zonder installatie" knop: alleen tonen als niet geinstalleerd
   const noInstBtn = document.getElementById('overlay-no-install');
   if(noInstBtn) noInstBtn.style.display = (!isInstalled) ? 'block' : 'none';
 
   overlay.style.display = 'flex';
-  // Vertaal alle data-i18n elementen in de overlay
-  applyTranslations();
 }
 
 function closeInstallThemePicker(){
@@ -5119,10 +5167,10 @@ function installWithTheme(t, g){
 function shareApp(){
   const base = window.location.href.split('?')[0];
   const shareUrl = base + '?install=1';
-  const naam = (_persGender === 'v') ? T('avatarFemale') : T('avatarMale');
+  const naam = (_persGender === 'v') ? 'Notenkraakster' : 'Notenkraker';
   const data = {
     title: naam,
-    text: T('shareText') || naam,
+    text: 'Kies een toonsoort en laat direct vanaf een notenbalk de juiste noot klinken.',
     url: shareUrl
   };
   if(navigator.share){
@@ -5246,6 +5294,8 @@ function openFeedback(){
 }
 
 // Taal: vlaggen + namen
+// Twemoji SVG-vlaggen voor Windows-compatibiliteit
+// Vlag-emoji → Twemoji codepoint: regional indicator A=1f1e6, B=1f1e7, ... Z=1f1ff
 const LANGS = {
   nl:{ flag:'🇳🇱', twemoji:'1f1f3-1f1f1', label:'Nederlands' },
   en:{ flag:'🇬🇧', twemoji:'1f1ec-1f1e7', label:'English' },
@@ -5256,53 +5306,7 @@ const LANGS = {
   pt:{ flag:'🇵🇹', twemoji:'1f1f5-1f1f9', label:'Português' },
   zh:{ flag:'🇨🇳', twemoji:'1f1e8-1f1f3', label:'中文' },
 };
-
-// Verwante talen: OS-talen die niet in LANGS staan → meest verwante beschikbare taal
-const _LANG_FALLBACK = {
-  af:'nl', // Afrikaans → Nederlands
-  be:'ru', // Belarussisch → Russisch
-  bg:'ru', // Bulgaars → Russisch
-  ca:'es', // Catalaans → Spaans
-  da:'nl', // Deens → Nederlands
-  el:'it', // Grieks → Italiaans
-  fi:'sv', // Fins (sv staat in ru/pl buiten LANGS; sv niet in LANGS — valt door naar en)
-  gl:'pt', // Galicisch → Portugees
-  hr:'de', // Kroatisch → Duits
-  hu:'de', // Hongaars → Duits
-  id:'en', // Indonesisch → Engels
-  ja:'zh', // Japans → Chinees
-  ko:'zh', // Koreaans → Chinees
-  ms:'en', // Maleis → Engels
-  nb:'de', // Noors → Duits
-  nn:'de',
-  no:'de',
-  ro:'it', // Roemeens → Italiaans
-  sk:'cs', // Slowaaks → Tsjechisch (cs zit in i18n maar niet in LANGS — valt door naar de)
-  sl:'de', // Sloveens → Duits
-  sr:'ru', // Servisch → Russisch
-  sv:'de', // Zweeds → Duits (sv niet in LANGS)
-  tr:'de', // Turks → Duits
-  uk:'ru', // Oekraïens → Russisch
-};
-
-// Bepaal startlang: 1) opgeslagen voorkeur, 2) OS-taal, 3) verwante taal, 4) nl
-function _detectLang(){
-  const saved = localStorage.getItem('nk_lang');
-  if(saved && LANGS[saved]) return saved;
-
-  const navLangs = navigator.languages && navigator.languages.length
-    ? navigator.languages : [navigator.language || 'nl'];
-
-  for(const nav of navLangs){
-    const code = nav.toLowerCase().split('-')[0];
-    if(LANGS[code]) return code;
-    if(_LANG_FALLBACK[code] && LANGS[_LANG_FALLBACK[code]]) return _LANG_FALLBACK[code];
-  }
-  return 'nl';
-}
-
-let _currentLang = _detectLang();
-_i18nLang = _currentLang; // sync zodat T() meteen de juiste taal gebruikt
+let _currentLang = 'nl';
 
 function flagImg(code, size){
   const lang = LANGS[code];
@@ -5322,7 +5326,6 @@ function initFlags(){
 function selectLang(code){
   _currentLang = code;
   _i18nLang    = code;
-  localStorage.setItem('nk_lang', code); // onthoud voorkeur
   const l = LANGS[code];
   const img = flagImg(code, 17);
   const cf  = document.getElementById('current-flag');
@@ -5976,7 +5979,7 @@ function showTabAnimated(i, dir){
     background:#fff; border-radius:16px; padding:20px 18px 16px;
     max-width:300px; width:88%; box-shadow:0 8px 32px rgba(0,0,0,0.25);
     font-family:Georgia,serif; text-align:center;">
-    <div id="overlay-title" style="font-size:15px; font-weight:bold; color:#2a2a2a; margin-bottom:14px;" data-i18n="installChooseTheme">Kies een thema</div>
+    <div id="overlay-title" style="font-size:15px; font-weight:bold; color:#2a2a2a; margin-bottom:14px;">Kies een thema</div>
     <div id="install-theme-grid" style="
       display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
       <!-- volgorde: dv, lv, dm, lm -->
@@ -5997,12 +6000,12 @@ function showTabAnimated(i, dir){
       <button onclick="skipInstall()" style="
         width:100%; padding:10px; border:1.5px solid #c8bfa8; border-radius:8px;
         background:#f5f0e8; color:#444; font-size:13px; cursor:pointer;
-        font-family:Georgia,serif;" data-i18n="skipInstall">Gebruik zonder installatie</button>
+        font-family:Georgia,serif;">Gebruik zonder installatie</button>
     </div>
     <button onclick="closeInstallThemePicker()" style="
       width:100%; padding:10px; border:1.5px solid #ccc; border-radius:8px;
       background:transparent; color:#888; font-size:13px; cursor:pointer;
-      font-family:Georgia,serif;" data-i18n="cancel">Annuleren</button>
+      font-family:Georgia,serif;">Annuleren</button>
   </div>
 </div>
 
@@ -6010,15 +6013,19 @@ function showTabAnimated(i, dir){
   <div id="pers-avatar-grid">
     <button class="pers-avatar-btn active" id="pers-btn-lm" onclick="persSetKarakter('l','m')">
       <img src="icons/icon-lm-96.png" alt="Blanke man">
+      <span class="pers-avatar-lbl">Notenkraker</span>
     </button>
     <button class="pers-avatar-btn" id="pers-btn-dm" onclick="persSetKarakter('d','m')">
       <img src="icons/icon-dm-96.png" alt="Donkere man">
+      <span class="pers-avatar-lbl">Notenkraker</span>
     </button>
     <button class="pers-avatar-btn" id="pers-btn-lv" onclick="persSetKarakter('l','v')">
       <img src="icons/icon-lv-96.png" alt="Blanke vrouw">
+      <span class="pers-avatar-lbl">Notenkraakster</span>
     </button>
     <button class="pers-avatar-btn" id="pers-btn-dv" onclick="persSetKarakter('d','v')">
       <img src="icons/icon-dv-96.png" alt="Donkere vrouw">
+      <span class="pers-avatar-lbl">Notenkraakster</span>
     </button>
   </div>
   <hr class="app-panel-divider">
@@ -6492,13 +6499,13 @@ document.addEventListener('click', e => {
 <!-- Notenkraker splash-overlay -->
 <div id="nk-overlay" onclick="nkOverlayBgClick(event)">
   <div id="nk-share-row-top" onclick="nkShare(event)">
-    <span data-i18n="shareSlogan">Zing het voort!</span>
+    <span>Zing het voort!</span>
     <span class="nk-share-icon-el"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></span>
   </div>
   <img id="nk-overlay-img" src="https://raw.githubusercontent.com/The-Red-Ninja/Notenkraker/main/add/kooropstelling.png" alt="Notenkraker koor"
        onclick="closeNkOverlay()" style="cursor:pointer;">
   <div id="nk-share-row" onclick="nkShare(event)">
-    <span data-i18n="shareSlogan">Zing het voort!</span>
+    <span>Zing het voort!</span>
     <span id="nk-share-icon" class="nk-share-icon-el"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></span>
   </div>
 </div>
