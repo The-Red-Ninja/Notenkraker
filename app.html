@@ -557,9 +557,9 @@ input[type=range].topbar-vol-thumb::-webkit-slider-thumb {
   -webkit-appearance:none; width:22px; height:22px; background:#333;
   border-radius:50%; border:2px solid #fff; box-shadow:0 1px 4px #0003;
 }
-#p0-middle { display:flex; flex-direction:column; flex:1; min-height:0; }
-#p0-right-col { display:flex; flex-direction:column; flex:1; min-height:0; gap:4px; }
-#p0-staves { flex:1; min-height:0; }
+#p0-middle { display:flex; flex-direction:column; flex:1; min-height:0; overflow:visible; }
+#p0-right-col { display:flex; flex-direction:column; flex:1; min-height:0; gap:4px; overflow:visible; }
+#p0-staves { flex:1; min-height:0; overflow:visible; }
 .bedieningtab1 { flex-shrink:0; }
 .toggle-row { display:flex; gap:6px; padding:4px 8px 2px 8px; }
 .toggle-btn { flex:1; padding:5px 4px; border-radius:16px; border:1.5px solid #ccc;
@@ -899,6 +899,7 @@ input[type=range].zoom-slider-thumb::-webkit-slider-thumb {
 
 /* Settings-panel: verberg notenbalk-items als geopend vanuit tab0 */
 #settings-panel[data-ctx="tab0"] .settings-staff-only { display:none; }
+#settings-panel[data-ctx="tab0"] #reload-mp3-row { display:none !important; }
 #settings-panel[data-ctx="tab0"] .settings-toggle-row { display:none; }
 #settings-panel[data-ctx="tab0"] .settings-clef-swap  { display:none !important; }
 /* Meer-knop: alleen op tab0 (aanpassingen-row blijft zichtbaar in staff-context) */
@@ -1922,7 +1923,10 @@ function drawMiniSystem(){
   const cv=document.getElementById('mini-system-canvas');
   if(!cv) return;
   const p=document.getElementById('p0-right-col');
-  const W=Math.max(p?p.clientWidth:120, 80);
+  // Begrens W: gebruik min van clientWidth en halve schermbreedtee als veiligheidsnet
+  // voor de eerste render op Windows waar flexbox nog niet gesettled is
+  const rawW = p ? p.clientWidth : 120;
+  const W = Math.max(Math.min(rawW, Math.floor(window.innerWidth * 0.55)), 80);
 
   // ls wordt bepaald op basis van het MAXIMALE aantal accidentalen (7) + één nootbreedte als marge.
   // Dit zorgt voor een stabiele, vaste grootte ongeacht de huidige toonsoort.
@@ -1939,8 +1943,8 @@ function drawMiniSystem(){
 
   const k=cKey(), n2=k.sharps||k.flats;
 
-  const staffH=4*ls, gap=3*ls, topPad=Math.round(ls*3.5), botPad=Math.round(ls*0.5);
-  const H=topPad+staffH+gap+staffH+botPad;
+  const staffH=4*ls, gap=3*ls, topPad=Math.round(ls*3.5), botPad=Math.round(ls*1.5);
+  const H=Math.min(topPad+staffH+gap+staffH+botPad, 200);
   // Alleen resetten als afmetingen echt veranderen (anders wordt canvas onnodig leeggemaakt)
   if(cv.width  !== W) cv.width  = W;
   if(cv.height !== H) cv.height = H;
@@ -2804,6 +2808,10 @@ function toggleAanpassingenMenu(e){
     closeSettings();
     return;
   }
+
+  // Sluit instellingenvenster zodra aanpassingen openen
+  spanel.classList.remove('open');
+  document.querySelectorAll('.settings-btn').forEach(b=>b.classList.remove('held'));
 
   // Activeer verhuisde triggers
   document.querySelectorAll('.page.staff-page').forEach(p=>p.classList.add('settings-open'));
@@ -4822,7 +4830,7 @@ const _I18N_NL_FALLBACK = {
     'Kleine septiem','Grote septiem','Octaaf'],
   adjustments:'Aanpassingen',
   bassFirst:'Bas eerst',
-  reloadMp3:'Laad nieuwe mp3',
+  reloadMp3:'Laad nieuwe mp3', reloadAudio:'Laad nieuw stuk',
   // Volledig set — synchron met i18n.json
   avatarFemale:'Notenkraakster',
   cancel:'Annuleren',
@@ -5861,7 +5869,7 @@ function showTabAnimated(i, dir){
   <div id="reload-mp3-row" style="display:none;margin-bottom:4px;">
     <button onclick="openMp3();closeSettings();" style="background:none;border:none;width:100%;display:flex;align-items:center;cursor:pointer;padding:0;">
       <div style="width:36px;height:22px;flex-shrink:0;"></div>
-      <span class="t-reload-mp3" style="flex:1;padding-left:9px;font-size:12.5px;font-family:Arial,sans-serif;color:#444;text-align:left;">Laad nieuwe mp3</span>
+      <span class="t-reload-mp3" style="flex:1;padding-left:9px;font-size:12.5px;font-family:Arial,sans-serif;color:#444;text-align:left;" data-i18n="reloadAudio">Laad nieuw stuk</span>
     </button>
   </div>
   <!-- Aanpassingen: alleen in staff-context -->
@@ -6011,21 +6019,21 @@ function showTabAnimated(i, dir){
 
 <div id="personaliseer-panel">
   <div id="pers-avatar-grid">
-    <button class="pers-avatar-btn active" id="pers-btn-lm" onclick="persSetKarakter('l','m')">
-      <img src="icons/icon-lm-96.png" alt="Blanke man">
-      <span class="pers-avatar-lbl">Notenkraker</span>
-    </button>
-    <button class="pers-avatar-btn" id="pers-btn-dm" onclick="persSetKarakter('d','m')">
-      <img src="icons/icon-dm-96.png" alt="Donkere man">
-      <span class="pers-avatar-lbl">Notenkraker</span>
+    <button class="pers-avatar-btn" id="pers-btn-dv" onclick="persSetKarakter('d','v')">
+      <img src="icons/icon-dv-96.png" alt="Donkere vrouw">
+      <span class="pers-avatar-lbl">Notenkraakster</span>
     </button>
     <button class="pers-avatar-btn" id="pers-btn-lv" onclick="persSetKarakter('l','v')">
       <img src="icons/icon-lv-96.png" alt="Blanke vrouw">
       <span class="pers-avatar-lbl">Notenkraakster</span>
     </button>
-    <button class="pers-avatar-btn" id="pers-btn-dv" onclick="persSetKarakter('d','v')">
-      <img src="icons/icon-dv-96.png" alt="Donkere vrouw">
-      <span class="pers-avatar-lbl">Notenkraakster</span>
+    <button class="pers-avatar-btn" id="pers-btn-dm" onclick="persSetKarakter('d','m')">
+      <img src="icons/icon-dm-96.png" alt="Donkere man">
+      <span class="pers-avatar-lbl">Notenkraker</span>
+    </button>
+    <button class="pers-avatar-btn active" id="pers-btn-lm" onclick="persSetKarakter('l','m')">
+      <img src="icons/icon-lm-96.png" alt="Blanke man">
+      <span class="pers-avatar-lbl">Notenkraker</span>
     </button>
   </div>
   <hr class="app-panel-divider">

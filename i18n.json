@@ -65,9 +65,7 @@
     "analysisChanges": "+ {n} toonsoortwijzigingen",
     "adjustments": "Aanpassingen",
     "bassFirst": "Bas eerst",
-    "shareText": "Kies een toonsoort en hoor direct de juiste noot.",
-    "installChooseTheme": "Kies een thema",
-    "skipInstall": "Gebruik zonder installatie"
+    "reloadAudio": "Laad nieuw stuk"
   },
   "en": {
     "tab1": "Key",
@@ -93,7 +91,7 @@
     "share": "Share",
     "personalize": "Personalize",
     "language": "Language",
-    "shareSlogan": "Sing it on!",
+    "shareSlogan": "Share the music!",
     "settingsTitle": "Settings",
     "soundsFamiliar": "Sounds Familiar",
     "intervalNames": [
@@ -135,9 +133,7 @@
     "analysisChanges": "+ {n} key changes",
     "adjustments": "Adjustments",
     "bassFirst": "Bass first",
-    "shareText": "Choose a key and instantly hear the right note.",
-    "installChooseTheme": "Choose a theme",
-    "skipInstall": "Use without installing"
+    "reloadAudio": "Load new piece"
   },
   "de": {
     "tab1": "Tonart",
@@ -163,7 +159,7 @@
     "share": "Teilen",
     "personalize": "Personalisieren",
     "language": "Sprache",
-    "shareSlogan": "Gib es weiter!",
+    "shareSlogan": "Musik teilen!",
     "settingsTitle": "Einstellungen",
     "soundsFamiliar": "Klingt vertraut",
     "intervalNames": [
@@ -205,9 +201,7 @@
     "analysisChanges": "+ {n} Tonartenwechsel",
     "adjustments": "Anpassungen",
     "bassFirst": "Bass zuerst",
-    "shareText": "Wähle eine Tonart und höre sofort die richtige Note.",
-    "installChooseTheme": "Thema wählen",
-    "skipInstall": "Ohne Installation verwenden"
+    "reloadAudio": "Neues Stück laden"
   },
   "fr": {
     "tab1": "Tonalité",
@@ -233,7 +227,7 @@
     "share": "Partager",
     "personalize": "Personnaliser",
     "language": "Langue",
-    "shareSlogan": "Chantez-le !",
+    "shareSlogan": "Partagez la musique !",
     "settingsTitle": "Paramètres",
     "soundsFamiliar": "Ça me dit quelque chose",
     "intervalNames": [
@@ -275,9 +269,7 @@
     "analysisChanges": "+ {n} changements de tonalité",
     "adjustments": "Réglages",
     "bassFirst": "Basse en premier",
-    "shareText": "Choisissez une tonalité et entendez immédiatement la bonne note.",
-    "installChooseTheme": "Choisir un thème",
-    "skipInstall": "Utiliser sans installer"
+    "reloadAudio": "Charger un nouveau morceau"
   },
   "es": {
     "tab1": "Tonalidad",
@@ -303,7 +295,7 @@
     "share": "Compartir",
     "personalize": "Personalizar",
     "language": "Idioma",
-    "shareSlogan": "¡Compártelo!",
+    "shareSlogan": "¡Comparte la música!",
     "settingsTitle": "Configuración",
     "soundsFamiliar": "Me suena",
     "intervalNames": [
@@ -345,9 +337,7 @@
     "analysisChanges": "+ {n} cambios de tonalidad",
     "adjustments": "Ajustes",
     "bassFirst": "Bajo primero",
-    "shareText": "Elige una tonalidad y escucha la nota correcta al instante.",
-    "installChooseTheme": "Elegir tema",
-    "skipInstall": "Usar sin instalar"
+    "reloadAudio": "Cargar nueva pieza"
   },
   "it": {
     "tab1": "Tonalità",
@@ -373,7 +363,7 @@
     "share": "Condividi",
     "personalize": "Personalizza",
     "language": "Lingua",
-    "shareSlogan": "Cantalo avanti!",
+    "shareSlogan": "Diffondi la musica!",
     "settingsTitle": "Impostazioni",
     "soundsFamiliar": "Mi suona familiare",
     "intervalNames": [
@@ -415,9 +405,7 @@
     "analysisChanges": "+ {n} cambi di tonalità",
     "adjustments": "Impostazioni",
     "bassFirst": "Basso prima",
-    "shareText": "Scegli una tonalità e ascolta subito la nota giusta.",
-    "installChooseTheme": "Scegli un tema",
-    "skipInstall": "Usa senza installare"
+    "reloadAudio": "Carica nuovo brano"
   },
   "pt": {
     "tab1": "Tonalidade",
@@ -443,7 +431,7 @@
     "share": "Partilhar",
     "personalize": "Personalizar",
     "language": "Idioma",
-    "shareSlogan": "Cante adiante!",
+    "shareSlogan": "Partilhe a música!",
     "settingsTitle": "Definições",
     "soundsFamiliar": "Soa familiar",
     "intervalNames": [
@@ -485,9 +473,7 @@
     "analysisChanges": "+ {n} mudanças de tonalidade",
     "adjustments": "Ajustes",
     "bassFirst": "Baixo primeiro",
-    "shareText": "Escolha uma tonalidade e ouça a nota certa imediatamente.",
-    "installChooseTheme": "Escolher tema",
-    "skipInstall": "Usar sem instalar"
+    "reloadAudio": "Carregar nova peça"
   },
   "ru": {
     "tab1": "Тональность",
@@ -513,7 +499,7 @@
     "share": "Поделиться",
     "personalize": "Персонализация",
     "language": "Язык",
-    "shareSlogan": "Пой дальше!",
+    "shareSlogan": "Делись музыкой!",
     "settingsTitle": "Настройки",
     "soundsFamiliar": "Звучит знакомо",
     "intervalNames": [
@@ -555,9 +541,7 @@
     "analysisChanges": "+ {n} смен тональности",
     "adjustments": "Настройки",
     "bassFirst": "Бас первым",
-    "shareText": "Выберите тональность и сразу услышьте нужную ноту.",
-    "installChooseTheme": "Выбрать тему",
-    "skipInstall": "Использовать без установки"
+    "reloadAudio": "Загрузить новое произведение"
   },
   "hi": {
     "tab1": "स्वरमान",
@@ -583,7 +567,7 @@
     "share": "शेयर करें",
     "personalize": "वैयक्तिकरण",
     "language": "भाषा",
-    "shareSlogan": "आगे गाओ!",
+    "shareSlogan": "संगीत फैलाएं!",
     "settingsTitle": "सेटिंग्स",
     "soundsFamiliar": "जाना-पहचाना लगता है",
     "intervalNames": [
@@ -625,9 +609,7 @@
     "analysisChanges": "+ {n} स्वरमान परिवर्तन",
     "adjustments": "समायोजन",
     "bassFirst": "बास पहले",
-    "shareText": "एक राग चुनें और तुरंत सही नोट सुनें।",
-    "installChooseTheme": "थीम चुनें",
-    "skipInstall": "बिना इंस्टॉल किए उपयोग करें"
+    "reloadAudio": "नया टुकड़ा लोड करें"
   },
   "pl": {
     "tab1": "Tonacja",
@@ -653,7 +635,7 @@
     "share": "Udostępnij",
     "personalize": "Personalizuj",
     "language": "Język",
-    "shareSlogan": "Śpiewaj dalej!",
+    "shareSlogan": "Dziel się muzyką!",
     "settingsTitle": "Ustawienia",
     "soundsFamiliar": "Brzmi znajomo",
     "intervalNames": [
@@ -695,9 +677,7 @@
     "analysisChanges": "+ {n} zmiany tonacji",
     "adjustments": "Ustawienia",
     "bassFirst": "Bas najpierw",
-    "shareText": "Wybierz tonację i natychmiast usłysz właściwą nutę.",
-    "installChooseTheme": "Wybierz motyw",
-    "skipInstall": "Używaj bez instalowania"
+    "reloadAudio": "Załaduj nowy utwór"
   },
   "cs": {
     "tab1": "Tónina",
@@ -723,7 +703,7 @@
     "share": "Sdílet",
     "personalize": "Přizpůsobit",
     "language": "Jazyk",
-    "shareSlogan": "Zpívej dál!",
+    "shareSlogan": "Šiřte hudbu!",
     "settingsTitle": "Nastavení",
     "soundsFamiliar": "Zní povědomě",
     "intervalNames": [
@@ -765,9 +745,7 @@
     "analysisChanges": "+ {n} změny tóniny",
     "adjustments": "Nastavení",
     "bassFirst": "Baskytara první",
-    "shareText": "Vyberte tóninu a okamžitě uslyšte správnou notu.",
-    "installChooseTheme": "Vybrat motiv",
-    "skipInstall": "Použít bez instalace"
+    "reloadAudio": "Načíst novou skladbu"
   },
   "sv": {
     "tab1": "Tonart",
@@ -793,7 +771,7 @@
     "share": "Dela",
     "personalize": "Anpassa",
     "language": "Språk",
-    "shareSlogan": "Sjung det vidare!",
+    "shareSlogan": "Sprid musiken!",
     "settingsTitle": "Inställningar",
     "soundsFamiliar": "Låter bekant",
     "intervalNames": [
@@ -835,9 +813,7 @@
     "analysisChanges": "+ {n} tonartsskiften",
     "adjustments": "Inställningar",
     "bassFirst": "Bas först",
-    "shareText": "Välj en tonart och hör genast rätt ton.",
-    "installChooseTheme": "Välj ett tema",
-    "skipInstall": "Använd utan att installera"
+    "reloadAudio": "Ladda nytt stycke"
   },
   "zh": {
     "tab1": "调性",
@@ -863,7 +839,7 @@
     "share": "分享",
     "personalize": "个性化",
     "language": "语言",
-    "shareSlogan": "传唱下去！",
+    "shareSlogan": "传播音乐！",
     "settingsTitle": "设置",
     "soundsFamiliar": "听起来熟悉",
     "intervalNames": [
@@ -905,8 +881,6 @@
     "analysisChanges": "+ {n} 个调性变化",
     "adjustments": "设置",
     "bassFirst": "低音优先",
-    "shareText": "选择调性，立即听到正确的音符。",
-    "installChooseTheme": "选择主题",
-    "skipInstall": "不安装直接使用"
+    "reloadAudio": "加载新曲目"
   }
 }
