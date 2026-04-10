@@ -80,30 +80,32 @@ self.addEventListener('fetch', e => {
           if (audioFile instanceof File && audioFile.size > 0) {
             const cache = await caches.open(SHARE_CACHE);
 
-            // Gebruik een vaste sleutel zodat app.html altijd weet waar te kijken.
-            // Metadata (naam + type) slaan we op als JSON naast het bestand.
+            // Vaste cache-sleutels op basis van de SW-locatie
+            // (werkt correct op GitHub Pages submap én op rootdomeinen)
+            const base = self.registration.scope; // bijv. https://host/Notenkraker/
             await cache.put(
-              new Request(url.origin + '/__nk_shared_file__'),
+              new Request(base + '__nk_shared_file__'),
               new Response(audioFile, {
                 headers: { 'Content-Type': audioFile.type || 'audio/mpeg' }
               })
             );
             await cache.put(
-              new Request(url.origin + '/__nk_shared_meta__'),
+              new Request(base + '__nk_shared_meta__'),
               new Response(
                 JSON.stringify({ name: audioFile.name, type: audioFile.type }),
                 { headers: { 'Content-Type': 'application/json' } }
               )
             );
 
-            // 303 See Other → browser wisselt naar GET, opent de app
-            return Response.redirect(url.origin + '/app.html?shared_audio=1', 303);
+            // 303 → browser wisselt naar GET, opent de app op de juiste URL
+            return Response.redirect(base + 'app.html?shared_audio=1', 303);
           }
         } catch (err) {
           console.warn('[SW] share-target fout:', err);
         }
         // Geen geldig audiobestand → gewoon app.html laden
-        return fetch(new Request(url.origin + '/app.html', { method: 'GET' }));
+        const base = self.registration.scope;
+        return fetch(new Request(base + 'app.html', { method: 'GET' }));
       })()
     );
     return;

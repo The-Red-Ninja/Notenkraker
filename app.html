@@ -5058,10 +5058,13 @@ window.addEventListener('DOMContentLoaded',()=>{
     (async () => {
       try {
         const cache    = await caches.open('nk-shared-audio-v1');
-        const origin   = location.origin;
+        // Gebruik dezelfde base als de SW: registration.scope
+        // Voorbeeld: https://the-red-ninja.github.io/Notenkraker/
+        const swReg  = await navigator.serviceWorker.getRegistration();
+        const base   = swReg ? swReg.scope : (location.origin + location.pathname.replace(/\/[^\/]*$/, '/'));
         const [fileResp, metaResp] = await Promise.all([
-          cache.match(new Request(origin + '/__nk_shared_file__')),
-          cache.match(new Request(origin + '/__nk_shared_meta__')),
+          cache.match(new Request(base + '__nk_shared_file__')),
+          cache.match(new Request(base + '__nk_shared_meta__')),
         ]);
         if (fileResp) {
           const blob = await fileResp.blob();
@@ -5077,8 +5080,8 @@ window.addEventListener('DOMContentLoaded',()=>{
           const file = new File([blob], fileName, { type: fileType });
           // Cache opruimen na gebruik
           await Promise.all([
-            cache.delete(new Request(origin + '/__nk_shared_file__')),
-            cache.delete(new Request(origin + '/__nk_shared_meta__')),
+            cache.delete(new Request(base + '__nk_shared_file__')),
+            cache.delete(new Request(base + '__nk_shared_meta__')),
           ]);
           setTimeout(() => loadAudioFile(file), 300);
         }
