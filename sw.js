@@ -3,7 +3,8 @@
 // of als je nieuwe statische bestanden toevoegt aan STATIC_ASSETS.
 // index.html wordt altijd live opgehaald (network-first).
 
-const CACHE = 'notenkraker-v2';
+const CACHE = 'notenkraker-v3';
+const SHARE_CACHE = 'nk-shared-audio-v1';
 
 // Statische bestanden die gecacht worden (cache-first)
 const STATIC_ASSETS = [
@@ -42,78 +43,88 @@ self.addEventListener('install', e => {
   self.skipWaiting(); // activeer nieuwe SW direct
 });
 
-// Activeer: verwijder oude caches
+// Activeer: verwijder oude caches (maar NIET de share-cache)
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      Promise.all(
+        keys
+          .filter(k => k !== CACHE && k !== SHARE_CACHE)
+          .map(k => caches.delete(k))
+      )
     )
   );
   self.clients.claim(); // neem direct controle over alle open tabs
 });
 
-// ── Share Target: vang POST /app.html op (Android "Delen via…" / iOS Share Sheet) ──
-// Het OS stuurt het gedeelde audiobestand als multipart-POST naar ./app.html.
-// De SW slaat het op in een aparte cache en stuurt door met ?shared_audio=…
-// zodat app.html het bij DOMContentLoaded kan ophalen.
+// ── FETCH ────────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
+  // ── Share Target: onderschep POST naar /app.html ──────────────────────────
+  // Chrome stuurt dit POST-verzoek wanneer de gebruiker "Delen via Notenkraker"
+  // kiest. De SW moet dit altijd afhandelen — ook als de app gesloten was.
+  // Werkwijze:
+  //   1. Lees het audiobestand uit de multipart-body
+  //   2. Sla het op in de share-cache onder een vaste sleutel
+  //   3. Stuur de browser door naar app.html?shared_audio=1  (GET)
+  //      → Chrome opent (of hergebruikt) de app-tab
+  //   4. app.html leest de sleutel en haalt het bestand op uit de cache
   if (e.request.method === 'POST' && url.pathname.endsWith('/app.html')) {
-    e.respondWith((async () => {
-      try {
-        const formData  = await e.request.formData();
-        const audioFile = formData.get('audio');   // naam = share_target.params.files[0].name
+    e.respondWith(
+      (async () => {
+        try {
+          const formData  = await e.request.formData();
+          const audioFile = formData.get('audio');
 
-        if (audioFile instanceof File && audioFile.size > 0) {
-          const cache    = await caches.open('nk-shared-audio-v1');
-          const safeKey  = encodeURIComponent(audioFile.name.replace(/[^a-zA-Z0-9._-]/g, '_'));
-          const storeUrl = url.origin + '/__nk_shared__/' + safeKey;
+          if (audioFile instanceof File && audioFile.size > 0) {
+            const cache = await caches.open(SHARE_CACHE);
 
-          await cache.put(
-            new Request(storeUrl),
-            new Response(audioFile, {
-              headers: { 'Content-Type': audioFile.type || 'audio/mpeg' }
-            })
-          );
+            // Gebruik een vaste sleutel zodat app.html altijd weet waar te kijken.
+            // Metadata (naam + type) slaan we op als JSON naast het bestand.
+            await cache.put(
+              new Request(url.origin + '/__nk_shared_file__'),
+              new Response(audioFile, {
+                headers: { 'Content-Type': audioFile.type || 'audio/mpeg' }
+              })
+            );
+            await cache.put(
+              new Request(url.origin + '/__nk_shared_meta__'),
+              new Response(
+                JSON.stringify({ name: audioFile.name, type: audioFile.type }),
+                { headers: { 'Content-Type': 'application/json' } }
+              )
+            );
 
-          const redir = url.origin + url.pathname + '?shared_audio=' + safeKey;
-          return Response.redirect(redir, 303);
+            // 303 See Other → browser wisselt naar GET, opent de app
+            return Response.redirect(url.origin + '/app.html?shared_audio=1', 303);
+          }
+        } catch (err) {
+          console.warn('[SW] share-target fout:', err);
         }
-      } catch (err) {
-        console.warn('[SW] share-target fout:', err);
-      }
-      // Geen geldig audiobestand: gewoon app.html ophalen
-      return fetch(new Request(url.origin + url.pathname, { method: 'GET' }));
-    })());
-    return;   // vroeg terug – volgende fetch-listener niet aanroepen
+        // Geen geldig audiobestand → gewoon app.html laden
+        return fetch(new Request(url.origin + '/app.html', { method: 'GET' }));
+      })()
+    );
+    return;
   }
-});
 
-// ── Fetch-strategie:
-// - index.html / app.html → network-first (altijd de laatste versie van GitHub)
-// - al het overige        → cache-first (snel, statisch)
-self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-  const isHTML = url.pathname.endsWith('.html') || url.pathname.endsWith('/');
-  // POST-requests voor share-target worden door de vorige listener afgehandeld;
-  // hier enkel GET-requests
-  if (e.request.method !== 'GET') return;
+  // ── Gewone fetch-strategie ────────────────────────────────────────────────
+  // HTML-bestanden → network-first (altijd de laatste versie van GitHub)
+  // Al het overige → cache-first (snel, statisch)
+  const isHTML = url.pathname.endsWith('.html') || url.pathname === '/';
 
   if (isHTML) {
-    // Network-first: probeer live te laden, val terug op cache
     e.respondWith(
       fetch(e.request)
         .then(response => {
-          // Sla verse versie op in cache
           const clone = response.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
           return response;
         })
-        .catch(() => caches.match(e.request)) // offline: gebruik cache
+        .catch(() => caches.match(e.request))
     );
   } else {
-    // Cache-first: gebruik cache, haal op als niet aanwezig
     e.respondWith(
       caches.match(e.request).then(cached => cached || fetch(e.request))
     );

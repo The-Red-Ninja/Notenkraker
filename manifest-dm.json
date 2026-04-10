@@ -2,7 +2,7 @@
   "name": "Notenkraker",
   "short_name": "Notenkraker",
   "description": "Kies een toonsoort en laat direct vanaf een notenbalk de juiste noot klinken.",
-  "start_url": "./index.html?karakter=dm",
+  "start_url": "/index.html?karakter=dm",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#f0ebe0",
@@ -32,7 +32,7 @@
     {
       "name": "Blanke man",
       "short_name": "Notenkraker",
-      "url": "./index.html?karakter=lm",
+      "url": "/index.html?karakter=lm",
       "icons": [
         {
           "src": "icons/icon-lm-96.png",
@@ -44,7 +44,7 @@
     {
       "name": "Donkere man",
       "short_name": "Notenkraker",
-      "url": "./index.html?karakter=dm",
+      "url": "/index.html?karakter=dm",
       "icons": [
         {
           "src": "icons/icon-dm-96.png",
@@ -56,7 +56,7 @@
     {
       "name": "Blanke vrouw",
       "short_name": "Notenkraakster",
-      "url": "./index.html?karakter=lv",
+      "url": "/index.html?karakter=lv",
       "icons": [
         {
           "src": "icons/icon-lv-96.png",
@@ -68,7 +68,7 @@
     {
       "name": "Donkere vrouw",
       "short_name": "Notenkraakster",
-      "url": "./index.html?karakter=dv",
+      "url": "/index.html?karakter=dv",
       "icons": [
         {
           "src": "icons/icon-dv-96.png",
@@ -78,9 +78,10 @@
       ]
     }
   ],
+  "scope": "/",
   "file_handlers": [
     {
-      "action": "./app.html",
+      "action": "/app.html",
       "accept": {
         "audio/mpeg": [
           ".mp3"
@@ -109,7 +110,7 @@
     }
   ],
   "share_target": {
-    "action": "./app.html",
+    "action": "/app.html",
     "method": "POST",
     "enctype": "multipart/form-data",
     "params": {
