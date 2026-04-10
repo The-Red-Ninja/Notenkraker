@@ -5051,45 +5051,55 @@ window.addEventListener('DOMContentLoaded',()=>{
   }
 
   // ── Share Target: audiobestand ontvangen via "Delen via…" (Android / iOS) ──
-  // De SW heeft het bestand in de cache opgeslagen en stuurt door naar
-  // app.html?shared_audio=1. Hier halen we het op en laden het in de speler.
-  if (new URLSearchParams(location.search).get('shared_audio') === '1') {
-    history.replaceState(null, '', location.pathname); // URL opschonen
-    (async () => {
-      try {
-        const cache    = await caches.open('nk-shared-audio-v1');
-        // Gebruik dezelfde base als de SW: registration.scope
-        // Voorbeeld: https://the-red-ninja.github.io/Notenkraker/
-        const swReg  = await navigator.serviceWorker.getRegistration();
-        const base   = swReg ? swReg.scope : (location.origin + location.pathname.replace(/\/[^\/]*$/, '/'));
-        const [fileResp, metaResp] = await Promise.all([
-          cache.match(new Request(base + '__nk_shared_file__')),
-          cache.match(new Request(base + '__nk_shared_meta__')),
-        ]);
-        if (fileResp) {
-          const blob = await fileResp.blob();
-          let fileName = 'gedeeld_audiobestand';
-          let fileType = blob.type || 'audio/mpeg';
-          if (metaResp) {
-            try {
-              const meta = await metaResp.json();
-              if (meta.name) fileName = meta.name;
-              if (meta.type) fileType = meta.type;
-            } catch (_) {}
-          }
-          const file = new File([blob], fileName, { type: fileType });
-          // Cache opruimen na gebruik
-          await Promise.all([
-            cache.delete(new Request(base + '__nk_shared_file__')),
-            cache.delete(new Request(base + '__nk_shared_meta__')),
-          ]);
-          setTimeout(() => loadAudioFile(file), 300);
-        }
-      } catch (err) {
-        console.warn('[NK] shared_audio: kon niet geladen worden:', err);
+  // Twee paden:
+  // A) App was gesloten → SW opent app.html?shared_audio=1 → lees cache bij startup
+  // B) App was al open → SW stuurt postMessage({type:'NK_SHARED_AUDIO'}) → lees cache
+
+  // Gedeelde helper: laad bestand uit SW-cache en gooi het naar de speler
+  async function _loadSharedAudioFromCache() {
+    try {
+      const cache  = await caches.open('nk-shared-audio-v1');
+      const swReg  = await navigator.serviceWorker.getRegistration();
+      const base   = swReg ? swReg.scope
+                           : (location.origin + location.pathname.replace(/\/[^\/]*$/, '/'));
+      const [fileResp, metaResp] = await Promise.all([
+        cache.match(new Request(base + '__nk_shared_file__')),
+        cache.match(new Request(base + '__nk_shared_meta__')),
+      ]);
+      if (!fileResp) return;
+      const blob = await fileResp.blob();
+      let fileName = 'gedeeld_audiobestand';
+      let fileType = blob.type || 'audio/mpeg';
+      if (metaResp) {
+        try {
+          const meta = await metaResp.json();
+          if (meta.name) fileName = meta.name;
+          if (meta.type) fileType = meta.type;
+        } catch (_) {}
       }
-    })();
+      const file = new File([blob], fileName, { type: fileType });
+      await Promise.all([
+        cache.delete(new Request(base + '__nk_shared_file__')),
+        cache.delete(new Request(base + '__nk_shared_meta__')),
+      ]);
+      setTimeout(() => loadAudioFile(file), 300);
+    } catch (err) {
+      console.warn('[NK] shared_audio: kon niet geladen worden:', err);
+    }
   }
+
+  // Pad A: app werd geopend met ?shared_audio=1
+  if (new URLSearchParams(location.search).get('shared_audio') === '1') {
+    history.replaceState(null, '', location.pathname);
+    _loadSharedAudioFromCache();
+  }
+
+  // Pad B: app was al open, SW stuurt een postMessage
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data && e.data.type === 'NK_SHARED_AUDIO') {
+      _loadSharedAudioFromCache();
+    }
+  });
 
 });
 

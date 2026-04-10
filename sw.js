@@ -61,28 +61,22 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // ── Share Target: onderschep POST naar /app.html ──────────────────────────
-  // Chrome stuurt dit POST-verzoek wanneer de gebruiker "Delen via Notenkraker"
-  // kiest. De SW moet dit altijd afhandelen — ook als de app gesloten was.
-  // Werkwijze:
-  //   1. Lees het audiobestand uit de multipart-body
-  //   2. Sla het op in de share-cache onder een vaste sleutel
-  //   3. Stuur de browser door naar app.html?shared_audio=1  (GET)
-  //      → Chrome opent (of hergebruikt) de app-tab
-  //   4. app.html leest de sleutel en haalt het bestand op uit de cache
+  // ── Share Target: onderschep POST naar app.html ───────────────────────────
+  // Chrome stuurt een multipart POST wanneer de gebruiker "Delen via" kiest.
+  // Response.redirect() vanuit een SW op een OS-POST geeft ERR_HTTP2_PROTOCOL_ERROR.
+  // Correcte aanpak: bestand opslaan in cache, dan clients.openWindow() aanroepen,
+  // en een lege 200-response teruggeven zodat Chrome niet crasht.
   if (e.request.method === 'POST' && url.pathname.endsWith('/app.html')) {
-    e.respondWith(
+    e.waitUntil(
       (async () => {
         try {
           const formData  = await e.request.formData();
           const audioFile = formData.get('audio');
+          const base      = self.registration.scope; // https://host/Notenkraker/
 
           if (audioFile instanceof File && audioFile.size > 0) {
+            // Sla bestand + metadata op in vaste cache-sleutels
             const cache = await caches.open(SHARE_CACHE);
-
-            // Vaste cache-sleutels op basis van de SW-locatie
-            // (werkt correct op GitHub Pages submap én op rootdomeinen)
-            const base = self.registration.scope; // bijv. https://host/Notenkraker/
             await cache.put(
               new Request(base + '__nk_shared_file__'),
               new Response(audioFile, {
@@ -96,18 +90,31 @@ self.addEventListener('fetch', e => {
                 { headers: { 'Content-Type': 'application/json' } }
               )
             );
+          }
 
-            // 303 → browser wisselt naar GET, opent de app op de juiste URL
-            return Response.redirect(base + 'app.html?shared_audio=1', 303);
+          // Stuur signaal naar alle open app-vensters
+          const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+          const appClients = allClients.filter(c => c.url.includes('/app.html'));
+
+          if (appClients.length > 0) {
+            // App is al open: stuur een bericht zodat hij het bestand laadt
+            appClients[0].postMessage({ type: 'NK_SHARED_AUDIO' });
+            appClients[0].focus();
+          } else {
+            // App is gesloten: open een nieuw venster met het signaal
+            await self.clients.openWindow(base + 'app.html?shared_audio=1');
           }
         } catch (err) {
           console.warn('[SW] share-target fout:', err);
+          // Open de app zonder bestand als fallback
+          const base = self.registration.scope;
+          await self.clients.openWindow(base + 'app.html');
         }
-        // Geen geldig audiobestand → gewoon app.html laden
-        const base = self.registration.scope;
-        return fetch(new Request(base + 'app.html', { method: 'GET' }));
       })()
     );
+
+    // Geef een lege 200 terug zodat Chrome de navigatie niet als fout beschouwt
+    e.respondWith(new Response('', { status: 200 }));
     return;
   }
 
