@@ -2,11 +2,11 @@
   "name": "Notenkraker",
   "short_name": "Notenkraker",
   "description": "Kies een toonsoort en laat direct vanaf een notenbalk de juiste noot klinken.",
-  "start_url": "./app.html?karakter=dm",
+  "start_url": "./index.html?karakter=dm",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#f0ebe0",
-  "orientation": "any",
+  "orientation": "portrait",
   "lang": "nl",
   "icons": [
     {
@@ -30,33 +30,21 @@
   ],
   "shortcuts": [
     {
-      "name": "4",
-      "short_name": "4",
-      "url": "./app.html?karakter=dv",
+      "name": "Blanke man",
+      "short_name": "Notenkraker",
+      "url": "./index.html?karakter=lm",
       "icons": [
         {
-          "src": "icons/icon-dv-96.png",
+          "src": "icons/icon-lm-96.png",
           "sizes": "96x96",
           "type": "image/png"
         }
       ]
     },
     {
-      "name": "3",
-      "short_name": "3",
-      "url": "./app.html?karakter=lv",
-      "icons": [
-        {
-          "src": "icons/icon-lv-96.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "2",
-      "short_name": "2",
-      "url": "./app.html?karakter=dm",
+      "name": "Donkere man",
+      "short_name": "Notenkraker",
+      "url": "./index.html?karakter=dm",
       "icons": [
         {
           "src": "icons/icon-dm-96.png",
@@ -66,16 +54,86 @@
       ]
     },
     {
-      "name": "1",
-      "short_name": "1",
-      "url": "./app.html?karakter=lm",
+      "name": "Blanke vrouw",
+      "short_name": "Notenkraakster",
+      "url": "./index.html?karakter=lv",
       "icons": [
         {
-          "src": "icons/icon-lm-96.png",
+          "src": "icons/icon-lv-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Donkere vrouw",
+      "short_name": "Notenkraakster",
+      "url": "./index.html?karakter=dv",
+      "icons": [
+        {
+          "src": "icons/icon-dv-96.png",
           "sizes": "96x96",
           "type": "image/png"
         }
       ]
     }
-  ]
+  ],
+  "file_handlers": [
+    {
+      "action": "./app.html",
+      "accept": {
+        "audio/mpeg": [
+          ".mp3"
+        ],
+        "audio/mp4": [
+          ".m4a",
+          ".mp4"
+        ],
+        "audio/wav": [
+          ".wav"
+        ],
+        "audio/ogg": [
+          ".ogg",
+          ".oga"
+        ],
+        "audio/flac": [
+          ".flac"
+        ],
+        "audio/aac": [
+          ".aac"
+        ],
+        "audio/webm": [
+          ".weba"
+        ]
+      }
+    }
+  ],
+  "share_target": {
+    "action": "./app.html",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "audio",
+          "accept": [
+            "audio/mpeg",
+            "audio/mp4",
+            "audio/wav",
+            "audio/ogg",
+            "audio/flac",
+            "audio/aac",
+            "audio/webm",
+            ".mp3",
+            ".m4a",
+            ".wav",
+            ".ogg",
+            ".flac",
+            ".aac",
+            ".weba"
+          ]
+        }
+      ]
+    }
+  }
 }

@@ -5034,6 +5034,47 @@ window.addEventListener('DOMContentLoaded',()=>{
   }, 100);
   setTimeout(()=>{ renderMiniStaves(); }, 50);
 
+  // ── File Handling API: audiobestand openen vanuit bestandsbeheer / Verkenner ──
+  // Android (Chrome 102+) en Windows sturen het bestand via launchQueue.
+  if ('launchQueue' in window) {
+    window.launchQueue.setConsumer(async launchParams => {
+      if (!launchParams.files || launchParams.files.length === 0) return;
+      try {
+        const fileHandle = launchParams.files[0];
+        const file = await fileHandle.getFile();
+        // Wacht tot de player volledig opgebouwd is
+        setTimeout(() => loadAudioFile(file), 300);
+      } catch (err) {
+        console.warn('[NK] launchQueue bestand kon niet geladen worden:', err);
+      }
+    });
+  }
+
+  // ── Share Target: audiobestand ontvangen via "Delen via…" (Android / iOS) ──
+  // De service worker heeft het bestand opgeslagen in de cache en stuurt
+  // door naar app.html?shared_audio=<sleutel>.
+  const _sharedKey = new URLSearchParams(location.search).get('shared_audio');
+  if (_sharedKey) {
+    // Verwijder de parameter meteen uit de URL
+    history.replaceState(null, '', location.pathname);
+    (async () => {
+      try {
+        const cache    = await caches.open('nk-shared-audio-v1');
+        const storeUrl = location.origin + '/__nk_shared__/' + _sharedKey;
+        const resp     = await cache.match(new Request(storeUrl));
+        if (resp) {
+          const blob     = await resp.blob();
+          const fileName = decodeURIComponent(_sharedKey);
+          const file     = new File([blob], fileName, { type: blob.type || 'audio/mpeg' });
+          await cache.delete(new Request(storeUrl)); // opruimen na gebruik
+          setTimeout(() => loadAudioFile(file), 300);
+        }
+      } catch (err) {
+        console.warn('[NK] shared_audio kon niet geladen worden:', err);
+      }
+    })();
+  }
+
 });
 
 // ════════════════════════════════════════

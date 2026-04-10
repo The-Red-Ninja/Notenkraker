@@ -52,12 +52,53 @@ self.addEventListener('activate', e => {
   self.clients.claim(); // neem direct controle over alle open tabs
 });
 
-// Fetch-strategie:
-// - index.html → network-first (altijd de laatste versie van GitHub)
-// - al het overige → cache-first (snel, statisch)
+// ── Share Target: vang POST /app.html op (Android "Delen via…" / iOS Share Sheet) ──
+// Het OS stuurt het gedeelde audiobestand als multipart-POST naar ./app.html.
+// De SW slaat het op in een aparte cache en stuurt door met ?shared_audio=…
+// zodat app.html het bij DOMContentLoaded kan ophalen.
+self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
+
+  if (e.request.method === 'POST' && url.pathname.endsWith('/app.html')) {
+    e.respondWith((async () => {
+      try {
+        const formData  = await e.request.formData();
+        const audioFile = formData.get('audio');   // naam = share_target.params.files[0].name
+
+        if (audioFile instanceof File && audioFile.size > 0) {
+          const cache    = await caches.open('nk-shared-audio-v1');
+          const safeKey  = encodeURIComponent(audioFile.name.replace(/[^a-zA-Z0-9._-]/g, '_'));
+          const storeUrl = url.origin + '/__nk_shared__/' + safeKey;
+
+          await cache.put(
+            new Request(storeUrl),
+            new Response(audioFile, {
+              headers: { 'Content-Type': audioFile.type || 'audio/mpeg' }
+            })
+          );
+
+          const redir = url.origin + url.pathname + '?shared_audio=' + safeKey;
+          return Response.redirect(redir, 303);
+        }
+      } catch (err) {
+        console.warn('[SW] share-target fout:', err);
+      }
+      // Geen geldig audiobestand: gewoon app.html ophalen
+      return fetch(new Request(url.origin + url.pathname, { method: 'GET' }));
+    })());
+    return;   // vroeg terug – volgende fetch-listener niet aanroepen
+  }
+});
+
+// ── Fetch-strategie:
+// - index.html / app.html → network-first (altijd de laatste versie van GitHub)
+// - al het overige        → cache-first (snel, statisch)
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   const isHTML = url.pathname.endsWith('.html') || url.pathname.endsWith('/');
+  // POST-requests voor share-target worden door de vorige listener afgehandeld;
+  // hier enkel GET-requests
+  if (e.request.method !== 'GET') return;
 
   if (isHTML) {
     // Network-first: probeer live te laden, val terug op cache
