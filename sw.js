@@ -1,13 +1,16 @@
-// Notenkraker Service Worker
-const CACHE       = 'notenkraker-v4';
+// Notenkraker Service Worker  v5
+const CACHE       = 'notenkraker-v5';
 const SHARE_CACHE = 'nk-shared-audio-v1';
 
+// share.html is bewust klein (< 1KB) zodat hij altijd precached kan worden.
+// De SW serveert hem uit cache zonder het netwerk te raken — dit is de
+// enige manier om de share-target POST te onderscheppen op GitHub Pages,
+// want GitHub Pages weigert POST-verzoeken met ERR_HTTP2_PROTOCOL_ERROR.
 const STATIC_ASSETS = [
+  './share.html',          // ← share-target action, MOET in cache zitten
   './manifest.json',
-  './icons/favicon-lm.ico',
-  './icons/favicon-dm.ico',
-  './icons/favicon-lv.ico',
-  './icons/favicon-dv.ico',
+  './icons/favicon-lm.ico', './icons/favicon-dm.ico',
+  './icons/favicon-lv.ico', './icons/favicon-dv.ico',
   './icons/icon-lm-32.png',  './icons/icon-lm-96.png',
   './icons/icon-lm-180.png', './icons/icon-lm-192.png', './icons/icon-lm-512.png',
   './icons/icon-dm-32.png',  './icons/icon-dm-96.png',
@@ -38,38 +41,34 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // ── Share Target POST ──────────────────────────────────────────────────────
-  // Chrome stuurt een multipart POST naar app.html wanneer de gebruiker
-  // "Delen via Notenkraker" kiest. Regels:
-  //   • Response.redirect() op een SW-POST → ERR_HTTP2_PROTOCOL_ERROR (altijd)
-  //   • e.respondWith(new Response('',{status:200})) + e.waitUntil(openWindow)
-  //     is het enige patroon dat Chrome Android accepteert
-  //   • Als de app al open is: postMessage zodat hij niet opnieuw navigeert
-  if (e.request.method === 'POST' && url.pathname.endsWith('/app.html')) {
+  // ── Share Target POST naar share.html ─────────────────────────────────────
+  // Chrome stuurt dit POST-verzoek wanneer de gebruiker "Delen via" kiest.
+  // De SW onderschept dit VOORDAT het netwerk geraakt wordt, omdat share.html
+  // in de precache zit. GitHub Pages zou anders ERR_HTTP2_PROTOCOL_ERROR geven.
+  //
+  // Aanpak: geef direct een lege 200 terug (synchroon, verplicht),
+  // sla het bestand op in de cache, en stuur de app een signaal via
+  // postMessage (app al open) of openWindow (app was gesloten).
+  if (e.request.method === 'POST' && url.pathname.endsWith('/share.html')) {
 
-    // KRITIEK: respondWith() moet SYNCHROON worden aangeroepen in de event-handler,
-    // anders gooit Chrome een "handler already run" fout.
-    // Geef meteen een lege 200 terug — geen redirect, geen fout.
-    e.respondWith(new Response('', {
-      status: 200,
-      headers: { 'Content-Type': 'text/html' }
-    }));
+    // Synchroon een lege pagina teruggeven — geen redirect, geen fout
+    e.respondWith(
+      caches.match('./share.html').then(cached =>
+        cached || new Response('<p>laden…</p>', { headers: { 'Content-Type': 'text/html' } })
+      )
+    );
 
-    // Verwerk het bestand asynchroon via waitUntil
+    // Asynchroon het audiobestand verwerken
     e.waitUntil((async () => {
-      const base = self.registration.scope; // https://host/Notenkraker/
+      const base = self.registration.scope;
       try {
         const formData  = await e.request.formData();
         const audioFile = formData.get('audio');
-
         if (audioFile instanceof File && audioFile.size > 0) {
-          // Sla bestand + metadata op in cache
           const cache = await caches.open(SHARE_CACHE);
           await cache.put(
             new Request(base + '__nk_shared_file__'),
-            new Response(audioFile, {
-              headers: { 'Content-Type': audioFile.type || 'audio/mpeg' }
-            })
+            new Response(audioFile, { headers: { 'Content-Type': audioFile.type || 'audio/mpeg' } })
           );
           await cache.put(
             new Request(base + '__nk_shared_meta__'),
@@ -80,43 +79,39 @@ self.addEventListener('fetch', e => {
           );
         }
       } catch (err) {
-        console.warn('[SW] share-target: formData fout:', err);
+        console.warn('[SW] share formData fout:', err);
       }
 
-      // Stuur naar app: bestaand venster of nieuw openen
-      const allClients = await self.clients.matchAll({
-        type: 'window',
-        includeUncontrolled: true
-      });
-      const appClient = allClients.find(c => c.url.includes('/app.html'));
-
+      // Stuur signaal naar app
+      const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const appClient  = allClients.find(c => c.url.includes('/app.html'));
       if (appClient) {
-        // App is al open: stuur bericht en breng naar voren
         appClient.postMessage({ type: 'NK_SHARED_AUDIO' });
         try { appClient.focus(); } catch (_) {}
       } else {
-        // App was gesloten: open nieuw venster
         await self.clients.openWindow(base + 'app.html?shared_audio=1');
       }
     })());
-    return; // Geen verdere fetch-verwerking
+    return;
+  }
+
+  // ── GET share.html → altijd uit cache ─────────────────────────────────────
+  if (url.pathname.endsWith('/share.html')) {
+    e.respondWith(
+      caches.match(e.request).then(cached => cached || fetch(e.request))
+    );
+    return;
   }
 
   // ── Gewone fetch-strategie ─────────────────────────────────────────────────
   const isHTML = url.pathname.endsWith('.html') || url.pathname === '/';
-
   if (isHTML) {
-    // Network-first voor HTML (altijd verse versie van GitHub)
     e.respondWith(
       fetch(e.request)
-        .then(response => {
-          caches.open(CACHE).then(c => c.put(e.request, response.clone()));
-          return response;
-        })
+        .then(r => { caches.open(CACHE).then(c => c.put(e.request, r.clone())); return r; })
         .catch(() => caches.match(e.request))
     );
   } else {
-    // Cache-first voor statische bestanden
     e.respondWith(
       caches.match(e.request).then(cached => cached || fetch(e.request))
     );

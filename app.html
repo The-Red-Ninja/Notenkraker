@@ -5051,17 +5051,15 @@ window.addEventListener('DOMContentLoaded',()=>{
   }
 
   // ── Share Target: audiobestand ontvangen via "Delen via…" (Android / iOS) ──
-  // Twee paden:
-  // A) App was gesloten → SW opent app.html?shared_audio=1 → lees cache bij startup
-  // B) App was al open → SW stuurt postMessage({type:'NK_SHARED_AUDIO'}) → lees cache
+  // De SW slaat het bestand op in de cache en stuurt ofwel een postMessage
+  // (als de app al open was) of opent app.html?shared_audio=1 (was gesloten).
 
-  // Gedeelde helper: laad bestand uit SW-cache en gooi het naar de speler
   async function _loadSharedAudioFromCache() {
     try {
-      const cache  = await caches.open('nk-shared-audio-v1');
-      const swReg  = await navigator.serviceWorker.getRegistration();
-      const base   = swReg ? swReg.scope
-                           : (location.origin + location.pathname.replace(/\/[^\/]*$/, '/'));
+      const swReg = await navigator.serviceWorker.getRegistration();
+      const base  = swReg ? swReg.scope
+                          : (location.origin + location.pathname.replace(/\/[^/]*$/, '/'));
+      const cache = await caches.open('nk-shared-audio-v1');
       const [fileResp, metaResp] = await Promise.all([
         cache.match(new Request(base + '__nk_shared_file__')),
         cache.match(new Request(base + '__nk_shared_meta__')),
@@ -5088,18 +5086,20 @@ window.addEventListener('DOMContentLoaded',()=>{
     }
   }
 
-  // Pad A: app werd geopend met ?shared_audio=1
+  // Pad A: app was gesloten, SW opende app.html?shared_audio=1
   if (new URLSearchParams(location.search).get('shared_audio') === '1') {
     history.replaceState(null, '', location.pathname);
     _loadSharedAudioFromCache();
   }
 
-  // Pad B: app was al open, SW stuurt een postMessage
-  navigator.serviceWorker.addEventListener('message', e => {
-    if (e.data && e.data.type === 'NK_SHARED_AUDIO') {
-      _loadSharedAudioFromCache();
-    }
-  });
+  // Pad B: app was al open, SW stuurde een postMessage
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data && e.data.type === 'NK_SHARED_AUDIO') {
+        _loadSharedAudioFromCache();
+      }
+    });
+  }
 
 });
 
